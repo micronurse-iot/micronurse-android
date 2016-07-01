@@ -1,51 +1,31 @@
 package org.micronurse.ui.activity;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.app.LoaderManager.LoaderCallbacks;
 
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
-
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
 import org.micronurse.R;
-import org.micronurse.http.MicronursePostAPI;
-import org.micronurse.http.model.LoginRequest;
-import org.micronurse.http.model.LoginResult;
-import org.micronurse.http.model.Result;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static android.Manifest.permission.READ_CONTACTS;
+import org.micronurse.http.APIErrorListener;
+import org.micronurse.http.MicronurseAPI;
+import org.micronurse.http.model.request.LoginRequest;
+import org.micronurse.http.model.result.LoginResult;
+import org.micronurse.http.model.result.Result;
 
 /**
  * A login screen that offers login via phone number/password.
@@ -150,32 +130,30 @@ public class LoginActivity extends AppCompatActivity {
             progressDialog.show();
 
             LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
-            final MicronursePostAPI request = new MicronursePostAPI(getApplicationContext(), "login", loginRequest, null,
+            final MicronurseAPI request = new MicronurseAPI(LoginActivity.this, "/v1/mobile/login", Request.Method.PUT, loginRequest, null,
                     new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {
                             progressDialog.dismiss();
                             LoginResult result = (LoginResult)response;
-                            if(result.getResultCode() == LoginResult.LOGIN_USER_NOT_EXISTS){
-                                mPhoneNumberView.setError(result.getMessage());
-                                mPhoneNumberView.requestFocus();
-                            }else if(result.getResultCode() == LoginResult.LOGIN_PASSWORD_INCORRECT){
-                                mPasswordView.setError(result.getMessage());
-                                mPasswordView.requestFocus();
-                            }else if(result.getResultCode() == 0){
-                                Toast.makeText(LoginActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
+                            Toast.makeText(LoginActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
                         }
-                    }, new Response.ErrorListener() {
+                    }, new APIErrorListener() {
                         @Override
-                        public void onErrorResponse(VolleyError error) {
+                        public void onErrorResponse(VolleyError error, Result result) {
                             progressDialog.dismiss();
-                            error.printStackTrace();
-                            if(error.networkResponse == null)
-                                Toast.makeText(LoginActivity.this, R.string.network_error, Toast.LENGTH_SHORT).show();
-                            else
-                                Toast.makeText(LoginActivity.this, getString(R.string.action_login_failed) + " error code:" + error.networkResponse.statusCode,
-                                               Toast.LENGTH_SHORT).show();
+                            if(result == null)
+                                return;
+                            switch (result.getResultCode()){
+                                case LoginResult.LOGIN_USER_NOT_EXISTS:
+                                    mPhoneNumberView.setError(result.getMessage());
+                                    mPhoneNumberView.requestFocus();
+                                    break;
+                                case LoginResult.LOGIN_PASSWORD_INCORRECT:
+                                    mPasswordView.setError(result.getMessage());
+                                    mPasswordView.requestFocus();
+                                    break;
+                            }
                     }
             }, LoginResult.class);
             request.startRequest();

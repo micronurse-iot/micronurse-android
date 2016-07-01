@@ -1,4 +1,4 @@
-package org.micronurse.http.model;
+package org.micronurse.http.model.result;
 
 /**
  * Created by shengyun-zhou on 5/23/16.
