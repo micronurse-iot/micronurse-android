@@ -41,6 +41,8 @@ class JSONRequest extends Request<Result> {
 
     @Override
     public byte[] getBody() throws AuthFailureError {
+        if(mRequestData == null)
+            return new byte[0];
         return GsonUtil.getGson().toJson(mRequestData).getBytes();
     }
 

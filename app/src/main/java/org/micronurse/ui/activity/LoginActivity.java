@@ -2,6 +2,7 @@ package org.micronurse.ui.activity;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -26,6 +27,10 @@ import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.request.LoginRequest;
 import org.micronurse.http.model.result.LoginResult;
 import org.micronurse.http.model.result.Result;
+import org.micronurse.http.model.result.UserResult;
+import org.micronurse.model.User;
+import org.micronurse.ui.activity.older.OlderMainActivity;
+import org.micronurse.util.GlobalInfo;
 
 /**
  * A login screen that offers login via phone number/password.
@@ -92,7 +97,7 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String phoneNumber = mPhoneNumberView.getText().toString();
+        final String phoneNumber = mPhoneNumberView.getText().toString();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -134,9 +139,31 @@ public class LoginActivity extends AppCompatActivity {
                     new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {
-                            progressDialog.dismiss();
                             LoginResult result = (LoginResult)response;
-                            Toast.makeText(LoginActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                            GlobalInfo.token = result.getToken();
+                            progressDialog.setCancelable(false);
+                            new MicronurseAPI(LoginActivity.this, "/v1/mobile/user/by_phone/" + phoneNumber, Request.Method.GET, null, null,
+                                new Response.Listener<Result>(){
+                                    @Override
+                                    public void onResponse(Result response) {
+                                        progressDialog.dismiss();
+                                        UserResult userResult = (UserResult)response;
+                                        GlobalInfo.user = userResult.getUser();
+                                        GlobalInfo.user.setPhoneNumber(phoneNumber);
+                                        switch (GlobalInfo.user.getAccountType()){
+                                            case User.ACCOUNT_TPYE_OLDER:
+                                                Intent intent = new Intent(LoginActivity.this, OlderMainActivity.class);
+                                                startActivity(intent);
+                                                break;
+                                        }
+                                    }
+                                }, new APIErrorListener(){
+                                    @Override
+                                    public void onErrorResponse(VolleyError err, Result result) {
+                                        progressDialog.dismiss();
+                                        Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
+                                    }
+                                }, UserResult.class).startRequest();
                         }
                     }, new APIErrorListener() {
                         @Override

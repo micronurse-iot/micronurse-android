@@ -11,8 +11,14 @@
     <string name="error_phone_number_required">请输入手机号</string>
     <string name="action_logining">正在登录……</string>
     <string name="response_data_corrupt">接收数据已损坏，请重试</string>
-    <string name="action_login_failed">登录失败，请稍后再试</string>
+    <string name="error_login_failed">登录失败，请稍后再试</string>
     <string name="network_error">网络错误，请检查网络</string>
     <string name="unknown_error">未知错误</string>
     <string name="server_internal_error">服务器内部错误</string>
+    <string name="title_activity_older_main">OlderMainActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
 </resources>
