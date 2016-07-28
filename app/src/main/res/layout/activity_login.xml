@@ -24,49 +24,84 @@
             android:orientation="vertical">
 
             <de.hdodenhof.circleimageview.CircleImageView
-                android:layout_width="126dp"
-                android:layout_height="126dp"
-                android:layout_centerInParent="true"
+                android:layout_width="@dimen/nav_header_portrait_size"
+                android:layout_height="@dimen/nav_header_portrait_size"
                 android:id="@+id/default_head_image"
-                android:src="@drawable/default_head_portrait"
-                app:civ_border_width="2dp"
-                app:civ_border_color="#ebffffff"
+                android:src="@mipmap/default_portrait"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                app:civ_border_width="1dp"
+                app:civ_border_color="#eeeeee"
+                app:civ_fill_color="#eeeeee"
                 android:layout_gravity="center_horizontal" />
 
 
-            <android.support.design.widget.TextInputLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
-                <AutoCompleteTextView
-                    android:id="@+id/login_phone_number"
+                <ImageView
+                    android:id="@+id/icon_phone_login"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:layout_centerVertical="true"
+                    android:tint="@color/colorPrimary"
+                    android:src="@drawable/ic_phone"
+                    />
+
+                <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/prompt_phone_number"
-                    android:imeOptions="actionNext"
-                    android:inputType="phone"
-                    android:maxLines="1"
-                    android:singleLine="true"/>
+                    android:layout_toRightOf="@+id/icon_phone_login"
+                    android:layout_centerVertical="true">
 
-            </android.support.design.widget.TextInputLayout>
+                    <AutoCompleteTextView
+                        android:id="@+id/login_phone_number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/prompt_phone_number"
+                        android:imeOptions="actionNext"
+                        android:inputType="phone"
+                        android:maxLines="1" />
 
-            <android.support.design.widget.TextInputLayout
+                </android.support.design.widget.TextInputLayout>
+
+            </RelativeLayout>
+
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
-                <EditText
-                    android:id="@+id/login_password"
+                <ImageView
+                    android:id="@+id/icon_password_login"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:layout_centerVertical="true"
+                    android:tint="@color/colorPrimary"
+                    android:src="@drawable/ic_key" />
+
+                <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/prompt_password"
-                    android:imeActionLabel="@string/action_sign_in_short"
-                    android:imeOptions="actionDone"
-                    android:inputType="textPassword"
-                    android:maxLines="1"
-                    android:maxLength="30"
-                    android:singleLine="true" />
+                    android:layout_toRightOf="@+id/icon_password_login"
+                    android:layout_centerVertical="true">
 
-            </android.support.design.widget.TextInputLayout>
+                    <EditText
+                        android:id="@+id/login_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/prompt_password"
+                        android:imeActionLabel="@string/action_sign_in_short"
+                        android:imeOptions="actionDone"
+                        android:inputType="textPassword"
+                        android:maxLines="1"
+                        android:maxLength="30"/>
+
+                </android.support.design.widget.TextInputLayout>
+            </RelativeLayout>
 
             <Button
                 android:id="@+id/button_sign_in"
@@ -83,27 +118,22 @@
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/activity_vertical_margin">
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/action_forget_password"
                     android:id="@+id/button_forget_password"
-                    android:layout_weight="0.5"
-                    android:paddingTop="@dimen/large_button_padding"
-                    android:paddingBottom="@dimen/large_button_padding"
-                    android:textStyle="bold" />
+                    android:layout_weight="0.5"/>
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/action_new_user"
                     android:id="@+id/button_new_user"
-                    android:layout_weight="0.5"
-                    android:paddingTop="@dimen/large_button_padding"
-                    android:paddingBottom="@dimen/large_button_padding"
-                    android:textStyle="bold" />
+                    android:layout_weight="0.5"/>
             </LinearLayout>
 
         </LinearLayout>

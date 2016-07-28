@@ -84,21 +84,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         Button mForgetPassword = (Button) findViewById(R.id.button_forget_password);
-        mForgetPassword.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                intent1 = new Intent(LoginActivity.this,SecondActivity.class);
-                startActivity(intent1);
-            }
-        });
         Button mNewUser = (Button) findViewById(R.id.button_new_user);
-        mNewUser.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                intent2 = new Intent(LoginActivity.this,SecondActivity.class);
-                startActivity(intent2);
-            }
-        });
 
     }
 
@@ -156,14 +142,14 @@ public class LoginActivity extends AppCompatActivity {
             progressDialog.show();
 
             LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
-            final MicronurseAPI request = new MicronurseAPI(LoginActivity.this, "/v1/mobile/login", Request.Method.PUT, loginRequest, null,
+            final MicronurseAPI request = new MicronurseAPI(LoginActivity.this, "/v1/mobile/account/login", Request.Method.PUT, loginRequest, null,
                     new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {
                             LoginResult result = (LoginResult)response;
                             GlobalInfo.token = result.getToken();
                             progressDialog.setCancelable(false);
-                            new MicronurseAPI(LoginActivity.this, "/v1/mobile/user/by_phone/" + phoneNumber, Request.Method.GET, null, null,
+                            new MicronurseAPI(LoginActivity.this, "/v1/mobile/account/user_basic_info/by_phone/" + phoneNumber, Request.Method.GET, null, null,
                                 new Response.Listener<Result>(){
                                     @Override
                                     public void onResponse(Result response) {
