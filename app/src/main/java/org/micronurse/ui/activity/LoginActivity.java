@@ -46,6 +46,9 @@ public class LoginActivity extends AppCompatActivity {
     private AutoCompleteTextView mPhoneNumberView;
     private EditText mPasswordView;
 
+    Intent intent1 = null;
+    Intent intent2 = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +82,24 @@ public class LoginActivity extends AppCompatActivity {
                 attemptLogin();
             }
         });
+
+        Button mForgetPassword = (Button) findViewById(R.id.button_forget_password);
+        mForgetPassword.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                intent1 = new Intent(LoginActivity.this,SecondActivity.class);
+                startActivity(intent1);
+            }
+        });
+        Button mNewUser = (Button) findViewById(R.id.button_new_user);
+        mNewUser.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                intent2 = new Intent(LoginActivity.this,SecondActivity.class);
+                startActivity(intent2);
+            }
+        });
+
     }
 
 

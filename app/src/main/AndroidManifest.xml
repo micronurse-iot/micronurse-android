@@ -24,6 +24,11 @@
             android:name=".ui.activity.older.OlderMainActivity"
             android:label="@string/title_activity_older_main"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <activity
+            android:name=".ui.activity.SecondActivity"
+            android:label="SecondActivity"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
