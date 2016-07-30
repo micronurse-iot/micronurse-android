@@ -30,6 +30,7 @@ import org.micronurse.http.model.result.Result;
 import org.micronurse.http.model.result.UserResult;
 import org.micronurse.model.User;
 import org.micronurse.ui.activity.older.OlderMainActivity;
+import org.micronurse.ui.activity.sms.SmsVerifyActivity;
 import org.micronurse.util.GlobalInfo;
 
 /**
@@ -84,6 +85,13 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         Button mForgetPassword = (Button) findViewById(R.id.button_forget_password);
+        mForgetPassword.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                intent1 = new Intent(LoginActivity.this,SmsVerifyActivity.class);
+                startActivity(intent1);
+            }
+        });
         Button mNewUser = (Button) findViewById(R.id.button_new_user);
 
     }
