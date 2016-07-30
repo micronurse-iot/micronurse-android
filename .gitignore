@@ -34,3 +34,6 @@ captures/
 #IDEA Project Files
 .idea/*
 *.iml
+
+#Project Gradle Build Script
+/build.gradle
