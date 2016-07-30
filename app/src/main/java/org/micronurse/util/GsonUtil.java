@@ -47,7 +47,6 @@ class BitmapAdapter implements JsonSerializer<Bitmap>, JsonDeserializer<Bitmap>{
     @Override
     public Bitmap deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         byte[] bitmapByteArray;
-        Log.i("Bitmap Adapter", "deserialize: " + json.getAsString());
         bitmapByteArray = Base64.decode(json.getAsString(), Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(bitmapByteArray, 0, bitmapByteArray.length);
     }

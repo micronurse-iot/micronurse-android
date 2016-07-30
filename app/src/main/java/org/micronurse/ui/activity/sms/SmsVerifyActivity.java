@@ -19,7 +19,7 @@ package org.micronurse.ui.activity.sms;
 
 
 public class SmsVerifyActivity extends AppCompatActivity{
-    private  AutoCompleteTextView phoneNumberView;
+    private AutoCompleteTextView phoneNumberView;
     private EditText cordView;
     private Button getCordButton;
     private Button saveCordButton;
