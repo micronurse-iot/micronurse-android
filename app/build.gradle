@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '23.0.3'
+    buildToolsVersion '24'
 
     defaultConfig {
         applicationId "org.micronurse"
@@ -21,6 +21,7 @@ android {
 
 repositories {
     mavenCentral()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 dependencies {
@@ -31,6 +32,7 @@ dependencies {
         'com.android.support:design:23.3.0',
         'com.google.code.gson:gson:2.6.+',
         'com.mcxiaoke.volley:library:+',
-        'de.hdodenhof:circleimageview:2.+'
+        'de.hdodenhof:circleimageview:2.+',
+        'com.michaelpardo:activeandroid:3.+',
     )
 }

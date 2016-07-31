@@ -6,31 +6,42 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.activeandroid.query.Select;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
 import org.micronurse.R;
+import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.request.LoginRequest;
 import org.micronurse.http.model.result.LoginResult;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.http.model.result.UserResult;
+import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.model.User;
 import org.micronurse.ui.activity.older.OlderMainActivity;
+import org.micronurse.ui.activity.sms.SmsVerifyActivity;
 import org.micronurse.util.GlobalInfo;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A login screen that offers login via phone number/password.
@@ -45,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
     // UI references.
     private AutoCompleteTextView mPhoneNumberView;
     private EditText mPasswordView;
+    private ImageView mPortraitImageView;
 
     Intent intent1 = null;
     Intent intent2 = null;
@@ -54,9 +66,36 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
-        mPhoneNumberView = (AutoCompleteTextView) findViewById(R.id.login_phone_number);
-        mPasswordView = (EditText) findViewById(R.id.login_password);
 
+        mPortraitImageView = (ImageView) findViewById(R.id.login_portrait);
+
+        final List<LoginUserRecord> loginUserRecords = new Select().from(LoginUserRecord.class)
+                .orderBy("LastLoginTime DESC").execute();
+        List<String> phoneNumberRecords = new ArrayList<String>();
+        for(LoginUserRecord lur : loginUserRecords){
+            phoneNumberRecords.add(lur.getPhoneNumber());
+        }
+
+        mPhoneNumberView = (AutoCompleteTextView) findViewById(R.id.login_phone_number);
+        mPhoneNumberView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String tempPhoneNum = s.toString();
+                for(LoginUserRecord lur : loginUserRecords){
+                    if(lur.getPhoneNumber().equals(tempPhoneNum))
+                        mPortraitImageView.setImageBitmap(lur.getPortrait());
+                    else
+                        mPortraitImageView.setImageResource(R.mipmap.default_portrait);
+                }
+            }
+        });
+        mPhoneNumberView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, phoneNumberRecords));
         mPhoneNumberView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -66,6 +105,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        mPasswordView = (EditText) findViewById(R.id.login_password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -84,6 +124,13 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         Button mForgetPassword = (Button) findViewById(R.id.button_forget_password);
+        mForgetPassword.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                intent1 = new Intent(LoginActivity.this,SmsVerifyActivity.class);
+                startActivity(intent1);
+            }
+        });
         Button mNewUser = (Button) findViewById(R.id.button_new_user);
 
     }
@@ -160,6 +207,7 @@ public class LoginActivity extends AppCompatActivity {
                                         switch (GlobalInfo.user.getAccountType()){
                                             case User.ACCOUNT_TPYE_OLDER:
                                                 Intent intent = new Intent(LoginActivity.this, OlderMainActivity.class);
+                                                finish();
                                                 startActivity(intent);
                                                 break;
                                         }
@@ -179,11 +227,11 @@ public class LoginActivity extends AppCompatActivity {
                             if(result == null)
                                 return;
                             switch (result.getResultCode()){
-                                case LoginResult.LOGIN_USER_NOT_EXISTS:
+                                case PublicResultCode.LOGIN_USER_NOT_EXIST:
                                     mPhoneNumberView.setError(result.getMessage());
                                     mPhoneNumberView.requestFocus();
                                     break;
-                                case LoginResult.LOGIN_PASSWORD_INCORRECT:
+                                case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
                                     mPasswordView.setError(result.getMessage());
                                     mPasswordView.requestFocus();
                                     break;

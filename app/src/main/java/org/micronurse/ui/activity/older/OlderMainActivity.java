@@ -1,5 +1,6 @@
 package org.micronurse.ui.activity.older;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -11,8 +12,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.activeandroid.query.Select;
+
 import org.micronurse.R;
+import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.util.GlobalInfo;
+
+import java.util.Date;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -34,6 +40,21 @@ public class OlderMainActivity extends AppCompatActivity
         toggle.syncState();
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(this);
+        mNavigationView.getMenu().getItem(0).setChecked(true);
+        setTitle(R.string.action_monitor);
+
+        GlobalInfo.loginRecord = new Select().from(LoginUserRecord.class)
+                                .where("PhoneNumber=?", GlobalInfo.user.getPhoneNumber())
+                                .executeSingle();
+        if(GlobalInfo.loginRecord == null){
+            GlobalInfo.loginRecord = new LoginUserRecord(GlobalInfo.user.getPhoneNumber(), GlobalInfo.token, GlobalInfo.user.getPortrait());
+            GlobalInfo.loginRecord.save();
+        }else{
+            GlobalInfo.loginRecord.setLastLoginTime(new Date());
+            GlobalInfo.loginRecord.setPortrait(GlobalInfo.user.getPortrait());
+            GlobalInfo.loginRecord.setToken(GlobalInfo.token);
+            GlobalInfo.loginRecord.save();
+        }
     }
 
     @Override
@@ -51,54 +72,22 @@ public class OlderMainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            moveTaskToBack(true);
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.older_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+        int id = item.getItemId();
+        switch (id){
+            case R.id.older_nav_exit:
+                finish();
+                break;
+        }
         return true;
     }
 }

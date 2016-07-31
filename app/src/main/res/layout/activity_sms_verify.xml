@@ -1,0 +1,133 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingBottom="16dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".ui.activity.sms.SmsVerifyActivity">
+
+    <ScrollView
+        android:id="@+id/verify_form"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/verify_info_form"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/activity_vertical_margin">
+
+            <TextView
+                android:id="@+id/verify_title"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:textSize="30sp"
+                android:text="短信验证" />
+            <LinearLayout
+                android:id="@+id/phone"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="16dp"
+                android:paddingTop="16dp">
+                <TextView
+                    android:id="@+id/phone_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginLeft="21dp"
+                    android:layout_marginTop="2dp"
+                    android:text="手机号："
+                    android:textSize="25sp"/>
+
+                    <AutoCompleteTextView
+                        android:id="@+id/phone_number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        android:inputType="phone"
+                        android:textSize="25sp"
+                        android:maxLength="11"
+                        android:ems="11"
+                        android:singleLine="true"/>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/verify_cord_form"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="16dp"
+                android:paddingTop="8dp">
+                <TextView
+                    android:id="@+id/cord_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginTop="32dp"
+                    android:text="验证码："
+                    android:textSize="25sp"/>
+
+                <EditText
+                    android:id="@+id/cord"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:imeOptions="actionDone"
+                    android:inputType="phone"
+                    android:textSize="25sp"
+                    android:singleLine="true"/>
+                <Button
+                    android:id="@+id/getcord"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@+id/cord"
+                    android:layout_marginLeft="20dp"
+                    android:visibility="visible"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:textSize="25sp"
+                    android:text="获取验证码" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/button_form"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="16dp"
+                android:paddingTop="25dp">
+                <Button
+                    android:id="@+id/savecord"
+                    android:layout_width="155dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:text="验证"
+                    android:textSize="28sp"
+                    android:textColor="@android:color/white"
+                    android:paddingTop="15dp"
+                    android:paddingBottom="15dp"
+                    android:textStyle="bold" />
+                <Button
+                    android:id="@+id/cancel"
+                    android:layout_width="155dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:text="取消"
+                    android:textSize="28sp"
+                    android:textColor="@android:color/white"
+                    android:paddingTop="15dp"
+                    android:paddingBottom="15dp"
+                    android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
+
