@@ -6,6 +6,7 @@
     <string name="prompt_password">密码</string>
     <string name="action_sign_in">登  录</string>
     <string name="action_sign_in_short">登录</string>
+    <string name="error_login_state_invalid">登录状态失效，请重新登录</string>
     <string name="error_invalid_phone_number">手机号无效</string>
     <string name="error_password_required">请输入密码</string>
     <string name="error_phone_number_required">请输入手机号</string>

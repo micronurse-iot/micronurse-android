@@ -5,6 +5,7 @@
     <dimen name="small_text_size">14sp</dimen>
     <dimen name="normal_text_size">17sp</dimen>
     <dimen name="large_text_size">22sp</dimen>
+    <dimen name="xlarge_text_size">28sp</dimen>
     <dimen name="large_button_padding">15dp</dimen>
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="nav_header_vertical_spacing">16dp</dimen>
@@ -14,4 +15,5 @@
 
     <dimen name="nav_header_portrait_size">72dp</dimen>
     <dimen name="normal_icon_size">32dp</dimen>
+    <dimen name="xlarge_icon_size">128dp</dimen>
 </resources>

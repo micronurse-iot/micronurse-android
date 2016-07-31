@@ -56,7 +56,10 @@ class JSONRequest extends Request<Result> {
     protected Response<Result> parseNetworkResponse(NetworkResponse response) {
         try {
             String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-
+            if(response.statusCode == 204){
+                return Response.success(null,
+                        HttpHeaderParser.parseCacheHeaders(response));
+            }
             return Response.success(GsonUtil.getGson().fromJson(jsonString, mResultType),
                     HttpHeaderParser.parseCacheHeaders(response));
         } catch (UnsupportedEncodingException e) {

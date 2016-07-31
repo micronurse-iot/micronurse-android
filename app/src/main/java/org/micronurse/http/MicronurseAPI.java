@@ -1,6 +1,8 @@
 package org.micronurse.http;
 
+import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -12,6 +14,8 @@ import com.google.gson.JsonSyntaxException;
 
 import org.micronurse.R;
 import org.micronurse.http.model.result.Result;
+import org.micronurse.ui.activity.LoginActivity;
+import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 
 /**
@@ -31,21 +35,39 @@ public class MicronurseAPI {
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
                 if(error.getCause() instanceof JsonSyntaxException) {
-                    Toast.makeText(context, R.string.network_error, Toast.LENGTH_SHORT).show();
-                    //errorListener.onErrorResponse(error, null);
+                    Toast.makeText(context, R.string.response_data_corrupt, Toast.LENGTH_SHORT).show();
+                    return;
                 }
                 else if(error.networkResponse == null) {
                     Toast.makeText(context, R.string.network_error, Toast.LENGTH_SHORT).show();
                     errorListener.onErrorResponse(error, null);
+                    return;
                 }else{
-                    if(error.networkResponse.statusCode == 500)
-                        Toast.makeText(context, R.string.server_internal_error, Toast.LENGTH_SHORT).show();
+                    Result result;
                     try {
-                        Result result = GsonUtil.getGson().fromJson(new String(error.networkResponse.data), Result.class);
-                        errorListener.onErrorResponse(error, result);
+                        result = GsonUtil.getGson().fromJson(new String(error.networkResponse.data), Result.class);
                     }catch (JsonSyntaxException jse){
+                        jse.printStackTrace();
                         errorListener.onErrorResponse(error, new Result(-1, context.getString(R.string.unknown_error)));
+                        return;
                     }
+                    if(error.networkResponse.statusCode == 401 && result.getResultCode() == 401){
+                        Toast.makeText(context, R.string.error_login_state_invalid, Toast.LENGTH_SHORT).show();
+                        errorListener.onErrorResponse(error, result);
+                        if(GlobalInfo.loginRecord != null) {
+                            GlobalInfo.loginRecord.setToken(null);
+                            GlobalInfo.loginRecord.save();
+                        }
+                        GlobalInfo.clearLoginUserInfo();
+                        Intent intent = new Intent(context, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        context.startActivity(intent);
+                        return;
+                    }
+                    else if(error.networkResponse.statusCode == 500) {
+                        Toast.makeText(context, R.string.server_internal_error, Toast.LENGTH_SHORT).show();
+                    }
+                    errorListener.onErrorResponse(error, result);
                 }
             }
         }, requestData, resultType);
