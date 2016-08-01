@@ -37,6 +37,10 @@
             android:name=".ui.activity.sms.SmsVerifyActivity"
             android:label="SmsVerifyActivity"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
+            android:name=".ui.activity.RegisterActivity"
+            android:label="RegisterActivity"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity android:name=".ui.activity.WelcomeActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>

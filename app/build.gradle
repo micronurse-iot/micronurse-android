@@ -25,14 +25,14 @@ repositories {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile(
-        'com.android.support:appcompat-v7:23.3.0',
-        'com.android.support:design:23.3.0',
-        'com.google.code.gson:gson:2.6.+',
-        'com.mcxiaoke.volley:library:+',
-        'de.hdodenhof:circleimageview:2.+',
-        'com.michaelpardo:activeandroid:3.+',
+            'com.android.support:appcompat-v7:23.3.0',
+            'com.android.support:design:23.3.0',
+            'com.google.code.gson:gson:2.6.+',
+            'com.mcxiaoke.volley:library:+',
+            'de.hdodenhof:circleimageview:2.+',
+            'com.michaelpardo:activeandroid:3.+',
     )
 }
