@@ -27,26 +27,36 @@
 
         <activity
             android:name=".ui.activity.LoginActivity"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name" />
         <activity
             android:name=".ui.activity.older.OlderMainActivity"
-            android:label="@string/title_activity_older_main"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.activity.sms.SmsVerifyActivity"
-            android:label="SmsVerifyActivity"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:label="SmsVerifyActivity"/>
         <activity
             android:name=".ui.activity.RegisterActivity"
-            android:label="RegisterActivity"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
-        <activity android:name=".ui.activity.WelcomeActivity"
+            android:label="@string/action_new_user"
+            android:parentActivityName=".ui.activity.LoginActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.micronurse.ui.activity.LoginActivity" />
+        </activity>
+        <activity
+            android:name=".ui.activity.WelcomeActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.activity.older.SettingsActivity"
+            android:label="@string/action_settings"
+            android:parentActivityName=".ui.activity.older.OlderMainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.micronurse.ui.activity.older.OlderMainActivity" />
         </activity>
     </application>
 

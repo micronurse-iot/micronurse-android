@@ -42,10 +42,14 @@ public class OlderMainActivity extends AppCompatActivity
         mNavigationView.setNavigationItemSelectedListener(this);
         mNavigationView.getMenu().getItem(0).setChecked(true);
         setTitle(R.string.action_monitor);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         GlobalInfo.loginRecord = new Select().from(LoginUserRecord.class)
-                                .where("PhoneNumber=?", GlobalInfo.user.getPhoneNumber())
-                                .executeSingle();
+                .where("PhoneNumber=?", GlobalInfo.user.getPhoneNumber())
+                .executeSingle();
         if(GlobalInfo.loginRecord == null){
             GlobalInfo.loginRecord = new LoginUserRecord(GlobalInfo.user.getPhoneNumber(), GlobalInfo.token, GlobalInfo.user.getPortrait());
             GlobalInfo.loginRecord.save();
@@ -55,11 +59,7 @@ public class OlderMainActivity extends AppCompatActivity
             GlobalInfo.loginRecord.setToken(GlobalInfo.token);
             GlobalInfo.loginRecord.save();
         }
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
         ((TextView)mNavigationView.getHeaderView(0).findViewById(R.id.nav_header_nickname_older_main)).setText(GlobalInfo.user.getNickname());
         ((TextView)mNavigationView.getHeaderView(0).findViewById(R.id.nav_header_phone_num_older_main)).setText(GlobalInfo.user.getPhoneNumber());
         if(GlobalInfo.user.getPortrait() != null)
@@ -86,6 +86,10 @@ public class OlderMainActivity extends AppCompatActivity
         switch (id){
             case R.id.older_nav_exit:
                 finish();
+                break;
+            case R.id.older_nav_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 break;
         }
         return true;

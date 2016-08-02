@@ -22,7 +22,7 @@
     <!--Strings related to register-->
     <string name="prompt_reconfirm_password">确认密码</string>
     <string name="prompt_sex">性别</string>
-    <string name="prompt_name">呢称</string>
+    <string name="prompt_name">昵称</string>
     <string name="prompt_account_type">账号类型</string>
     <string name="prompt_identifying_code">手机验证码</string>
     <string name="prompt_male">男</string>
@@ -31,15 +31,15 @@
     <string name="prompt_guardian">监护人</string>
     <string name="action_register">完成注册</string>
     <string name="action_identifying_code">获取验证码</string>
-    <string name="error_invalid_password">密码格式不正确</string>
+    <string name="error_nickname_empty">请输入昵称</string>
+    <string name="error_captcha_empty">请输入验证码</string>
+    <string name="error_password_invalid_len">密码长度为6-20位</string>
     <string name="error_password_inconstancy">两次输入密码不一致</string>
+    <string name="action_registering">正在注册...</string>
 
-
-    <string name="title_activity_older_main">OlderMainActivity</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-
     <string name="other">其它</string>
     <string name="action_monitor">监测</string>
     <string name="action_monitor_warning">监测警报</string>
@@ -48,4 +48,5 @@
     <string name="action_settings">应用设置</string>
     <string name="action_logout">注销账号</string>
     <string name="action_exit">退出应用</string>
+
 </resources>

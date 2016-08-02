@@ -47,6 +47,9 @@ import java.util.List;
  * A login screen that offers login via phone number/password.
  */
 public class LoginActivity extends AppCompatActivity {
+    public static final String BUNDLE_PREFER_PHONE_NUMBER_KEY = "PreferPhoneNum";
+    public static final String BUNDLE_PREFER_PASSWORD_KEY = "PreferPassword";
+    public static final String BUNDLE_AUTO_LOGIN_KEY = "AutoLogin";
 
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
@@ -88,20 +91,23 @@ public class LoginActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
                 String tempPhoneNum = s.toString();
                 for(LoginUserRecord lur : loginUserRecords){
-                    if(lur.getPhoneNumber().equals(tempPhoneNum))
+                    if(lur.getPhoneNumber().equals(tempPhoneNum)) {
                         mPortraitImageView.setImageBitmap(lur.getPortrait());
-                    else
-                        mPortraitImageView.setImageResource(R.mipmap.default_portrait);
+                        return;
+                    }
                 }
+                mPortraitImageView.setImageResource(R.mipmap.default_portrait);
             }
         });
         mPhoneNumberView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, phoneNumberRecords));
         mPhoneNumberView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_NEXT)
+                if(actionId == EditorInfo.IME_ACTION_NEXT) {
                     mPasswordView.requestFocus();
-                return true;
+                    return true;
+                }
+                return false;
             }
         });
 
@@ -109,9 +115,11 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if(id == EditorInfo.IME_ACTION_DONE)
+                if(id == EditorInfo.IME_ACTION_DONE) {
                     attemptLogin();
-                return true;
+                    return true;
+                }
+                return false;
             }
         });
 
@@ -142,6 +150,20 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent intent = getIntent();
+        String preferPhoneNum = intent.getStringExtra(BUNDLE_PREFER_PHONE_NUMBER_KEY);
+        if(preferPhoneNum != null)
+            mPhoneNumberView.setText(preferPhoneNum);
+        String preferPassword = intent.getStringExtra(BUNDLE_PREFER_PASSWORD_KEY);
+        if(preferPassword != null)
+            mPasswordView.setText(preferPassword);
+        if(intent.getBooleanExtra(BUNDLE_AUTO_LOGIN_KEY, false))
+            attemptLogin();
+    }
 
     /**
      * Attempts to sign in the account specified by the login form.
@@ -196,14 +218,14 @@ public class LoginActivity extends AppCompatActivity {
             progressDialog.show();
 
             LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
-            final MicronurseAPI request = new MicronurseAPI(LoginActivity.this, "/v1/mobile/account/login", Request.Method.PUT, loginRequest, null,
+            final MicronurseAPI request = new MicronurseAPI(LoginActivity.this, "/account/login", Request.Method.PUT, loginRequest, null,
                     new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {
                             LoginResult result = (LoginResult)response;
                             GlobalInfo.token = result.getToken();
                             progressDialog.setCancelable(false);
-                            new MicronurseAPI(LoginActivity.this, "/v1/mobile/account/user_basic_info/by_phone/" + phoneNumber, Request.Method.GET, null, null,
+                            new MicronurseAPI(LoginActivity.this, "/account/user_basic_info/by_phone/" + phoneNumber, Request.Method.GET, null, null,
                                 new Response.Listener<Result>(){
                                     @Override
                                     public void onResponse(Result response) {

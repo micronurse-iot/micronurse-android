@@ -10,12 +10,14 @@ public class PublicResultCode {
     public static final int RESULT_NOT_FOUND = 200003;
 
     public static final int PHONE_NUM_INVALID = 200004;
-    public static final int PASSWORD_LENGTH_ILLEGAL = 200005;
-    public static final int PASSWORD_FORMAT_ILLEGAL = 200006;
-    public static final int GENDER_ILLEGAL = 200007;
-    public static final int ACCOUNT_TYPE_INVALID = 200008;
+    public static final int PHONE_NUM_REGISTERED = 200005;
+    public static final int NICKNAME_REGISTERED = 200006;
+    public static final int PASSWORD_LENGTH_ILLEGAL = 200007;
+    public static final int PASSWORD_FORMAT_ILLEGAL = 200008;
+    public static final int GENDER_ILLEGAL = 200009;
+    public static final int ACCOUNT_TYPE_INVALID = 200010;
 
-    public static final int PHONE_CAPTCHA_INCORRECT = 200009;
-    public static final int PHONE_CAPTCHA_SEND_TOO_FREQUENTLY = 200010;
-    public static final int PHONE_CAPTCHA_SEND_FAILED = 200011;
+    public static final int PHONE_CAPTCHA_INCORRECT = 200011;
+    public static final int PHONE_CAPTCHA_SEND_TOO_FREQUENTLY = 200012;
+    public static final int PHONE_CAPTCHA_SEND_FAILED = 200013;
 }

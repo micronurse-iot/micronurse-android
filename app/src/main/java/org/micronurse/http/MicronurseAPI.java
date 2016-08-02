@@ -1,6 +1,5 @@
 package org.micronurse.http;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
@@ -22,7 +21,7 @@ import org.micronurse.util.GsonUtil;
  * Created by shengyun-zhou on 5/23/16.
  */
 public class MicronurseAPI {
-    private static final String BASE_URL = "http://101.200.144.204:13000/micronurse";
+    private static final String BASE_URL = "http://101.200.144.204:13000/micronurse/v1/mobile";
     private static RequestQueue requestQueue = null;
     private Request<Result> request;
 
@@ -54,13 +53,16 @@ public class MicronurseAPI {
                     if(error.networkResponse.statusCode == 401 && result.getResultCode() == 401){
                         Toast.makeText(context, R.string.error_login_state_invalid, Toast.LENGTH_SHORT).show();
                         errorListener.onErrorResponse(error, result);
+                        Intent intent = new Intent(context, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
                         if(GlobalInfo.loginRecord != null) {
+                            intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, GlobalInfo.loginRecord.getPhoneNumber());
                             GlobalInfo.loginRecord.setToken(null);
                             GlobalInfo.loginRecord.save();
                         }
                         GlobalInfo.clearLoginUserInfo();
-                        Intent intent = new Intent(context, LoginActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
                         context.startActivity(intent);
                         return;
                     }

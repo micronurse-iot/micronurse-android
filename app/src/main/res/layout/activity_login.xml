@@ -5,10 +5,6 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".ui.activity.LoginActivity">
 
     <ScrollView
@@ -16,11 +12,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-
         <LinearLayout
             android:id="@+id/email_login_form"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingTop="@dimen/activity_vertical_margin"
+            android:paddingBottom="@dimen/activity_vertical_margin"
             android:orientation="vertical">
 
             <de.hdodenhof.circleimageview.CircleImageView
@@ -64,6 +63,7 @@
                         android:imeOptions="actionNext"
                         android:inputType="phone"
                         android:completionThreshold="1"
+                        android:maxLength="20"
                         android:maxLines="1" />
 
                 </android.support.design.widget.TextInputLayout>
@@ -99,7 +99,7 @@
                         android:imeOptions="actionDone"
                         android:inputType="textPassword"
                         android:maxLines="1"
-                        android:maxLength="30"/>
+                        android:maxLength="20"/>
 
                 </android.support.design.widget.TextInputLayout>
             </RelativeLayout>

@@ -8,6 +8,8 @@ import android.graphics.Bitmap;
 public class User {
     public static final char ACCOUNT_TPYE_OLDER = 'O';
     public static final char ACCOUNT_TYPE_GUARDIAN = 'G';
+    public static final char GENDER_MALE = 'M';
+    public static final char GENDER_FEMALE = 'F';
 
     private String phoneNumber;
     private String nickname;

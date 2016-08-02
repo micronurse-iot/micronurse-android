@@ -3,22 +3,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
-    android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    >
+    android:orientation="vertical">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/scrollView" >
+        android:id="@+id/scrollView">
 
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingTop="@dimen/activity_vertical_margin"
+            android:paddingBottom="@dimen/activity_vertical_margin">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -41,13 +40,14 @@
                     android:layout_toRightOf="@+id/icon_phone_register"
                     android:layout_centerVertical="true">
 
-                    <AutoCompleteTextView
+                    <EditText
                         android:id="@+id/register_phone_number"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/prompt_phone_number"
                         android:imeOptions="actionNext"
                         android:inputType="phone"
+                        android:maxLength="20"
                         android:maxLines="1" />
 
                 </android.support.design.widget.TextInputLayout>
@@ -58,7 +58,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp">
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <ImageView
                     android:id="@+id/icon_password_register"
@@ -70,10 +70,11 @@
                     android:src="@drawable/ic_key" />
 
                 <android.support.design.widget.TextInputLayout
+                    android:id="@+id/password_register_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_toRightOf="@+id/icon_password_register"
-                    android:layout_centerVertical="true">
+                    android:layout_marginBottom="@dimen/activity_vertical_margin"
+                    android:layout_toRightOf="@+id/icon_password_register">
 
                     <EditText
                         android:id="@+id/register_password"
@@ -83,80 +84,78 @@
                         android:imeOptions="actionNext"
                         android:inputType="textPassword"
                         android:maxLines="1"
-                        android:maxLength="30"/>
+                        android:maxLength="20"/>
                 </android.support.design.widget.TextInputLayout>
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp">
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_centerVertical="true">
+                    android:layout_below="@+id/password_register_layout"
+                    android:layout_alignLeft="@+id/password_register_layout">
+
+                    <EditText
+                        android:id="@+id/register_reconfirm_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/prompt_reconfirm_password"
+                        android:imeOptions="actionNext"
+                        android:inputType="textPassword"
+                        android:maxLines="1"
+                        android:maxLength="20" />
 
                 </android.support.design.widget.TextInputLayout>
 
+            </RelativeLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
+
                 <EditText
-                    android:id="@+id/register_reconfirm_password"
+                    android:id="@+id/register_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/prompt_reconfirm_password"
-                    android:imeOptions="actionDone"
-                    android:inputType="textPassword"
+                    android:imeOptions="actionNext"
+                    android:inputType="text"
+                    android:hint="@string/prompt_name"
                     android:maxLines="1"
-                    android:maxLength="30"
-                    android:layout_alignParentTop="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:layout_marginLeft="51dp"
-                    android:layout_marginStart="51dp" />
+                    android:maxLength="30"/>
 
-            </RelativeLayout>
+            </android.support.design.widget.TextInputLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="@dimen/large_text_size"
-                    android:textStyle="bold"
                     android:text="@string/prompt_sex"
                     android:id="@+id/register_sex"
-                    android:layout_marginLeft="51dp"
-                    android:layout_marginStart="51dp"
                     android:layout_centerVertical="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true" />
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"/>
 
                 <RadioGroup
-                    android:id="@+id/sex_group"
+                    android:id="@+id/register_sex_group"
                     android:orientation="horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignTop="@+id/register_sex"
-                    android:layout_centerHorizontal="true">
+                    android:layout_toRightOf="@+id/register_sex"
+                    android:layout_centerVertical="true">
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="@dimen/large_text_size"
-                        android:textStyle="bold"
                         android:text="@string/prompt_male"
                         android:id="@+id/register_male"
-                        android:layout_gravity="center_horizontal" />
+                        android:checked="true"
+                        android:layout_marginRight="@dimen/activity_horizontal_margin" />
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="@dimen/large_text_size"
-                        android:textStyle="bold"
                         android:text="@string/prompt_female"
                         android:id="@+id/register_female" />
                 </RadioGroup>
@@ -164,80 +163,36 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="@dimen/large_text_size"
-                    android:textStyle="bold"
-                    android:text="@string/prompt_name"
-                    android:id="@+id/register_name_label"
-                    android:layout_marginLeft="51dp"
-                    android:layout_marginStart="51dp"
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true" />
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_toRightOf="@id/register_name_label">
-
-                    <EditText
-                        android:id="@+id/register_name"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:imeOptions="actionDone"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:maxLength="30"/>
-
-                </android.support.design.widget.TextInputLayout>
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="@dimen/large_text_size"
-                    android:textStyle="bold"
                     android:text="@string/prompt_account_type"
                     android:id="@+id/register_account_type"
-                    android:layout_marginLeft="51dp"
-                    android:layout_marginStart="51dp"
                     android:layout_centerVertical="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true" />
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"/>
 
                 <RadioGroup
-                    android:id="@+id/account_group"
+                    android:id="@+id/register_account_type_group"
                     android:orientation="horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignTop="@+id/register_account_type"
+                    android:layout_centerVertical="true"
                     android:layout_toRightOf="@+id/register_account_type">
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="@dimen/large_text_size"
-                        android:textStyle="bold"
                         android:text="@string/prompt_elder"
                         android:id="@+id/register_account_elder"
-                        android:layout_gravity="center_horizontal" />
+                        android:checked="true"
+                        android:layout_marginRight="@dimen/activity_horizontal_margin"/>
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="@dimen/large_text_size"
-                        android:textStyle="bold"
                         android:text="@string/prompt_guardian"
                         android:id="@+id/register_account_guardian" />
                 </RadioGroup>
@@ -246,46 +201,40 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="@dimen/large_text_size"
-                    android:textStyle="bold"
-                    android:text="@string/prompt_identifying_code"
-                    android:id="@+id/register_identifying_label"
-                    android:layout_marginLeft="51dp"
-                    android:layout_marginStart="51dp"
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <android.support.design.widget.TextInputLayout
+                    android:id="@+id/register_identifying_code_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:layout_toRightOf="@id/register_identifying_label">
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:layout_toLeftOf="@+id/button_get_code"
+                    android:layout_toStartOf="@+id/button_get_code">
 
                     <EditText
                         android:id="@+id/register_identifying_code"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:imeOptions="actionDone"
+                        android:hint="@string/prompt_identifying_code"
                         android:inputType="text"
                         android:maxLines="1"
-                        android:maxLength="30"/>
+                        android:maxLength="10"/>
 
                 </android.support.design.widget.TextInputLayout>
-            </RelativeLayout>
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/action_identifying_code"
-                android:id="@+id/button_get_code"
-                android:layout_weight="0.5"
-                android:layout_gravity="end" />
+                <Button
+                    android:id="@+id/button_get_code"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/action_identifying_code"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentRight="true"/>
+
+            </RelativeLayout>
 
             <Button
                 android:id="@+id/button_register"
