@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.Toast;
 
 import com.activeandroid.query.Select;
 import com.android.volley.Request;
@@ -20,8 +19,6 @@ import org.micronurse.http.model.result.UserResult;
 import org.micronurse.model.User;
 import org.micronurse.ui.activity.older.OlderMainActivity;
 import org.micronurse.util.GlobalInfo;
-
-import java.util.List;
 
 public class WelcomeActivity extends AppCompatActivity {
     private void startLoginActivity() {
@@ -66,7 +63,7 @@ public class WelcomeActivity extends AppCompatActivity {
                                 public void onErrorResponse(VolleyError err, Result result) {
                                     startLoginActivity();
                                 }
-                            }, UserResult.class).startRequest();
+                            }, UserResult.class, false, null).startRequest();
                         }
                     }, new APIErrorListener() {
                         @Override
@@ -74,7 +71,7 @@ public class WelcomeActivity extends AppCompatActivity {
                             if (result == null || result.getResultCode() != 401)
                                 startLoginActivity();
                         }
-                    }, Result.class).startRequest();
+                    }, Result.class, false, null).startRequest();
                 }else{
                     startLoginActivity();
                 }

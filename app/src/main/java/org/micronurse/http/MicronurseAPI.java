@@ -1,5 +1,6 @@
 package org.micronurse.http;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
@@ -24,39 +25,54 @@ public class MicronurseAPI {
     private static final String BASE_URL = "http://101.200.144.204:13000/micronurse/v1/mobile";
     private static RequestQueue requestQueue = null;
     private Request<Result> request;
+    private ProgressDialog mStatusDialog;
 
-    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, Response.Listener<Result> listener,
+    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<Result> listener,
                          final APIErrorListener errorListener, Class<? extends Result> resultType){
+        this(context, apiURL, method, requestData, token, listener, errorListener, resultType, true,
+                context.getResources().getString(R.string.action_waiting));
+    }
+
+    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<Result> listener,
+                         final APIErrorListener errorListener, Class<? extends Result> resultType, boolean showStatus, String statusText){
         if(requestQueue == null)
             requestQueue = Volley.newRequestQueue(context);
-        request = new JSONRequest(BASE_URL + apiURL, method, token, listener, new Response.ErrorListener() {
+        request = new JSONRequest(BASE_URL + apiURL, method, token, new Response.Listener<Result>() {
+            @Override
+            public void onResponse(Result response) {
+                if (mStatusDialog != null)
+                    mStatusDialog.dismiss();
+                listener.onResponse(response);
+            }
+        }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
-                if(error.getCause() instanceof JsonSyntaxException) {
+                if (mStatusDialog != null)
+                    mStatusDialog.dismiss();
+                if (error.getCause() instanceof JsonSyntaxException) {
                     Toast.makeText(context, R.string.response_data_corrupt, Toast.LENGTH_SHORT).show();
                     return;
-                }
-                else if(error.networkResponse == null) {
+                } else if (error.networkResponse == null) {
                     Toast.makeText(context, R.string.network_error, Toast.LENGTH_SHORT).show();
                     errorListener.onErrorResponse(error, null);
                     return;
-                }else{
+                } else {
                     Result result;
                     try {
                         result = GsonUtil.getGson().fromJson(new String(error.networkResponse.data), Result.class);
-                    }catch (JsonSyntaxException jse){
+                    } catch (JsonSyntaxException jse) {
                         jse.printStackTrace();
                         errorListener.onErrorResponse(error, new Result(-1, context.getString(R.string.unknown_error)));
                         return;
                     }
-                    if(error.networkResponse.statusCode == 401 && result.getResultCode() == 401){
+                    if (error.networkResponse.statusCode == 401 && result.getResultCode() == 401) {
                         Toast.makeText(context, R.string.error_login_state_invalid, Toast.LENGTH_SHORT).show();
                         errorListener.onErrorResponse(error, result);
                         Intent intent = new Intent(context, LoginActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-                        if(GlobalInfo.loginRecord != null) {
+                        if (GlobalInfo.loginRecord != null) {
                             intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, GlobalInfo.loginRecord.getPhoneNumber());
                             GlobalInfo.loginRecord.setToken(null);
                             GlobalInfo.loginRecord.save();
@@ -65,18 +81,25 @@ public class MicronurseAPI {
 
                         context.startActivity(intent);
                         return;
-                    }
-                    else if(error.networkResponse.statusCode == 500) {
+                    } else if (error.networkResponse.statusCode == 500) {
                         Toast.makeText(context, R.string.server_internal_error, Toast.LENGTH_SHORT).show();
                     }
                     errorListener.onErrorResponse(error, result);
                 }
             }
         }, requestData, resultType);
+
+        if(showStatus) {
+            mStatusDialog = new ProgressDialog(context);
+            mStatusDialog.setMessage(statusText);
+            mStatusDialog.setCancelable(false);
+        }
     }
 
     public void startRequest(){
         requestQueue.add(request);
+        if(mStatusDialog != null)
+            mStatusDialog.show();
     }
 
     public void cancelRequest(){

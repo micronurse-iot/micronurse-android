@@ -16,4 +16,5 @@
     <dimen name="nav_header_portrait_size">72dp</dimen>
     <dimen name="normal_icon_size">32dp</dimen>
     <dimen name="xlarge_icon_size">128dp</dimen>
+    <dimen name="actionbar_elevation">10dp</dimen>
 </resources>

@@ -1,13 +1,10 @@
 package org.micronurse.ui.activity;
 
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
@@ -37,7 +34,7 @@ import org.micronurse.http.model.result.UserResult;
 import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.model.User;
 import org.micronurse.ui.activity.older.OlderMainActivity;
-import org.micronurse.ui.activity.sms.SmsVerifyActivity;
+import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 
 import java.util.ArrayList;
@@ -135,7 +132,7 @@ public class LoginActivity extends AppCompatActivity {
         mForgetPassword.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                intent1 = new Intent(LoginActivity.this,SmsVerifyActivity.class);
+                intent1 = new Intent(LoginActivity.this, ResetPasswordActivity.class);
                 startActivity(intent1);
             }
         });
@@ -183,108 +180,62 @@ public class LoginActivity extends AppCompatActivity {
         final String phoneNumber = mPhoneNumberView.getText().toString();
         String password = mPasswordView.getText().toString();
 
-        boolean cancel = false;
-        View focusView = null;
-
         // Check for a valid phone number.
-        if (TextUtils.isEmpty(phoneNumber)) {
-            mPhoneNumberView.setError(getString(R.string.error_phone_number_required));
-            focusView = mPhoneNumberView;
-            cancel = true;
-        } else if (!isPhoneNumValid(phoneNumber)) {
-            mPhoneNumberView.setError(getString(R.string.error_invalid_phone_number));
-            focusView = mPhoneNumberView;
-            cancel = true;
-        }
+        if(!CheckUtil.checkPhoneNumber(mPhoneNumberView))
+            return;
 
         // Check for a valid password, if the user entered one.
-        if (TextUtils.isEmpty(password)) {
-            mPasswordView.setError(getString(R.string.error_password_required));
-            focusView = mPasswordView;
-            cancel = true;
-        }
+        if (!CheckUtil.checkPassword(mPasswordView))
+            return;
 
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-        } else {
-            // Kick off a background task to perform the user login attempt.
-
-            final ProgressDialog progressDialog = new ProgressDialog(this);
-            progressDialog.setCancelable(true);
-            progressDialog.setMessage(getString(R.string.action_logining));
-            progressDialog.show();
-
-            LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
-            final MicronurseAPI request = new MicronurseAPI(LoginActivity.this, "/account/login", Request.Method.PUT, loginRequest, null,
-                    new Response.Listener<Result>() {
-                        @Override
-                        public void onResponse(Result response) {
-                            LoginResult result = (LoginResult)response;
-                            GlobalInfo.token = result.getToken();
-                            progressDialog.setCancelable(false);
-                            new MicronurseAPI(LoginActivity.this, "/account/user_basic_info/by_phone/" + phoneNumber, Request.Method.GET, null, null,
-                                new Response.Listener<Result>(){
-                                    @Override
-                                    public void onResponse(Result response) {
-                                        progressDialog.dismiss();
-                                        UserResult userResult = (UserResult)response;
-                                        GlobalInfo.user = userResult.getUser();
-                                        GlobalInfo.user.setPhoneNumber(phoneNumber);
-                                        switch (GlobalInfo.user.getAccountType()){
-                                            case User.ACCOUNT_TPYE_OLDER:
-                                                Intent intent = new Intent(LoginActivity.this, OlderMainActivity.class);
-                                                finish();
-                                                startActivity(intent);
-                                                break;
-                                        }
+        // Kick off a background task to perform the user login attempt.
+        LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
+        final MicronurseAPI request = new MicronurseAPI(LoginActivity.this, "/account/login", Request.Method.PUT, loginRequest, null,
+                new Response.Listener<Result>() {
+                    @Override
+                    public void onResponse(Result response) {
+                        LoginResult result = (LoginResult)response;
+                        GlobalInfo.token = result.getToken();
+                        new MicronurseAPI(LoginActivity.this, "/account/user_basic_info/by_phone/" + phoneNumber, Request.Method.GET, null, null,
+                            new Response.Listener<Result>(){
+                                @Override
+                                public void onResponse(Result response) {
+                                    UserResult userResult = (UserResult)response;
+                                    GlobalInfo.user = userResult.getUser();
+                                    GlobalInfo.user.setPhoneNumber(phoneNumber);
+                                    switch (GlobalInfo.user.getAccountType()){
+                                        case User.ACCOUNT_TPYE_OLDER:
+                                            Intent intent = new Intent(LoginActivity.this, OlderMainActivity.class);
+                                            finish();
+                                            startActivity(intent);
+                                            break;
                                     }
-                                }, new APIErrorListener(){
-                                    @Override
-                                    public void onErrorResponse(VolleyError err, Result result) {
-                                        progressDialog.dismiss();
-                                        Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
-                                    }
-                                }, UserResult.class).startRequest();
-                        }
-                    }, new APIErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error, Result result) {
-                            progressDialog.dismiss();
-                            if(result == null)
-                                return;
-                            switch (result.getResultCode()){
-                                case PublicResultCode.LOGIN_USER_NOT_EXIST:
-                                    mPhoneNumberView.setError(result.getMessage());
-                                    mPhoneNumberView.requestFocus();
-                                    break;
-                                case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
-                                    mPasswordView.setError(result.getMessage());
-                                    mPasswordView.requestFocus();
-                                    break;
-                            }
+                                }
+                            }, new APIErrorListener(){
+                                @Override
+                                public void onErrorResponse(VolleyError err, Result result) {
+                                    Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
+                                }
+                            }, UserResult.class).startRequest();
                     }
-            }, LoginResult.class);
-            request.startRequest();
-            progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    dialog.dismiss();
-                    request.cancelRequest();
+                }, new APIErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error, Result result) {
+                        if(result == null)
+                            return;
+                        switch (result.getResultCode()){
+                            case PublicResultCode.LOGIN_USER_NOT_EXIST:
+                                mPhoneNumberView.setError(result.getMessage());
+                                mPhoneNumberView.requestFocus();
+                                break;
+                            case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
+                                mPasswordView.setError(result.getMessage());
+                                mPasswordView.requestFocus();
+                                break;
+                        }
                 }
-            });
-        }
+        }, LoginResult.class, true, getString(R.string.action_logining));
+        request.startRequest();
     }
-
-    private boolean isPhoneNumValid(String phoneNumber){
-        for(int i = 0; i < phoneNumber.length(); i++){
-            if(!(phoneNumber.charAt(i) >= '0' && phoneNumber.charAt(i) <= '9'))
-                return false;
-        }
-        return true;
-    }
-
 }
 

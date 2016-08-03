@@ -2,8 +2,6 @@ package org.micronurse.ui.activity.older;
 
 import android.content.Intent;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 
@@ -18,9 +16,6 @@ import org.micronurse.http.model.result.Result;
 import org.micronurse.ui.activity.AppCompatPreferenceActivity;
 import org.micronurse.ui.activity.LoginActivity;
 import org.micronurse.util.GlobalInfo;
-
-import java.lang.reflect.Method;
-import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
     @Override

@@ -3,7 +3,6 @@ package org.micronurse.ui.activity;
  * Created by 1111 on 2016/7/30.
  */
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
@@ -24,13 +23,15 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
 import org.micronurse.R;
-import org.micronurse.database.model.PhoneCaptchaRequest;
+import org.micronurse.http.model.request.PhoneCaptchaRequest;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.request.RegisterRequest;
 import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.model.User;
+import org.micronurse.util.CheckUtil;
+import org.micronurse.util.HttpAPIUtil;
 
 public class RegisterActivity extends AppCompatActivity{
 
@@ -42,7 +43,6 @@ public class RegisterActivity extends AppCompatActivity{
     private EditText mCaptchaView;
     private RadioGroup mGenderGroup;
     private RadioGroup mAccountTypeGroup;
-    private ProgressDialog mProgressDialog;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,7 +61,7 @@ public class RegisterActivity extends AppCompatActivity{
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_NEXT) {
-                    if(checkPhonenumber())
+                    if(CheckUtil.checkPhoneNumber(actvPhoneNumberView))
                         etPasswordView.requestFocus();
                     return true;
                 }
@@ -73,7 +73,7 @@ public class RegisterActivity extends AppCompatActivity{
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
                 if(id == EditorInfo.IME_ACTION_NEXT){
-                    if(checkPassword())
+                    if(CheckUtil.checkPassword(etPasswordView))
                         etrPasswordView.requestFocus();
                     return true;
                 }
@@ -85,7 +85,7 @@ public class RegisterActivity extends AppCompatActivity{
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
                 if(id == EditorInfo.IME_ACTION_NEXT){
-                    if(recheckPassword())
+                    if(CheckUtil.recheckPassword(etPasswordView, etrPasswordView))
                         mNicknameView.requestFocus();
                     return true;
                 }
@@ -115,9 +115,6 @@ public class RegisterActivity extends AppCompatActivity{
             }
         });
 
-        mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setCancelable(false);
-
         ((Button)findViewById(R.id.button_get_code)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,77 +130,6 @@ public class RegisterActivity extends AppCompatActivity{
         });
     }
 
-    private boolean isPhoneNumValid(String phoneNumber){
-        for(int i = 0; i < phoneNumber.length(); i++){
-            if(!(phoneNumber.charAt(i) >= '0' && phoneNumber.charAt(i) <= '9'))
-                return false;
-        }
-        return true;
-    }
-
-    private boolean isPasswordValid(String password){
-        return !(password.length() < 6 || password.length() > 20);
-
-    }
-
-    private boolean checkPhonenumber(){
-        // Reset errors.
-        actvPhoneNumberView.setError(null);
-
-        // Store values at the time of the login attempt.
-        final String phoneNumber = actvPhoneNumberView.getText().toString();
-        boolean cancel = false;
-        View focusView = null;
-
-        // Check for a valid phone number.
-        if (TextUtils.isEmpty(phoneNumber)) {
-            actvPhoneNumberView.setError(getString(R.string.error_phone_number_required));
-            focusView = actvPhoneNumberView;
-            cancel = true;
-        }
-        else if (!isPhoneNumValid(phoneNumber)) {
-            actvPhoneNumberView.setError(getString(R.string.error_invalid_phone_number));
-            focusView = actvPhoneNumberView;
-            cancel = true;
-        }
-
-        if (cancel) {
-            focusView.requestFocus();
-            return false;
-        }
-        else
-            return true;
-    }
-
-    private  boolean checkPassword(){
-        etrPasswordView.setError(null);
-        etPasswordView.setError(null);
-        String password = etPasswordView.getText().toString();
-        if (TextUtils.isEmpty(password) || !isPasswordValid(password)) {
-            etPasswordView.setError(getString(R.string.error_password_required));
-            etPasswordView.requestFocus();
-            return true;
-        }
-        return true;
-
-    }
-
-    private boolean recheckPassword(){
-        etrPasswordView.setError(null);
-        etPasswordView.setError(null);
-        String rpassword = etrPasswordView.getText().toString();
-        String password = etPasswordView.getText().toString();
-
-        if(!rpassword.equals(password)){
-            etPasswordView.setError(getString(R.string.error_password_inconstancy));
-            etPasswordView.requestFocus();
-            etrPasswordView.setError(getString(R.string.error_password_inconstancy));
-            etrPasswordView.requestFocus();
-            return false;
-        }
-        return true;
-    }
-
     private boolean checkNickname(){
         mNicknameView.setError(null);
         if(TextUtils.isEmpty(mNicknameView.getText())){
@@ -214,47 +140,23 @@ public class RegisterActivity extends AppCompatActivity{
         return true;
     }
 
-
-    private boolean checkCaptcha(){
-        mCaptchaView.setError(null);
-        if(TextUtils.isEmpty(mCaptchaView.getText())){
-            mCaptchaView.setError(getString(R.string.error_captcha_empty));
-            mCaptchaView.requestFocus();
-            return false;
-        }
-        return true;
-    }
-
     private void sendCaptcha(){
-        if(!checkPhonenumber()) {
+        if(!CheckUtil.checkPhoneNumber(actvPhoneNumberView)) {
             return;
         }
-        new MicronurseAPI(RegisterActivity.this, "/account/send_captcha", Request.Method.PUT,
-                new PhoneCaptchaRequest(actvPhoneNumberView.getText().toString()), null,
-                new Response.Listener<Result>() {
-                    @Override
-                    public void onResponse(Result response) {
-                        Toast.makeText(RegisterActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                }, new APIErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError err, Result result) {
-                        if(result != null)
-                            Toast.makeText(RegisterActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                }, Result.class).startRequest();
+        HttpAPIUtil.sendCaptcha(this, new PhoneCaptchaRequest(actvPhoneNumberView.getText().toString()));
     }
 
     private void register(){
-        if(!checkPhonenumber())
+        if(!CheckUtil.checkPhoneNumber(actvPhoneNumberView))
             return;
-        if(!checkPassword())
+        if(!CheckUtil.checkPassword(etPasswordView))
             return;
-        if(!recheckPassword())
+        if(!CheckUtil.recheckPassword(etPasswordView, etrPasswordView))
             return;
-        if(!checkNickname())
+        if(!CheckUtil.checkNickname(mNicknameView))
             return;
-        if(!checkCaptcha())
+        if(!CheckUtil.checkCaptcha(mCaptchaView))
             return;
         char gender = User.GENDER_MALE;
         switch (mGenderGroup.getCheckedRadioButtonId()){
@@ -274,8 +176,6 @@ public class RegisterActivity extends AppCompatActivity{
                 accountType = User.ACCOUNT_TYPE_GUARDIAN;
                 break;
         }
-        mProgressDialog.setMessage(getString(R.string.action_registering));
-        mProgressDialog.show();
         new MicronurseAPI(this, "/account/register", Request.Method.POST, new RegisterRequest(
                 actvPhoneNumberView.getText().toString(),
                 etPasswordView.getText().toString(),
@@ -284,7 +184,6 @@ public class RegisterActivity extends AppCompatActivity{
         ), null, new Response.Listener<Result>() {
             @Override
             public void onResponse(Result response) {
-                mProgressDialog.dismiss();
                 Toast.makeText(RegisterActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                 intent.putExtra(LoginActivity.BUNDLE_AUTO_LOGIN_KEY, true);
@@ -296,7 +195,6 @@ public class RegisterActivity extends AppCompatActivity{
         }, new APIErrorListener() {
             @Override
             public void onErrorResponse(VolleyError err, Result result) {
-                mProgressDialog.dismiss();
                 if(result == null)
                     return;
                 switch (result.getResultCode()){
@@ -322,6 +220,6 @@ public class RegisterActivity extends AppCompatActivity{
                         Toast.makeText(RegisterActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
-        }, Result.class).startRequest();
+        }, Result.class, true, getString(R.string.action_registering)).startRequest();
     }
 }

@@ -32,8 +32,13 @@
             android:name=".ui.activity.older.OlderMainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".ui.activity.sms.SmsVerifyActivity"
-            android:label="SmsVerifyActivity"/>
+            android:name=".ui.activity.ResetPasswordActivity"
+            android:label="@string/action_reset_password"
+            android:parentActivityName=".ui.activity.LoginActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.micronurse.ui.activity.LoginActivity" />
+        </activity>
         <activity
             android:name=".ui.activity.RegisterActivity"
             android:label="@string/action_new_user"
@@ -52,12 +57,7 @@
         </activity>
         <activity
             android:name=".ui.activity.older.SettingsActivity"
-            android:label="@string/action_settings"
-            android:parentActivityName=".ui.activity.older.OlderMainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.micronurse.ui.activity.older.OlderMainActivity" />
-        </activity>
+            android:label="@string/action_settings"/>
     </application>
 
 </manifest>
