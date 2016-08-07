@@ -68,7 +68,7 @@ public class MonitorFragment extends Fragment {
                 case 0:
                     return getString(R.string.action_family_monitor);
                 case 1:
-                    return getString(R.string.action_guard_theif_monitor);
+                    return getString(R.string.action_guard_thief_monitor);
                 case 2:
                     return getString(R.string.action_health_monitor);
                 case 3:

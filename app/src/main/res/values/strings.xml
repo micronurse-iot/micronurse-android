@@ -57,8 +57,11 @@
     <string name="action_exit">退出应用</string>
 
     <string name="action_family_monitor">家庭环境</string>
-    <string name="action_guard_theif_monitor">防盗</string>
+    <string name="action_guard_thief_monitor">防盗</string>
     <string name="action_health_monitor">身体健康</string>
     <string name="action_going_out_monitor">出行</string>
-    
+
+    <!--Strings related to guardTheif monitor-->
+
+    <string name="sites_prompt">请选择监控区域</string>
 </resources>
