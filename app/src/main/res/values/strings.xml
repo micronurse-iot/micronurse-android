@@ -60,6 +60,8 @@
     <string name="action_guard_thief_monitor">防盗</string>
     <string name="action_health_monitor">身体健康</string>
     <string name="action_going_out_monitor">出行</string>
+    <string name="action_call_for_help">一键呼救</string>
+
 
     <!--Strings related to guardTheif monitor-->
 
