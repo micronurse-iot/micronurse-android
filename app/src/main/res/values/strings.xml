@@ -66,4 +66,11 @@
     <!--Strings related to guardTheif monitor-->
 
     <string name="sites_prompt">请选择监控区域</string>
+
+    <string name="family_monitor_safe_level">安全等级：</string>
+    <string name="danger">危险！</string>
+    <string name="hidden_in_danger">存在隐患</string>
+    <string name="safe">安全</string>
+    <string name="prompt_temperature">温度：</string>
+    <string name="prompt_humidity">湿度：</string>
 </resources>

@@ -17,4 +17,7 @@
     <dimen name="normal_icon_size">32dp</dimen>
     <dimen name="xlarge_icon_size">128dp</dimen>
     <dimen name="actionbar_elevation">10dp</dimen>
+
+    <dimen name="left_margin">16dp</dimen>
+    <dimen name="safe_level_size">120dp</dimen>
 </resources>
