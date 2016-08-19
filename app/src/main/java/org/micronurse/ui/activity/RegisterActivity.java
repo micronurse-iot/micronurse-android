@@ -176,7 +176,7 @@ public class RegisterActivity extends AppCompatActivity{
                 accountType = User.ACCOUNT_TYPE_GUARDIAN;
                 break;
         }
-        new MicronurseAPI(this, "/account/register", Request.Method.POST, new RegisterRequest(
+        new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_REGISTER), Request.Method.POST, new RegisterRequest(
                 actvPhoneNumberView.getText().toString(),
                 etPasswordView.getText().toString(),
                 mNicknameView.getText().toString(),
@@ -195,9 +195,9 @@ public class RegisterActivity extends AppCompatActivity{
         }, new APIErrorListener() {
             @Override
             public void onErrorResponse(VolleyError err, Result result) {
-                if(result == null)
+                if (result == null)
                     return;
-                switch (result.getResultCode()){
+                switch (result.getResultCode()) {
                     case PublicResultCode.PHONE_NUM_INVALID:
                     case PublicResultCode.PHONE_NUM_REGISTERED:
                         actvPhoneNumberView.setError(result.getMessage());
@@ -220,6 +220,6 @@ public class RegisterActivity extends AppCompatActivity{
                         Toast.makeText(RegisterActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
-        }, Result.class, true, getString(R.string.action_registering)).startRequest();
+        },Result.class, true, getString(R.string.action_registering)).startRequest();
     }
 }

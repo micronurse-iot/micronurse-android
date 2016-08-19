@@ -2,86 +2,61 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activity.older.main.monitor.HealthMonitorFragment"
-    android:orientation="vertical"
-    android:weightSum="1">
+    tools:context=".ui.activity.older.main.monitor.FamilyMonitorFragment"
+    android:orientation="vertical">
 
-    <!-- TODO: Update blank fragment layout -->
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical">
 
-
-    <ScrollView
-    android:id="@+id/health_monitor"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-        <LinearLayout
-            android:id="@+id/health_condition"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <android.support.v4.widget.SwipeRefreshLayout
-                xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="wrap_content"
-                android:layout_height="400dp"
-                android:orientation="vertical"
-                android:id="@+id/swipeLayout">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="健康状况:"
-                    android:id="@+id/text_health_condition"
-                    style="@android:style/TextAppearance.Medium" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/text_temperature"
-                    style="@android:style/TextAppearance.Medium"
-                    android:singleLine="false"
-                    android:textColor="@color/accent_material_light" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/text_pulse"
-                    style="@android:style/TextAppearance.Medium"
-                    android:textColor="@color/accent_material_light" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@android:style/TextAppearance.Medium"
-                    android:id="@+id/text_blood_pressure"
-                    android:textColor="@color/accent_material_light" />
-
-            </android.support.v4.widget.SwipeRefreshLayout>
+            android:layout_height="match_parent">
 
             <LinearLayout
-                android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.13">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/action_medication_reminder"
-                    android:id="@+id/action_remind_pills"
-                    android:layout_gravity="left"
-                    android:layout_weight="0.5"
-                    android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/safe_level_size"
+                    android:orientation="horizontal"
+                    android:gravity="center">
 
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/action_call_for_help"
-                    android:id="@+id/action_call_for_help"
-                    android:layout_gravity="right"
-                    android:layout_weight="0.5"
-                    android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/health_monitor_health_condition"
+                        android:gravity="center_vertical"
+                        android:textColor="@android:color/black"
+                        android:textSize="@dimen/normal_text_size"
+                        android:layout_marginRight="@dimen/activity_horizontal_margin"/>
+
+                    <TextView
+                        android:id="@+id/health_condition"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/green_500"
+                        android:textStyle="bold"
+                        android:text="@string/health_good"
+                        android:textSize="@dimen/xlarge_text_size"
+                        />
+
+                </LinearLayout>
+
+                <include android:id="@+id/fever_item"
+                    layout="@layout/monitor_data_item"/>
+                <include android:id="@+id/pulse_item"
+                    layout="@layout/monitor_data_item"/>
+                <include android:id="@+id/blood_pressure_item"
+                    layout="@layout/monitor_data_item"/>
 
             </LinearLayout>
 
-        </LinearLayout>>
-    </ScrollView>>
+        </ScrollView>
+    </android.support.v4.widget.SwipeRefreshLayout>
 
 </LinearLayout>

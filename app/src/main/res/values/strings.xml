@@ -62,15 +62,20 @@
     <string name="action_going_out_monitor">出行</string>
     <string name="action_call_for_help">一键呼救</string>
 
-
-    <!--Strings related to guardTheif monitor-->
-
-    <string name="sites_prompt">请选择监控区域</string>
-
-    <string name="family_monitor_safe_level">安全等级：</string>
-    <string name="danger">危险！</string>
+    <string name="update_time">更新时间：</string>
+    <string name="family_monitor_safe_level">安全等级</string>
+    <string name="danger">危险</string>
     <string name="hidden_in_danger">存在隐患</string>
     <string name="safe">安全</string>
-    <string name="prompt_temperature">温度：</string>
-    <string name="prompt_humidity">湿度：</string>
+    <string name="prompt_temperature">温度</string>
+    <string name="prompt_humidity">湿度</string>
+    <string name="prompt_smoke">烟雾浓度</string>
+
+    <string name="health_monitor_health_condition">健康状况</string>
+    <string name="health_good">良好</string>
+    <string name="health_so">一般</string>
+    <string name="health_bad">较差</string>
+    <string name="pulse">脉搏</string>
+    <string name="fever">体温</string>
+    <string name="blood_pressure">血压</string>
 </resources>

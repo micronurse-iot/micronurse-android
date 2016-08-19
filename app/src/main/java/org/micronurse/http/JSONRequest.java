@@ -18,18 +18,18 @@ import java.util.Map;
 /**
  * Created by shengyun-zhou on 5/23/16.
  */
-class JSONRequest extends Request<Result> {
-    private Response.Listener<Result> mListener;
-    private Class<? extends Result> mResultType;
+class JSONRequest<T extends Result> extends Request<T> {
+    private Response.Listener<T> mListener;
+    private Class<T> mResultClass;
     private Object mRequestData;
     private Map<String, String> mHeaderMap = new HashMap<>();
 
-    public JSONRequest(String url, int method, String token, Response.Listener<Result> listener, Response.ErrorListener errorListener,
-                       Object requestData, Class<? extends Result> resultType) {
+    public JSONRequest(String url, int method, String token, Response.Listener<T> listener, Response.ErrorListener errorListener,
+                       Object requestData, Class<T> resultType) {
         super(method, url, errorListener);
+        mResultClass = resultType;
         mRequestData = requestData;
         mListener = listener;
-        mResultType = resultType;
         if(token != null && !token.isEmpty())
             mHeaderMap.put("Auth-Token", token);
     }
@@ -53,14 +53,14 @@ class JSONRequest extends Request<Result> {
     }
 
     @Override
-    protected Response<Result> parseNetworkResponse(NetworkResponse response) {
+    protected Response<T> parseNetworkResponse(NetworkResponse response) {
         try {
             String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
             if(response.statusCode == 204){
                 return Response.success(null,
                         HttpHeaderParser.parseCacheHeaders(response));
             }
-            return Response.success(GsonUtil.getGson().fromJson(jsonString, mResultType),
+            return Response.success(GsonUtil.getGson().fromJson(jsonString, mResultClass),
                     HttpHeaderParser.parseCacheHeaders(response));
         } catch (UnsupportedEncodingException e) {
             return Response.error(new ParseError(e));
@@ -70,7 +70,7 @@ class JSONRequest extends Request<Result> {
     }
 
     @Override
-    protected void deliverResponse(Result result) {
+    protected void deliverResponse(T result) {
         mListener.onResponse(result);
     }
 }

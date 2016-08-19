@@ -190,50 +190,48 @@ public class LoginActivity extends AppCompatActivity {
 
         // Kick off a background task to perform the user login attempt.
         LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
-        final MicronurseAPI request = new MicronurseAPI(LoginActivity.this, "/account/login", Request.Method.PUT, loginRequest, null,
-                new Response.Listener<Result>() {
+        final MicronurseAPI<LoginResult> request = new MicronurseAPI<>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_LOGIN), Request.Method.PUT, loginRequest, null,
+                new Response.Listener<LoginResult>() {
                     @Override
-                    public void onResponse(Result response) {
-                        LoginResult result = (LoginResult)response;
-                        GlobalInfo.token = result.getToken();
-                        new MicronurseAPI(LoginActivity.this, "/account/user_basic_info/by_phone/" + phoneNumber, Request.Method.GET, null, null,
-                            new Response.Listener<Result>(){
-                                @Override
-                                public void onResponse(Result response) {
-                                    UserResult userResult = (UserResult)response;
-                                    GlobalInfo.user = userResult.getUser();
-                                    GlobalInfo.user.setPhoneNumber(phoneNumber);
-                                    switch (GlobalInfo.user.getAccountType()){
-                                        case User.ACCOUNT_TPYE_OLDER:
-                                            Intent intent = new Intent(LoginActivity.this, OlderMainActivity.class);
-                                            finish();
-                                            startActivity(intent);
-                                            break;
+                    public void onResponse(LoginResult response) {
+                        GlobalInfo.token = response.getToken();
+                        new MicronurseAPI<UserResult>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_USER_BASIC_INFO_BY_PHONE, phoneNumber), Request.Method.GET, null, null,
+                                new Response.Listener<UserResult>() {
+                                    @Override
+                                    public void onResponse(UserResult response) {
+                                        GlobalInfo.user = response.getUser();
+                                        GlobalInfo.user.setPhoneNumber(phoneNumber);
+                                        switch (GlobalInfo.user.getAccountType()) {
+                                            case User.ACCOUNT_TPYE_OLDER:
+                                                Intent intent = new Intent(LoginActivity.this, OlderMainActivity.class);
+                                                finish();
+                                                startActivity(intent);
+                                                break;
+                                        }
                                     }
-                                }
-                            }, new APIErrorListener(){
-                                @Override
-                                public void onErrorResponse(VolleyError err, Result result) {
-                                    Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
-                                }
-                            }, UserResult.class).startRequest();
+                                }, new APIErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError err, Result result) {
+                                Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
+                            }
+                        }, UserResult.class).startRequest();
                     }
                 }, new APIErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error, Result result) {
-                        if(result == null)
-                            return;
-                        switch (result.getResultCode()){
-                            case PublicResultCode.LOGIN_USER_NOT_EXIST:
-                                mPhoneNumberView.setError(result.getMessage());
-                                mPhoneNumberView.requestFocus();
-                                break;
-                            case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
-                                mPasswordView.setError(result.getMessage());
-                                mPasswordView.requestFocus();
-                                break;
-                        }
+            @Override
+            public void onErrorResponse(VolleyError error, Result result) {
+                if (result == null)
+                    return;
+                switch (result.getResultCode()) {
+                    case PublicResultCode.LOGIN_USER_NOT_EXIST:
+                        mPhoneNumberView.setError(result.getMessage());
+                        mPhoneNumberView.requestFocus();
+                        break;
+                    case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
+                        mPasswordView.setError(result.getMessage());
+                        mPasswordView.requestFocus();
+                        break;
                 }
+            }
         }, LoginResult.class, true, getString(R.string.action_logining));
         request.startRequest();
     }

@@ -19,5 +19,6 @@
     <dimen name="actionbar_elevation">10dp</dimen>
 
     <dimen name="left_margin">16dp</dimen>
-    <dimen name="safe_level_size">120dp</dimen>
+    <dimen name="safe_level_size">100dp</dimen>
+    <dimen name="item_padding">8dp</dimen>
 </resources>

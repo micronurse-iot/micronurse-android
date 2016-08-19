@@ -1,8 +1,6 @@
 package org.micronurse.ui.activity.older.main;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -15,7 +13,6 @@ import android.view.ViewGroup;
 import org.micronurse.R;
 import org.micronurse.ui.activity.older.main.monitor.FamilyMonitorFragment;
 import org.micronurse.ui.activity.older.main.monitor.GoingoutMonitorFragment;
-import org.micronurse.ui.activity.older.main.monitor.GuardTheifMonitorFragment;
 import org.micronurse.ui.activity.older.main.monitor.HealthMonitorFragment;
 
 public class MonitorFragment extends Fragment {
@@ -48,10 +45,8 @@ public class MonitorFragment extends Fragment {
                 case 0:
                     return new FamilyMonitorFragment();
                 case 1:
-                    return new GuardTheifMonitorFragment();
-                case 2:
                     return new HealthMonitorFragment();
-                case 3:
+                case 2:
                     return new GoingoutMonitorFragment();
             }
             return null;
@@ -59,7 +54,7 @@ public class MonitorFragment extends Fragment {
 
         @Override
         public int getCount() {
-            return 4;
+            return 3;
         }
 
         @Override
@@ -68,10 +63,8 @@ public class MonitorFragment extends Fragment {
                 case 0:
                     return getString(R.string.action_family_monitor);
                 case 1:
-                    return getString(R.string.action_guard_thief_monitor);
-                case 2:
                     return getString(R.string.action_health_monitor);
-                case 3:
+                case 2:
                     return getString(R.string.action_going_out_monitor);
             }
             return null;

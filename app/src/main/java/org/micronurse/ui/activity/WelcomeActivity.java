@@ -38,17 +38,16 @@ public class WelcomeActivity extends AppCompatActivity {
                 final LoginUserRecord loginUserRecord = new Select().from(LoginUserRecord.class)
                         .orderBy("LastLoginTime DESC").limit(1).executeSingle();
                 if(loginUserRecord != null && loginUserRecord.getToken() != null && !loginUserRecord.getToken().isEmpty()) {
-                    new MicronurseAPI(WelcomeActivity.this, "/account/check_login", Request.Method.GET,
+                    new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_CHECK_LOGIN), Request.Method.GET,
                             null, loginUserRecord.getToken(), new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {
                             GlobalInfo.token = loginUserRecord.getToken();
-                            new MicronurseAPI(WelcomeActivity.this, "/account/user_basic_info/by_phone/" + loginUserRecord.getPhoneNumber(), Request.Method.GET, null, null,
-                                    new Response.Listener<Result>() {
+                            new MicronurseAPI<UserResult>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_USER_BASIC_INFO_BY_PHONE, loginUserRecord.getPhoneNumber()), Request.Method.GET, null, null,
+                                    new Response.Listener<UserResult>() {
                                         @Override
-                                        public void onResponse(Result response) {
-                                            UserResult userResult = (UserResult) response;
-                                            GlobalInfo.user = userResult.getUser();
+                                        public void onResponse(UserResult response) {
+                                            GlobalInfo.user = response.getUser();
                                             GlobalInfo.user.setPhoneNumber(loginUserRecord.getPhoneNumber());
                                             switch (GlobalInfo.user.getAccountType()) {
                                                 case User.ACCOUNT_TPYE_OLDER:

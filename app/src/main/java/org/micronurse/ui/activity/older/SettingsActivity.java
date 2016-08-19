@@ -27,7 +27,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        new MicronurseAPI(SettingsActivity.this, "/account/logout", Request.Method.DELETE,
+                        new MicronurseAPI<Result>(SettingsActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_LOGOUT), Request.Method.DELETE,
                                 null, GlobalInfo.token, new Response.Listener<Result>() {
                             @Override
                             public void onResponse(Result response) {

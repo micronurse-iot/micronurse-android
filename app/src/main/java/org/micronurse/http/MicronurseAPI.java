@@ -3,6 +3,7 @@ package org.micronurse.http;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -21,25 +22,25 @@ import org.micronurse.util.GsonUtil;
 /**
  * Created by shengyun-zhou on 5/23/16.
  */
-public class MicronurseAPI {
+public class MicronurseAPI<T extends Result> {
     private static final String BASE_URL = "http://101.200.144.204:13000/micronurse/v1/mobile";
     private static RequestQueue requestQueue = null;
-    private Request<Result> request;
+    private Request<T> request;
     private ProgressDialog mStatusDialog;
 
-    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<Result> listener,
-                         final APIErrorListener errorListener, Class<? extends Result> resultType){
-        this(context, apiURL, method, requestData, token, listener, errorListener, resultType, true,
+    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
+                         final APIErrorListener errorListener, Class<T> resultClass){
+        this(context, apiURL, method, requestData, token, listener, errorListener, resultClass, true,
                 context.getResources().getString(R.string.action_waiting));
     }
 
-    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<Result> listener,
-                         final APIErrorListener errorListener, Class<? extends Result> resultType, boolean showStatus, String statusText){
+    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
+                         final APIErrorListener errorListener, Class<T> resultClass, boolean showStatus, String statusText){
         if(requestQueue == null)
             requestQueue = Volley.newRequestQueue(context);
-        request = new JSONRequest(BASE_URL + apiURL, method, token, new Response.Listener<Result>() {
+        request = new JSONRequest<>(apiURL, method, token, new Response.Listener<T>() {
             @Override
-            public void onResponse(Result response) {
+            public void onResponse(T response) {
                 if (mStatusDialog != null)
                     mStatusDialog.dismiss();
                 listener.onResponse(response);
@@ -87,7 +88,7 @@ public class MicronurseAPI {
                     errorListener.onErrorResponse(error, result);
                 }
             }
-        }, requestData, resultType);
+        }, requestData, resultClass);
 
         if(showStatus) {
             mStatusDialog = new ProgressDialog(context);
@@ -105,4 +106,20 @@ public class MicronurseAPI {
     public void cancelRequest(){
         request.cancel();
     }
+
+    public static String getApiUrl(String... urlParam){
+        String url = BASE_URL;
+        for(String s : urlParam){
+            url += '/' + s;
+        }
+        return url;
+    }
+
+    public static String API_CHECK_LOGIN = "account/check_login";
+    public static String API_ACCOUNT_LOGIN = "account/login";
+    public static String API_ACCOUNT_USER_BASIC_INFO_BY_PHONE = "account/user_basic_info/by_phone";
+    public static String API_ACCOUNT_REGISTER = "account/register";
+    public static String API_ACCOUNT_SEND_CAPTCHA = "account/send_captcha";
+    public static String API_ACCOUNT_LOGOUT = "account/logout";
+    public static String API_ACCOUNT_RESET_PASSWORD = "account/reset_password";
 }

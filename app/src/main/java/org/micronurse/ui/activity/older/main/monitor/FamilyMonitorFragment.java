@@ -3,23 +3,30 @@ package org.micronurse.ui.activity.older.main.monitor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.ListView;
+import android.widget.TextView;
 
 import org.micronurse.R;
+import org.micronurse.adapter.FamilyMonitorAdapter;
+import org.micronurse.model.Humidometer;
+import org.micronurse.model.SmokeTransducer;
+import org.micronurse.model.Thermometer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Date;
 
 public class FamilyMonitorFragment extends Fragment {
-    private ListView lv;
-    private ArrayList<HashMap<String, String>>  listItem;
+    private View viewRoot;
+    private TextView safeLevel;
+    private RecyclerView temperatureList;
+    private RecyclerView humidityList;
+    private RecyclerView smokeList;
     private SwipeRefreshLayout refresh;
+
     public FamilyMonitorFragment() {
         // Required empty public constructor
     }
@@ -27,36 +34,40 @@ public class FamilyMonitorFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_older_family_monitor, container, false);
-        refresh = (SwipeRefreshLayout)view.findViewById(R.id.swipeLayout);
-        lv = (ListView)view.findViewById(R.id.lv);
-        listItem = new ArrayList<HashMap<String, String>>();
+        if(viewRoot != null)
+            return viewRoot;
+        viewRoot = inflater.inflate(R.layout.fragment_older_family_monitor, container, false);
+        safeLevel = (TextView)viewRoot.findViewById(R.id.safe_level);
+        refresh = (SwipeRefreshLayout)viewRoot.findViewById(R.id.swipeLayout);
+        refresh.setColorSchemeResources(R.color.colorAccent);
+        temperatureList = (RecyclerView) viewRoot.findViewById(R.id.temperature_list);
+        temperatureList.setLayoutManager(new LinearLayoutManager(getContext()));
+        temperatureList.setNestedScrollingEnabled(false);
+        humidityList = (RecyclerView) viewRoot.findViewById(R.id.humidity_list);
+        humidityList.setLayoutManager(new LinearLayoutManager(getContext()));
+        humidityList.setNestedScrollingEnabled(false);
+        smokeList = (RecyclerView) viewRoot.findViewById(R.id.smoke_list);
+        smokeList.setLayoutManager(new LinearLayoutManager(getContext()));
+        smokeList.setNestedScrollingEnabled(false);
 
-        String []data={"安全", "温度", "卧室 25 摄氏度 2016-08-08", "厨房 26 摄氏度 2016-08-08","湿度",
-                "卧室 70 % 2016-08-08", "厨房 70 % 2016-08-08"};
-        int []type={0,1,2,2,1,2,2};
-        int size=data.length;
-        for(int i=0;i<size;i++){
-            HashMap<String, String> map = new HashMap<String, String>();
-//根据不同需求可以构造更复杂的数据,目前只构造一个数据
-            map.put("data", data[i]);
-            listItem.add(map);
-        }
-        FamilyMonitorAdapter listItemAdapter= new FamilyMonitorAdapter(getActivity(), listItem,type);
-        lv.setAdapter(listItemAdapter);
+        //Test Data
+        ArrayList<Object> listItem = new ArrayList<>();
+        listItem.add(new Thermometer(new Date().getTime(), "厨房", (float) 23.8));
+        listItem.add(new Humidometer(new Date().getTime(), "卧室", (float) 76));
+        listItem.add(new SmokeTransducer(new Date().getTime(), "客厅", 2000));
+        FamilyMonitorAdapter listItemAdapter= new FamilyMonitorAdapter(getActivity(), listItem);
+        temperatureList.setAdapter(listItemAdapter);
+        humidityList.setAdapter(listItemAdapter);
+        smokeList.setAdapter(listItemAdapter);
 
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             //TODO refresh
             @Override
             public void onRefresh() {
-
                 refresh.setRefreshing(false);
             }
         });
-
-
-        return inflater.inflate(R.layout.fragment_older_family_monitor, container, false);
+        return viewRoot;
     }
 
 
