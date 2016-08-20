@@ -21,4 +21,5 @@
     <dimen name="left_margin">16dp</dimen>
     <dimen name="safe_level_size">100dp</dimen>
     <dimen name="item_padding">8dp</dimen>
+    <dimen name="emergency_call_btn_size">64dp</dimen>
 </resources>

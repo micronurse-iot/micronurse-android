@@ -18,6 +18,7 @@ import com.activeandroid.query.Select;
 
 import org.micronurse.R;
 import org.micronurse.database.model.LoginUserRecord;
+import org.micronurse.service.EmergencyCallService;
 import org.micronurse.ui.activity.older.main.FriendJuanFragment;
 import org.micronurse.ui.activity.older.main.MedicationReminderFragment;
 import org.micronurse.ui.activity.older.main.MonitorFragment;
@@ -36,6 +37,7 @@ public class OlderMainActivity extends AppCompatActivity
     private MonitorWarningFragment monitorWarningFragment;
     private FriendJuanFragment friendJuanFragment;
     private MedicationReminderFragment medicationReminderFragment;
+    private Intent serviceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +68,9 @@ public class OlderMainActivity extends AppCompatActivity
         mNavigationView.setNavigationItemSelectedListener(this);
         mNavigationView.getMenu().getItem(0).setChecked(true);
         onNavigationItemSelected(mNavigationView.getMenu().getItem(0));
+
+        serviceIntent = new Intent(this, EmergencyCallService.class);
+        //startService(serviceIntent);
     }
 
     @Override
@@ -139,6 +144,7 @@ public class OlderMainActivity extends AppCompatActivity
                 break;
             case R.id.older_nav_exit:
                 //TODO:do something before exit
+                //stopService(serviceIntent);
                 finish();
                 break;
             case R.id.older_nav_settings:
