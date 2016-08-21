@@ -20,4 +20,7 @@ public class PublicResultCode {
     public static final int PHONE_CAPTCHA_INCORRECT = 200011;
     public static final int PHONE_CAPTCHA_SEND_TOO_FREQUENTLY = 200012;
     public static final int PHONE_CAPTCHA_SEND_FAILED = 200013;
+
+    public static final int MOBILE_SENSOR_TYPE_UNSUPPORTED = 200101;
+    public static final int MOBILE_SENSOR_DATA_NOT_FOUND = 200102;
 }

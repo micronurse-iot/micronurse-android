@@ -53,11 +53,9 @@ public class MicronurseAPI<T extends Result> {
                     mStatusDialog.dismiss();
                 if (error.getCause() instanceof JsonSyntaxException) {
                     Toast.makeText(context, R.string.response_data_corrupt, Toast.LENGTH_SHORT).show();
-                    return;
                 } else if (error.networkResponse == null) {
                     Toast.makeText(context, R.string.network_error, Toast.LENGTH_SHORT).show();
                     errorListener.onErrorResponse(error, null);
-                    return;
                 } else {
                     Result result;
                     try {
@@ -67,6 +65,7 @@ public class MicronurseAPI<T extends Result> {
                         errorListener.onErrorResponse(error, new Result(-1, context.getString(R.string.unknown_error)));
                         return;
                     }
+                    Log.e("Micro nurser API", "onErrorResponse: result code:" + result.getResultCode() + " message:" + result.getMessage());
                     if (error.networkResponse.statusCode == 401 && result.getResultCode() == 401) {
                         Toast.makeText(context, R.string.error_login_state_invalid, Toast.LENGTH_SHORT).show();
                         errorListener.onErrorResponse(error, result);
@@ -115,11 +114,17 @@ public class MicronurseAPI<T extends Result> {
         return url;
     }
 
-    public static String API_CHECK_LOGIN = "account/check_login";
-    public static String API_ACCOUNT_LOGIN = "account/login";
-    public static String API_ACCOUNT_USER_BASIC_INFO_BY_PHONE = "account/user_basic_info/by_phone";
-    public static String API_ACCOUNT_REGISTER = "account/register";
-    public static String API_ACCOUNT_SEND_CAPTCHA = "account/send_captcha";
-    public static String API_ACCOUNT_LOGOUT = "account/logout";
-    public static String API_ACCOUNT_RESET_PASSWORD = "account/reset_password";
+    public static class AccountAPI{
+        public static String CHECK_LOGIN = "account/check_login";
+        public static String LOGIN = "account/login";
+        public static String USER_BASIC_INFO_BY_PHONE = "account/user_basic_info/by_phone";
+        public static String REGISTER = "account/register";
+        public static String SEND_CAPTCHA = "account/send_captcha";
+        public static String LOGOUT = "account/logout";
+        public static String RESET_PASSWORD = "account/reset_password";
+    }
+
+    public static class OlderSensorAPI{
+        public static String LATEST_SENSOR_DATA = "sensor/sensor_data/older/latest";
+    }
 }

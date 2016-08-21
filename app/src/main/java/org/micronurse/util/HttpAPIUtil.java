@@ -17,7 +17,7 @@ import org.micronurse.http.model.result.Result;
  */
 public class HttpAPIUtil {
     public static void sendCaptcha(final Context context, PhoneCaptchaRequest phoneCaptchaRequest){
-        new MicronurseAPI<Result>(context, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_SEND_CAPTCHA), Request.Method.PUT, phoneCaptchaRequest, null,
+        new MicronurseAPI<Result>(context, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.SEND_CAPTCHA), Request.Method.PUT, phoneCaptchaRequest, null,
                 new Response.Listener<Result>() {
                     @Override
                     public void onResponse(Result response) {

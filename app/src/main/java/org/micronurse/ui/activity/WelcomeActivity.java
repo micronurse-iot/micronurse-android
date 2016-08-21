@@ -38,12 +38,12 @@ public class WelcomeActivity extends AppCompatActivity {
                 final LoginUserRecord loginUserRecord = new Select().from(LoginUserRecord.class)
                         .orderBy("LastLoginTime DESC").limit(1).executeSingle();
                 if(loginUserRecord != null && loginUserRecord.getToken() != null && !loginUserRecord.getToken().isEmpty()) {
-                    new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_CHECK_LOGIN), Request.Method.GET,
+                    new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.CHECK_LOGIN), Request.Method.GET,
                             null, loginUserRecord.getToken(), new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {
                             GlobalInfo.token = loginUserRecord.getToken();
-                            new MicronurseAPI<UserResult>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_USER_BASIC_INFO_BY_PHONE, loginUserRecord.getPhoneNumber()), Request.Method.GET, null, null,
+                            new MicronurseAPI<UserResult>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.USER_BASIC_INFO_BY_PHONE, loginUserRecord.getPhoneNumber()), Request.Method.GET, null, null,
                                     new Response.Listener<UserResult>() {
                                         @Override
                                         public void onResponse(UserResult response) {

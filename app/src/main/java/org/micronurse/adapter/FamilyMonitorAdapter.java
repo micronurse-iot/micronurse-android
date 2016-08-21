@@ -19,7 +19,7 @@ public class FamilyMonitorAdapter extends RecyclerView.Adapter<FamilyMonitorAdap
     private List<Object> dataList;
     private Context context;
 
-    public FamilyMonitorAdapter(Context context, List<Object> dataList) {
+    public FamilyMonitorAdapter(Context context, List dataList) {
         this.context = context;
         this.dataList = dataList;
     }

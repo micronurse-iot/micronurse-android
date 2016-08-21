@@ -190,12 +190,12 @@ public class LoginActivity extends AppCompatActivity {
 
         // Kick off a background task to perform the user login attempt.
         LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
-        final MicronurseAPI<LoginResult> request = new MicronurseAPI<>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_LOGIN), Request.Method.PUT, loginRequest, null,
+        final MicronurseAPI<LoginResult> request = new MicronurseAPI<>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.LOGIN), Request.Method.PUT, loginRequest, null,
                 new Response.Listener<LoginResult>() {
                     @Override
                     public void onResponse(LoginResult response) {
                         GlobalInfo.token = response.getToken();
-                        new MicronurseAPI<UserResult>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_USER_BASIC_INFO_BY_PHONE, phoneNumber), Request.Method.GET, null, null,
+                        new MicronurseAPI<UserResult>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.USER_BASIC_INFO_BY_PHONE, phoneNumber), Request.Method.GET, null, null,
                                 new Response.Listener<UserResult>() {
                                     @Override
                                     public void onResponse(UserResult response) {

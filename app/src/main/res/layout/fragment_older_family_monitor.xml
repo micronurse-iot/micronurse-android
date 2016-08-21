@@ -1,9 +1,20 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.activity.older.main.monitor.FamilyMonitorFragment"
     android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/txt_no_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:drawableLeft="@drawable/ic_info_outline_48dp"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:textSize="@dimen/large_text_size"
+        android:text="@string/no_data"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeLayout"
@@ -17,13 +28,15 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:id="@+id/safe_level_area"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/safe_level_size"
                     android:orientation="horizontal"
+                    android:visibility="gone"
                     android:gravity="center">
 
                     <TextView
@@ -49,9 +62,11 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/temperature_area"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                     <TextView android:id="@+id/txt_temperature"
                         android:layout_width="wrap_content"
@@ -66,6 +81,15 @@
                         android:id="@+id/temperature_list"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/humidity_area"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/txt_humidity"
@@ -84,6 +108,15 @@
                         android:layout_height="wrap_content"
                         android:clickable="true"/>
 
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/smoke_area"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
                     <TextView android:id="@+id/txt_smoke"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -98,12 +131,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:clickable="true"/>
-
                 </LinearLayout>
-
             </LinearLayout>
-
         </ScrollView>
+
     </android.support.v4.widget.SwipeRefreshLayout>
 
-</LinearLayout>
+</RelativeLayout>

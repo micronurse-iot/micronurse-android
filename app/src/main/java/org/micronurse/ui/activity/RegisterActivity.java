@@ -176,7 +176,7 @@ public class RegisterActivity extends AppCompatActivity{
                 accountType = User.ACCOUNT_TYPE_GUARDIAN;
                 break;
         }
-        new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_REGISTER), Request.Method.POST, new RegisterRequest(
+        new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.REGISTER), Request.Method.POST, new RegisterRequest(
                 actvPhoneNumberView.getText().toString(),
                 etPasswordView.getText().toString(),
                 mNicknameView.getText().toString(),

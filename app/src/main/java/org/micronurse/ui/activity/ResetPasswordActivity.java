@@ -119,7 +119,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
         if(!CheckUtil.checkCaptcha(mCaptchaView))
             return;
 
-        new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.API_ACCOUNT_RESET_PASSWORD), Request.Method.PUT, new ResetPasswordRequest(
+        new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.RESET_PASSWORD), Request.Method.PUT, new ResetPasswordRequest(
                 mPhoneNumberView.getText().toString(), mPasswordView.getText().toString(), mCaptchaView.getText().toString()
         ), null, new Response.Listener<Result>(){
             @Override

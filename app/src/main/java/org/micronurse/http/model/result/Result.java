@@ -7,8 +7,6 @@ public class Result {
     private int resultCode;
     private String message;
 
-    public Result(){}
-
     public Result(int resultCode, String message) {
         this.resultCode = resultCode;
         this.message = message;

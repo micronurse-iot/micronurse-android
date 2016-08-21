@@ -8,7 +8,10 @@ import org.micronurse.model.User;
 public class UserResult extends Result {
     private User user;
 
-    public UserResult(){}
+    public UserResult(int resultCode, String message, User user) {
+        super(resultCode, message);
+        this.user = user;
+    }
 
     public User getUser() {
         return user;
