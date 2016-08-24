@@ -79,4 +79,7 @@
     <string name="pulse">脉搏</string>
     <string name="fever">体温</string>
     <string name="blood_pressure">血压</string>
+
+    <string name="today">今天</string>
+    <string name="yesterday">昨天</string>
 </resources>

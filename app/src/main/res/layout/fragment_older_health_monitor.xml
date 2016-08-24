@@ -1,15 +1,24 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activity.older.main.monitor.FamilyMonitorFragment"
-    android:orientation="vertical">
+    tools:context=".ui.activity.older.main.monitor.FamilyMonitorFragment">
+
+    <TextView
+        android:id="@+id/txt_no_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:drawableLeft="@drawable/ic_info_outline_48dp"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:textSize="@dimen/large_text_size"
+        android:text="@string/no_data"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical">
+        android:layout_height="match_parent">
 
         <ScrollView
             android:layout_width="match_parent"
@@ -17,13 +26,15 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:id="@+id/health_condition_area"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/safe_level_size"
                     android:orientation="horizontal"
+                    android:visibility="gone"
                     android:gravity="center">
 
                     <TextView
@@ -48,7 +59,7 @@
                 </LinearLayout>
 
                 <include android:id="@+id/fever_item"
-                    layout="@layout/monitor_data_item"/>
+                    layout="@layout/monitor_data_item" />
                 <include android:id="@+id/pulse_item"
                     layout="@layout/monitor_data_item"/>
                 <include android:id="@+id/blood_pressure_item"
@@ -59,4 +70,4 @@
         </ScrollView>
     </android.support.v4.widget.SwipeRefreshLayout>
 
-</LinearLayout>
+</RelativeLayout>

@@ -41,15 +41,15 @@ public class FamilyMonitorAdapter extends RecyclerView.Adapter<FamilyMonitorAdap
         if(data instanceof Thermometer){
             holder.dataView.setText(String.valueOf(((Thermometer) data).getTemperature()) + "°C");
             holder.dataNameView.setText(((Thermometer) data).getName());
-            holder.dataUpdateTimeView.setText(DateTimeUtil.convertTimestamp(((Thermometer) data).getTimestamp()));
+            holder.dataUpdateTimeView.setText(DateTimeUtil.convertTimestamp(context, ((Thermometer) data).getTimestamp()));
         }else if(data instanceof Humidometer){
             holder.dataView.setText(String.valueOf(((Humidometer) data).getHumidity()) + '%');
             holder.dataNameView.setText(((Humidometer) data).getName());
-            holder.dataUpdateTimeView.setText(DateTimeUtil.convertTimestamp(((Sensor) data).getTimestamp()));
+            holder.dataUpdateTimeView.setText(DateTimeUtil.convertTimestamp(context, ((Sensor) data).getTimestamp()));
         }else if(data instanceof SmokeTransducer){
             holder.dataView.setText(String.valueOf(((SmokeTransducer) data).getSmoke()));
             holder.dataNameView.setText(((SmokeTransducer) data).getName());
-            holder.dataUpdateTimeView.setText(DateTimeUtil.convertTimestamp(((Sensor) data).getTimestamp()));
+            holder.dataUpdateTimeView.setText(DateTimeUtil.convertTimestamp(context, ((Sensor) data).getTimestamp()));
         }
     }
 

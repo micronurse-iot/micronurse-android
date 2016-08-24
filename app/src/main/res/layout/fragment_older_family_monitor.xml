@@ -2,8 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activity.older.main.monitor.FamilyMonitorFragment"
-    android:orientation="vertical">
+    tools:context=".ui.activity.older.main.monitor.FamilyMonitorFragment">
 
     <TextView
         android:id="@+id/txt_no_data"
@@ -19,8 +18,7 @@
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical">
+        android:layout_height="match_parent">
 
         <ScrollView
             android:layout_width="match_parent"
