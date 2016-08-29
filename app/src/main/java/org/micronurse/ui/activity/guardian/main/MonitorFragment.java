@@ -1,4 +1,4 @@
-package org.micronurse.ui.activity.older.main;
+package org.micronurse.ui.activity.guardian.main;
 
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -11,9 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.micronurse.R;
-import org.micronurse.ui.activity.older.main.monitor.FamilyMonitorFragment;
-import org.micronurse.ui.activity.older.main.monitor.GoingoutMonitorFragment;
-import org.micronurse.ui.activity.older.main.monitor.HealthMonitorFragment;
+import org.micronurse.ui.activity.guardian.main.monitor.FamilyMonitorFragment;
+import org.micronurse.ui.activity.guardian.main.monitor.GoingoutMonitorFragment;
+import org.micronurse.ui.activity.guardian.main.monitor.HealthMonitorFragment;
 
 public class MonitorFragment extends Fragment {
 

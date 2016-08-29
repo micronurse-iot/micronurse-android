@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.activeandroid.query.Select;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -15,12 +14,19 @@ import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.result.Result;
+import org.micronurse.http.model.result.UserListResult;
 import org.micronurse.http.model.result.UserResult;
 import org.micronurse.model.User;
+import org.micronurse.ui.activity.guardian.GuardianMainActivity;
 import org.micronurse.ui.activity.older.OlderMainActivity;
+import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 
+import java.util.List;
+
 public class WelcomeActivity extends AppCompatActivity {
+    private Intent loginIntent;
+
     private void startLoginActivity() {
         Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
         finish();
@@ -35,8 +41,13 @@ public class WelcomeActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                final LoginUserRecord loginUserRecord = new Select().from(LoginUserRecord.class)
-                        .orderBy("LastLoginTime DESC").limit(1).executeSingle();
+                final LoginUserRecord loginUserRecord;
+                List<LoginUserRecord> records = DatabaseUtil.findAllLoginUserRecords(1);
+                if(records == null || records.isEmpty())
+                    loginUserRecord = null;
+                else
+                    loginUserRecord = records.get(0);
+
                 if(loginUserRecord != null && loginUserRecord.getToken() != null && !loginUserRecord.getToken().isEmpty()) {
                     new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.CHECK_LOGIN), Request.Method.GET,
                             null, loginUserRecord.getToken(), new Response.Listener<Result>() {
@@ -51,18 +62,33 @@ public class WelcomeActivity extends AppCompatActivity {
                                             GlobalInfo.user.setPhoneNumber(loginUserRecord.getPhoneNumber());
                                             switch (GlobalInfo.user.getAccountType()) {
                                                 case User.ACCOUNT_TPYE_OLDER:
-                                                    Intent intent = new Intent(WelcomeActivity.this, OlderMainActivity.class);
-                                                    finish();
-                                                    startActivity(intent);
+                                                    loginIntent = new Intent(WelcomeActivity.this, OlderMainActivity.class);
+                                                    break;
+                                                case User.ACCOUNT_TYPE_GUARDIAN:
+                                                    loginIntent = new Intent(WelcomeActivity.this, GuardianMainActivity.class);
                                                     break;
                                             }
+                                            new MicronurseAPI<UserListResult>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GUARDIANSHIP), Request.Method.GET,
+                                                    null, GlobalInfo.token, new Response.Listener<UserListResult>() {
+                                                @Override
+                                                public void onResponse(UserListResult response) {
+                                                    GlobalInfo.guardianshipList = response.getUserList();
+                                                    finish();
+                                                    startActivity(loginIntent);
+                                                }
+                                            }, new APIErrorListener() {
+                                                @Override
+                                                public void onErrorResponse(VolleyError err, Result result) {
+                                                    startLoginActivity();
+                                                }
+                                            }, UserListResult.class, false, null).startRequest();
                                         }
                                     }, new APIErrorListener() {
-                                @Override
-                                public void onErrorResponse(VolleyError err, Result result) {
-                                    startLoginActivity();
-                                }
-                            }, UserResult.class, false, null).startRequest();
+                                        @Override
+                                        public void onErrorResponse(VolleyError err, Result result) {
+                                            startLoginActivity();
+                                        }
+                                    }, UserResult.class, false, null).startRequest();
                         }
                     }, new APIErrorListener() {
                         @Override

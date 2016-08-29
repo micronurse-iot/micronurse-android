@@ -1,4 +1,4 @@
-package org.micronurse.ui.activity.older.main.monitor;
+package org.micronurse.ui.activity.guardian.main.monitor;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -13,9 +13,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import org.micronurse.R;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
@@ -29,6 +26,9 @@ import org.micronurse.model.Sensor;
 import org.micronurse.model.Turgoscope;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
@@ -84,14 +84,21 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     @Override
     public void onResume() {
         super.onResume();
-        scheduleTask = new Timer();
-        swipeLayout.setRefreshing(true);
-        scheduleTask.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                updateData();
-            }
-        }, 0, 5000);
+        if(GlobalInfo.Guardian.monitorOlder == null){
+            scheduleTask = null;
+            swipeLayout.setVisibility(View.GONE);
+            viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.VISIBLE);
+        }else {
+            swipeLayout.setVisibility(View.VISIBLE);
+            scheduleTask = new Timer();
+            swipeLayout.setRefreshing(true);
+            scheduleTask.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    updateData();
+                }
+            }, 0, 5000);
+        }
     }
 
     @Override
@@ -106,8 +113,9 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     }
 
     private void updateData(){
-        new MicronurseAPI<>(getContext(), MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_FEVER_THERMOMETER,
-                String.valueOf(1)), Request.Method.GET, null, GlobalInfo.token, new Response.Listener<FeverThermometerDataListResult>() {
+        new MicronurseAPI<>(getContext(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_FEVER_THERMOMETER, String.valueOf(1)),
+                Request.Method.GET, null, GlobalInfo.token, new Response.Listener<FeverThermometerDataListResult>() {
             @Override
             public void onResponse(FeverThermometerDataListResult response) {
                 feverThermometer = response.getDataList().get(0);
@@ -121,8 +129,9 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             }
         }, FeverThermometerDataListResult.class, false, null).startRequest();
 
-        new MicronurseAPI<>(getContext(), MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_PULSE_TRANSDUCER,
-                String.valueOf(1)), Request.Method.GET, null, GlobalInfo.token, new Response.Listener<PulseTransducerDataListResult>() {
+        new MicronurseAPI<>(getContext(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_PULSE_TRANSDUCER, String.valueOf(1)),
+                Request.Method.GET, null, GlobalInfo.token, new Response.Listener<PulseTransducerDataListResult>() {
             @Override
             public void onResponse(PulseTransducerDataListResult response) {
                 pulseTransducer = response.getDataList().get(0);
@@ -136,8 +145,9 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             }
         }, PulseTransducerDataListResult.class, false, null).startRequest();
 
-        new MicronurseAPI<>(getContext(), MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_TURGOSCOPE,
-                String.valueOf(1)), Request.Method.GET, null, GlobalInfo.token, new Response.Listener<TurgoscopeDataListResult>() {
+        new MicronurseAPI<>(getContext(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_TURGOSCOPE, String.valueOf(1)),
+                Request.Method.GET, null, GlobalInfo.token, new Response.Listener<TurgoscopeDataListResult>() {
             @Override
             public void onResponse(TurgoscopeDataListResult response) {
                 turgoscope = response.getDataList().get(0);

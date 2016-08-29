@@ -20,14 +20,14 @@
         app:civ_border_color="#ffffff"
         android:layout_above="@+id/nav_header_nickname"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:layout_marginBottom="@dimen/activity_vertical_margin"/>
 
     <TextView
         android:id="@+id/nav_header_nickname"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/nav_header_phone_num"
+        android:layout_alignParentLeft="true"
         android:text="Android Studio"
         android:singleLine="true"
         android:textSize="@dimen/normal_text_size"
@@ -36,13 +36,37 @@
 
     <TextView
         android:id="@+id/nav_header_phone_num"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Android Studio"
         android:textSize="@dimen/small_text_size"
         android:singleLine="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentBottom="true"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"/>
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/nav_header_older_portrait"
+        android:layout_width="@dimen/nav_header_small_portrait_size"
+        android:layout_height="@dimen/nav_header_small_portrait_size"
+        android:src="@android:drawable/sym_def_app_icon"
+        app:civ_border_width="1dp"
+        app:civ_fill_color="#eeeeee"
+        app:civ_border_color="#ffffff"
+        android:layout_above="@+id/nav_header_older_nickname"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="@dimen/item_padding"/>
+
+    <TextView
+        android:id="@+id/nav_header_older_nickname"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Android Studio"
+        android:singleLine="true"
+        android:textSize="@dimen/small_text_size"
+        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:layout_alignBottom="@+id/nav_header_portrait"
+        android:layout_alignParentRight="true"/>
 
 </RelativeLayout>

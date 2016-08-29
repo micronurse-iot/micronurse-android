@@ -1,4 +1,4 @@
-package org.micronurse.ui.activity.older.main.monitor;
+package org.micronurse.ui.activity.guardian.main.monitor;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -84,16 +84,23 @@ public class FamilyMonitorFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        scheduleTask = new Timer();
-        refresh.setRefreshing(true);
-        scheduleTask.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                updateTemperature();
-                updateHumidity();
-                updateSmoke();
-            }
-        }, 0, 5000);
+        if(GlobalInfo.Guardian.monitorOlder == null){
+            scheduleTask = null;
+            refresh.setVisibility(View.GONE);
+            viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.VISIBLE);
+        }else{
+            refresh.setVisibility(View.VISIBLE);
+            scheduleTask = new Timer();
+            refresh.setRefreshing(true);
+            scheduleTask.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    updateTemperature();
+                    updateHumidity();
+                    updateSmoke();
+                }
+            }, 0, 5000);
+        }
     }
 
     @Override
@@ -113,8 +120,8 @@ public class FamilyMonitorFragment extends Fragment {
     }
 
     private void updateTemperature(){
-        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA,
-                Sensor.SENSOR_TYPE_THERMOMETER, String.valueOf(1)),
+        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_THERMOMETER, String.valueOf(1)),
                 Request.Method.GET, null, GlobalInfo.token, new Response.Listener<ThermometerDataListResult>() {
             @Override
             public void onResponse(ThermometerDataListResult response) {
@@ -135,8 +142,8 @@ public class FamilyMonitorFragment extends Fragment {
     }
 
     private void updateHumidity(){
-        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA,
-                Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1)),
+        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1)),
                 Request.Method.GET, null, GlobalInfo.token, new Response.Listener<HumidometerDataListResult>() {
                     @Override
                     public void onResponse(HumidometerDataListResult response) {
@@ -157,8 +164,8 @@ public class FamilyMonitorFragment extends Fragment {
     }
 
     private void updateSmoke(){
-        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA,
-                Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1)),
+        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1)),
                 Request.Method.GET, null, GlobalInfo.token, new Response.Listener<SmokeTransducerDataListResult>() {
                     @Override
                     public void onResponse(SmokeTransducerDataListResult response) {

@@ -14,8 +14,10 @@ import com.android.volley.toolbox.Volley;
 import com.google.gson.JsonSyntaxException;
 
 import org.micronurse.R;
+import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.ui.activity.LoginActivity;
+import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 
@@ -72,13 +74,15 @@ public class MicronurseAPI<T extends Result> {
                         Intent intent = new Intent(context, LoginActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-                        if (GlobalInfo.loginRecord != null) {
-                            intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, GlobalInfo.loginRecord.getPhoneNumber());
-                            GlobalInfo.loginRecord.setToken(null);
-                            GlobalInfo.loginRecord.save();
+                        if (GlobalInfo.user != null) {
+                            intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, GlobalInfo.user.getPhoneNumber());
+                            LoginUserRecord lur = DatabaseUtil.findLoginUserRecord(GlobalInfo.user.getPhoneNumber());
+                            if(lur != null) {
+                                lur.setToken(null);
+                                lur.save();
+                            }
                         }
                         GlobalInfo.clearLoginUserInfo();
-
                         context.startActivity(intent);
                         return;
                     } else if (error.networkResponse.statusCode == 500) {
@@ -122,9 +126,14 @@ public class MicronurseAPI<T extends Result> {
         public static String SEND_CAPTCHA = "account/send_captcha";
         public static String LOGOUT = "account/logout";
         public static String RESET_PASSWORD = "account/reset_password";
+        public static String GUARDIANSHIP = "account/guardianship";
     }
 
     public static class OlderSensorAPI{
         public static String LATEST_SENSOR_DATA = "sensor/sensor_data/older/latest";
+    }
+
+    public static class GuardianSensorAPI{
+        public static String LATEST_SENSOR_DATA = "sensor/sensor_data/guardian/latest";
     }
 }

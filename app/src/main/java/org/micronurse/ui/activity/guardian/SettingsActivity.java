@@ -1,8 +1,8 @@
-package org.micronurse.ui.activity.older;
+package org.micronurse.ui.activity.guardian;
 
 import android.content.Intent;
-import android.preference.Preference;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.view.MenuItem;
 
 import com.android.volley.Request;
@@ -24,7 +24,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        addPreferencesFromResource(R.xml.older_settings);
+        addPreferencesFromResource(R.xml.guradian_settings);
         findPreference(getResources().getString(R.string.action_logout)).
                 setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
@@ -57,7 +57,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             lur.save();
         }
         GlobalInfo.clearLoginUserInfo();
-
         startActivity(intent);
     }
 

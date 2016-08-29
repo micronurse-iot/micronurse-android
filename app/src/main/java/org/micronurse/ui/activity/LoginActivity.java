@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -30,9 +31,11 @@ import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.request.LoginRequest;
 import org.micronurse.http.model.result.LoginResult;
 import org.micronurse.http.model.result.Result;
+import org.micronurse.http.model.result.UserListResult;
 import org.micronurse.http.model.result.UserResult;
 import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.model.User;
+import org.micronurse.ui.activity.guardian.GuardianMainActivity;
 import org.micronurse.ui.activity.older.OlderMainActivity;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
@@ -58,8 +61,9 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mPasswordView;
     private ImageView mPortraitImageView;
 
-    Intent intent1 = null;
-    Intent intent2 = null;
+    private Intent loginIntent;
+    private Intent resetPasswordIntent;
+    private Intent registerIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,16 +136,16 @@ public class LoginActivity extends AppCompatActivity {
         mForgetPassword.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                intent1 = new Intent(LoginActivity.this, ResetPasswordActivity.class);
-                startActivity(intent1);
+                resetPasswordIntent = new Intent(LoginActivity.this, ResetPasswordActivity.class);
+                startActivity(resetPasswordIntent);
             }
         });
         Button mNewUser = (Button) findViewById(R.id.button_new_user);
         mNewUser.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                intent2 = new Intent(LoginActivity.this,RegisterActivity.class);
-                startActivity(intent2);
+                registerIntent = new Intent(LoginActivity.this,RegisterActivity.class);
+                startActivity(registerIntent);
             }
         });
 
@@ -203,11 +207,26 @@ public class LoginActivity extends AppCompatActivity {
                                         GlobalInfo.user.setPhoneNumber(phoneNumber);
                                         switch (GlobalInfo.user.getAccountType()) {
                                             case User.ACCOUNT_TPYE_OLDER:
-                                                Intent intent = new Intent(LoginActivity.this, OlderMainActivity.class);
-                                                finish();
-                                                startActivity(intent);
+                                                loginIntent = new Intent(LoginActivity.this, OlderMainActivity.class);
+                                                break;
+                                            case User.ACCOUNT_TYPE_GUARDIAN:
+                                                loginIntent = new Intent(LoginActivity.this, GuardianMainActivity.class);
                                                 break;
                                         }
+                                        new MicronurseAPI<UserListResult>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GUARDIANSHIP), Request.Method.GET,
+                                                null, GlobalInfo.token, new Response.Listener<UserListResult>() {
+                                            @Override
+                                            public void onResponse(UserListResult response) {
+                                                GlobalInfo.guardianshipList = response.getUserList();
+                                                finish();
+                                                startActivity(loginIntent);
+                                            }
+                                        }, new APIErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError err, Result result) {
+                                                Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
+                                            }
+                                        }, UserListResult.class).startRequest();
                                     }
                                 }, new APIErrorListener() {
                             @Override

@@ -43,7 +43,7 @@
     <string name="prompt_repeat_new_password">重复新密码</string>
     <string name="action_done">完 成</string>
     <string name="action_resetting">正在重置密码...</string>
-    
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_waiting">请稍等...</string>
@@ -82,4 +82,6 @@
 
     <string name="today">今天</string>
     <string name="yesterday">昨天</string>
+
+    <string name="action_contacts_older">联系老人</string>
 </resources>

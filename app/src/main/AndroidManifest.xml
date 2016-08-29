@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="org.micronurse">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name="com.activeandroid.app.Application"
@@ -11,16 +12,18 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="false"
+        tools:replace="android:supportsRtl"
         android:theme="@style/AppTheme">
         <meta-data
             android:name="AA_DB_NAME"
             android:value="MicroNurse.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="1" />
+            android:value="2" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord" />
+            android:value="org.micronurse.database.model.LoginUserRecord,
+                           org.micronurse.database.model.Guardianship" />
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
@@ -57,8 +60,13 @@
         </activity>
         <activity
             android:name=".ui.activity.older.SettingsActivity"
-            android:label="@string/action_settings"/>
+            android:label="@string/action_settings" />
+
         <service android:name=".service.EmergencyCallService" />
+        <activity android:name=".ui.activity.older.main.monitor.goingout.SettingHomeLocationActivity"/>
+        <activity android:name=".ui.activity.guardian.GuardianMainActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
+        <activity android:name=".ui.activity.guardian.SettingsActivity"/>
     </application>
 
 </manifest>
