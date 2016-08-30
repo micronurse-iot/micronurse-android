@@ -84,4 +84,7 @@
     <string name="yesterday">昨天</string>
 
     <string name="action_contacts_older">联系老人</string>
+
+    <string name="location">当前位置</string>
+    <string name="home">家</string>
 </resources>
