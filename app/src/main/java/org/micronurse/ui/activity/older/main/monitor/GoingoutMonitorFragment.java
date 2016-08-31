@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.MapView;
 
@@ -57,7 +56,6 @@ public class GoingoutMonitorFragment extends Fragment {
             }
         });
 
-        SDKInitializer.initialize(getContext());
         mMapView = (MapView) viewRoot.findViewById(R.id.bmapView);
 
         return viewRoot;

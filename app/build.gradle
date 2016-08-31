@@ -1,9 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        micronurse {
+            keyAlias 'UniqueSwitch'
+            keyPassword '123456'
+            storeFile file('/home/zhou-shengyun/Documents/Micronurse-APKSignature.jks')
+            storePassword '123456'
+        }
+    }
     compileSdkVersion 24
     buildToolsVersion "24.0.1"
-
     defaultConfig {
         applicationId "org.micronurse"
         minSdkVersion 16
@@ -15,6 +22,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.micronurse
+        }
+        debug {
+            signingConfig signingConfigs.micronurse
         }
     }
 }

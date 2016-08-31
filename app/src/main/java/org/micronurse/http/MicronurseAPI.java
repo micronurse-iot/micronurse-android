@@ -1,8 +1,10 @@
 package org.micronurse.http;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -54,9 +56,17 @@ public class MicronurseAPI<T extends Result> {
                 if (mStatusDialog != null)
                     mStatusDialog.dismiss();
                 if (error.getCause() instanceof JsonSyntaxException) {
-                    Toast.makeText(context, R.string.response_data_corrupt, Toast.LENGTH_SHORT).show();
+                    if(context instanceof Activity){
+                        Snackbar.make(((Activity) context).findViewById(android.R.id.content), R.string.response_data_corrupt, Snackbar.LENGTH_SHORT).show();
+                    }else {
+                        Toast.makeText(context, R.string.response_data_corrupt, Toast.LENGTH_SHORT).show();
+                    }
                 } else if (error.networkResponse == null) {
-                    Toast.makeText(context, R.string.network_error, Toast.LENGTH_SHORT).show();
+                    if(context instanceof Activity){
+                        Snackbar.make(((Activity) context).findViewById(android.R.id.content), R.string.network_error, Snackbar.LENGTH_SHORT).show();
+                    }else {
+                        Toast.makeText(context, R.string.network_error, Toast.LENGTH_SHORT).show();
+                    }
                     errorListener.onErrorResponse(error, null);
                 } else {
                     Result result;
@@ -86,7 +96,11 @@ public class MicronurseAPI<T extends Result> {
                         context.startActivity(intent);
                         return;
                     } else if (error.networkResponse.statusCode == 500) {
-                        Toast.makeText(context, R.string.server_internal_error, Toast.LENGTH_SHORT).show();
+                        if(context instanceof Activity) {
+                            Snackbar.make(((Activity) context).findViewById(android.R.id.content), R.string.server_internal_error, Snackbar.LENGTH_SHORT).show();
+                        }else {
+                            Toast.makeText(context, R.string.server_internal_error, Toast.LENGTH_SHORT).show();
+                        }
                     }
                     errorListener.onErrorResponse(error, result);
                 }
