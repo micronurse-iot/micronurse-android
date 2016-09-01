@@ -5,7 +5,7 @@ android {
         micronurse {
             keyAlias 'UniqueSwitch'
             keyPassword '123456'
-            storeFile file('/home/zhou-shengyun/Documents/Micronurse-APKSignature.jks')
+            storeFile file('Micronurse-APKSignature.jks')
             storePassword '123456'
         }
     }
