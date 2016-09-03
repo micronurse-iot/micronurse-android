@@ -39,9 +39,14 @@ import org.micronurse.ui.activity.guardian.GuardianMainActivity;
 import org.micronurse.ui.activity.older.OlderMainActivity;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.HttpAPIUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import cn.jpush.android.api.JPushInterface;
+import cn.jpush.android.api.TagAliasCallback;
 
 /**
  * A login screen that offers login via phone number/password.
@@ -149,6 +154,9 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+
+        //Set empty JPush alias to cancel receiving any user's notification.
+        HttpAPIUtil.setJPushAlias(LoginActivity.this, "");
     }
 
 
@@ -218,6 +226,7 @@ public class LoginActivity extends AppCompatActivity {
                                             @Override
                                             public void onResponse(UserListResult response) {
                                                 GlobalInfo.guardianshipList = response.getUserList();
+                                                HttpAPIUtil.setJPushAlias(LoginActivity.this, GlobalInfo.user.getPhoneNumber());
                                                 finish();
                                                 startActivity(loginIntent);
                                             }
@@ -253,6 +262,12 @@ public class LoginActivity extends AppCompatActivity {
             }
         }, LoginResult.class, true, getString(R.string.action_logining));
         request.startRequest();
+    }
+
+    @Override
+    public void onBackPressed() {
+        JPushInterface.stopPush(getApplicationContext());
+        super.onBackPressed();
     }
 }
 

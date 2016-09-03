@@ -1,47 +1,77 @@
 package org.micronurse.ui.activity.older.main.monitor;
 
-import android.content.BroadcastReceiver;
+import android.graphics.Point;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
-import com.baidu.mapapi.BMapManager;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.baidu.mapapi.map.BaiduMap;
-import com.baidu.mapapi.map.MapStatusUpdate;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.Marker;
+import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.search.core.SearchResult;
+import com.baidu.mapapi.search.geocode.GeoCodeResult;
+import com.baidu.mapapi.search.geocode.GeoCoder;
+import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
+import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
+import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
 
 
 import org.micronurse.R;
+import org.micronurse.http.APIErrorListener;
+import org.micronurse.http.MicronurseAPI;
+import org.micronurse.http.model.result.GPSDataListResult;
+import org.micronurse.http.model.result.Result;
+import org.micronurse.model.GPS;
+import org.micronurse.model.Sensor;
+import org.micronurse.util.DateTimeUtil;
+import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.ImageUtil;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class GoingoutMonitorFragment extends Fragment {
     private View viewRoot;
-    private RecyclerView location;
-    private RecyclerView home;
     private SwipeRefreshLayout refresh;
-    //private List<location> locationList;
-    //private List<location> homeList;
     private Timer scheduleTask;
-    private final String key = "EROcxOxeLvnewEAAR5hTIZpTBDWlCteD";
 
-    private double latitude = 40.050966;// 纬度
-    private double longitude = 116.303128;// 经度
-    private LatLng hmPos = new LatLng(latitude, longitude);// 坐标
+    private GPS olderLocation;
     private MapView mMapView;
     private BaiduMap baiduMap;
-    private BMapManager mBMapManager = null;
+    private MarkerOptions olderMarkerOptions;
+    private Marker olderMarker;
+    private GeoCoder geoCoder;
 
     public GoingoutMonitorFragment() {
         // Required empty public constructor
+        geoCoder = GeoCoder.newInstance();
+        geoCoder.setOnGetGeoCodeResultListener(new OnGetGeoCoderResultListener() {
+            @Override
+            public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {}
+
+            @Override
+            public void onGetReverseGeoCodeResult(ReverseGeoCodeResult reverseGeoCodeResult) {
+                if (reverseGeoCodeResult == null || reverseGeoCodeResult.error != SearchResult.ERRORNO.NO_ERROR) {
+                    Log.e(GlobalInfo.LOG_TAG, "Geo reverse error:" + reverseGeoCodeResult.error);
+                    ((TextView)viewRoot.findViewById(R.id.older_location)).setText(R.string.unknown_location);
+                }else{
+                    ((TextView)viewRoot.findViewById(R.id.older_location)).setText(reverseGeoCodeResult.getAddress());
+                }
+            }
+        });
     }
 
     @Override
@@ -49,48 +79,39 @@ public class GoingoutMonitorFragment extends Fragment {
                              Bundle savedInstanceState) {
         if(viewRoot != null)
             return viewRoot;
-        mBMapManager = new BMapManager();
-        mBMapManager.init();
-        viewRoot = inflater.inflate(R.layout.fragment_older_goingout_monitor, container, false);
-        refresh = (SwipeRefreshLayout)viewRoot.findViewById(R.id.swipeLayout);
-        refresh.setColorSchemeResources(R.color.colorAccent);
-        location = (RecyclerView) viewRoot.findViewById(R.id.location_list);
-        location.setLayoutManager(new LinearLayoutManager(getContext()));
-        location.setNestedScrollingEnabled(false);
-        home = (RecyclerView) viewRoot.findViewById(R.id.home_list);
-        home.setLayoutManager(new LinearLayoutManager(getContext()));
-        home.setNestedScrollingEnabled(false);
 
+        viewRoot = inflater.inflate(R.layout.fragment_older_goingout_monitor, container, false);
+        refresh = (SwipeRefreshLayout) viewRoot.findViewById(R.id.swipeLayout);
+        refresh.setColorSchemeResources(R.color.colorAccent);
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            //TODO refresh
             @Override
             public void onRefresh() {
                 updateLocation();
-                updateHomeLocation();
             }
         });
 
         mMapView = (MapView) viewRoot.findViewById(R.id.bmapView);
+        mMapView.showZoomControls(false);
         baiduMap = mMapView.getMap();
-        //设置缩放级别，默认级别为12
-        MapStatusUpdate mapstatusUpdate = MapStatusUpdateFactory.zoomTo(19);;
-        baiduMap.setMapStatus(mapstatusUpdate);
+        baiduMap.getUiSettings().setAllGesturesEnabled(false);
+        baiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(17));
 
-        //设置地图中心点，默认是天安门
-        MapStatusUpdate mapstatusUpdatePoint = MapStatusUpdateFactory.newLatLng(hmPos);
-        baiduMap.setMapStatus(mapstatusUpdatePoint );
+        olderMarkerOptions = new MarkerOptions()
+                .icon(BitmapDescriptorFactory.fromBitmap(ImageUtil.getBitmapFromDrawable(getContext(), R.drawable.ic_location_red)))
+                .draggable(false);
         return viewRoot;
     }
+
     @Override
     public void onResume() {
         mMapView.onResume();
-        scheduleTask = new Timer();
         refresh.setRefreshing(true);
+        updateHomeLocation();
+        scheduleTask = new Timer();
         scheduleTask.schedule(new TimerTask() {
             @Override
             public void run() {
                 updateLocation();
-                updateHomeLocation();
             }
         }, 0, 5000);
         super.onResume();
@@ -107,11 +128,36 @@ public class GoingoutMonitorFragment extends Fragment {
     public void onDestroy() {
         scheduleTask.cancel();
         mMapView.onDestroy();
+        geoCoder.destroy();
         super.onDestroy();
     }
 
     private void updateLocation(){
-        //TODO:
+        new MicronurseAPI<GPSDataListResult>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_GPS,
+                String.valueOf(1)), Request.Method.GET, null, GlobalInfo.token, new Response.Listener<GPSDataListResult>() {
+            @Override
+            public void onResponse(GPSDataListResult response) {
+                refresh.setRefreshing(false);
+                olderLocation = response.getDataList().get(0);
+                viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
+                viewRoot.findViewById(R.id.location_area).setVisibility(View.VISIBLE);
+                LatLng latLng = new LatLng(olderLocation.getLatitude(), olderLocation.getLongitude());
+                baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(latLng));
+                olderMarkerOptions.position(latLng);
+                if(olderMarker != null)
+                    olderMarker.remove();
+                olderMarker = (Marker) baiduMap.addOverlay(olderMarkerOptions);
+                ((TextView)viewRoot.findViewById(R.id.data_update_time)).setText(DateTimeUtil.convertTimestamp(getContext(),
+                        olderLocation.getTimestamp()));
+                geoCoder.reverseGeoCode(new ReverseGeoCodeOption()
+                        .location(latLng));
+            }
+        }, new APIErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError err, Result result) {
+                refresh.setRefreshing(false);
+            }
+        }, GPSDataListResult.class, false, null).startRequest();
     }
 
     private void updateHomeLocation(){

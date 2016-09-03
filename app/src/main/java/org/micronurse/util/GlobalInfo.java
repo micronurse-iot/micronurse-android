@@ -9,6 +9,8 @@ import java.util.List;
  * Created by zhou-shengyun on 7/1/16.
  */
 public class GlobalInfo {
+    public static String LOG_TAG = "Micronurse";
+
     public static User user = null;
     public static String token = null;
     public static List<User> guardianshipList;

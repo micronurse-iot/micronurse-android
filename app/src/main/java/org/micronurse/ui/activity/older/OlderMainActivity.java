@@ -23,6 +23,7 @@ import org.micronurse.ui.activity.older.main.MonitorWarningFragment;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 
+import cn.jpush.android.api.JPushInterface;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class OlderMainActivity extends AppCompatActivity
@@ -131,6 +132,7 @@ public class OlderMainActivity extends AppCompatActivity
             case R.id.older_nav_exit:
                 //TODO:do something before exit
                 //stopService(serviceIntent);
+                JPushInterface.stopPush(getApplicationContext());
                 finish();
                 break;
             case R.id.older_nav_settings:

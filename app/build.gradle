@@ -12,6 +12,7 @@ android {
     compileSdkVersion 24
     buildToolsVersion "24.0.1"
     defaultConfig {
+        vectorDrawables.useSupportLibrary true
         applicationId "org.micronurse"
         minSdkVersion 16
         targetSdkVersion 24

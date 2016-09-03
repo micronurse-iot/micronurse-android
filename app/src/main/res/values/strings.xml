@@ -85,6 +85,7 @@
 
     <string name="action_contacts_older">联系老人</string>
 
-    <string name="location">当前位置</string>
-    <string name="home">家</string>
+    <string name="older_location">老人当前位置</string>
+    <string name="unknown_location">未知位置</string>
+    <string name="home_loaction_not_setting">家的位置未设置</string>
 </resources>

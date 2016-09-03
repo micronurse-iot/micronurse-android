@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -21,8 +22,13 @@ import org.micronurse.ui.activity.guardian.GuardianMainActivity;
 import org.micronurse.ui.activity.older.OlderMainActivity;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.HttpAPIUtil;
 
 import java.util.List;
+import java.util.Set;
+
+import cn.jpush.android.api.JPushInterface;
+import cn.jpush.android.api.TagAliasCallback;
 
 public class WelcomeActivity extends AppCompatActivity {
     private Intent loginIntent;
@@ -73,6 +79,7 @@ public class WelcomeActivity extends AppCompatActivity {
                                                 @Override
                                                 public void onResponse(UserListResult response) {
                                                     GlobalInfo.guardianshipList = response.getUserList();
+                                                    HttpAPIUtil.setJPushAlias(WelcomeActivity.this, GlobalInfo.user.getPhoneNumber());
                                                     finish();
                                                     startActivity(loginIntent);
                                                 }
@@ -102,5 +109,9 @@ public class WelcomeActivity extends AppCompatActivity {
                 }
             }
         }, 1000);
+
+        if(JPushInterface.isPushStopped(getApplicationContext())){
+            JPushInterface.resumePush(getApplicationContext());
+        }
     }
 }
