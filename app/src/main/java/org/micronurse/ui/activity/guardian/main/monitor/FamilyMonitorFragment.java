@@ -15,7 +15,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
 import org.micronurse.R;
-import org.micronurse.adapter.FamilyMonitorAdapter;
+import org.micronurse.adapter.MonitorAdapter;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.result.HumidometerDataListResult;
@@ -26,6 +26,7 @@ import org.micronurse.model.Humidometer;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.SmokeTransducer;
 import org.micronurse.model.Thermometer;
+import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 
 import java.util.List;
@@ -34,11 +35,12 @@ import java.util.TimerTask;
 
 public class FamilyMonitorFragment extends Fragment {
     private View viewRoot;
-    private TextView safeLevel;
+    private TextView txtSafeLevel;
     private RecyclerView temperatureList;
     private RecyclerView humidityList;
     private RecyclerView smokeList;
     private SwipeRefreshLayout refresh;
+
     private List<Thermometer> thermometerList;
     private List<Humidometer> humidometerList;
     private List<SmokeTransducer> smokeTransducerList;
@@ -55,7 +57,7 @@ public class FamilyMonitorFragment extends Fragment {
         if(viewRoot != null)
             return viewRoot;
         viewRoot = inflater.inflate(R.layout.fragment_family_monitor, container, false);
-        safeLevel = (TextView)viewRoot.findViewById(R.id.safe_level);
+        txtSafeLevel = (TextView)viewRoot.findViewById(R.id.safe_level);
         refresh = (SwipeRefreshLayout)viewRoot.findViewById(R.id.swipeLayout);
         refresh.setColorSchemeResources(R.color.colorAccent);
         temperatureList = (RecyclerView) viewRoot.findViewById(R.id.temperature_list);
@@ -116,7 +118,8 @@ public class FamilyMonitorFragment extends Fragment {
     }
 
     private void updateSafeLevel(){
-        //TODO: Set a new safe level
+        CheckUtil.checkFamilySafetyLevel(txtSafeLevel, viewRoot.findViewById(R.id.safe_level_area),
+                thermometerList, humidometerList, smokeTransducerList);
     }
 
     private void updateTemperature(){
@@ -129,7 +132,7 @@ public class FamilyMonitorFragment extends Fragment {
                 viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
                 viewRoot.findViewById(R.id.temperature_area).setVisibility(View.VISIBLE);
                 thermometerList = response.getDataList();
-                temperatureList.setAdapter(new FamilyMonitorAdapter(getActivity(), thermometerList));
+                temperatureList.setAdapter(new MonitorAdapter(getActivity(), thermometerList));
                 updateSafeLevel();
                 refresh.setRefreshing(false);
             }
@@ -151,7 +154,7 @@ public class FamilyMonitorFragment extends Fragment {
                         viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
                         viewRoot.findViewById(R.id.humidity_area).setVisibility(View.VISIBLE);
                         humidometerList = response.getDataList();
-                        humidityList.setAdapter(new FamilyMonitorAdapter(getActivity(), humidometerList));
+                        humidityList.setAdapter(new MonitorAdapter(getActivity(), humidometerList));
                         updateSafeLevel();
                         refresh.setRefreshing(false);
                     }
@@ -173,7 +176,7 @@ public class FamilyMonitorFragment extends Fragment {
                         viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
                         viewRoot.findViewById(R.id.smoke_area).setVisibility(View.VISIBLE);
                         smokeTransducerList = response.getDataList();
-                        smokeList.setAdapter(new FamilyMonitorAdapter(getActivity(), smokeTransducerList));
+                        smokeList.setAdapter(new MonitorAdapter(getActivity(), smokeTransducerList));
                         updateSafeLevel();
                         refresh.setRefreshing(false);
                     }

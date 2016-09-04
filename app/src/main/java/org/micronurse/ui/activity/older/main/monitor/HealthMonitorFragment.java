@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,10 +15,13 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.micronurse.R;
+import org.micronurse.adapter.MonitorAdapter;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.result.FeverThermometerDataListResult;
@@ -27,25 +32,21 @@ import org.micronurse.model.FeverThermometer;
 import org.micronurse.model.PulseTransducer;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.Turgoscope;
+import org.micronurse.util.CheckUtil;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
 
 
 public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private View viewRoot;
+    private TextView txtHealthCondition;
     private SwipeRefreshLayout swipeLayout;
-    private View feverItem;
-    private TextView feverUpdateTime;
-    private TextView feverData;
+    private RecyclerView healthDataList;
+
     private FeverThermometer feverThermometer;
-    private View pulseItem;
-    private TextView pulseUpdateTime;
-    private TextView pulseData;
     private PulseTransducer pulseTransducer;
-    private View bloodPressureItem;
-    private TextView bloodPressureUpdateTime;
-    private TextView bloodPressureData;
     private Turgoscope turgoscope;
+    private List<Object> sensorDataList = new ArrayList<>();
     private Timer scheduleTask;
 
     public HealthMonitorFragment() {
@@ -60,24 +61,10 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         swipeLayout.setColorSchemeResources(R.color.colorAccent);
         swipeLayout.setOnRefreshListener(this);
 
-        feverItem = viewRoot.findViewById(R.id.fever_item);
-        feverItem.setVisibility(View.GONE);
-        ((TextView)feverItem.findViewById(R.id.data_name)).setText(R.string.fever);
-        feverUpdateTime = (TextView) feverItem.findViewById(R.id.data_update_time);
-        feverData = (TextView) feverItem.findViewById(R.id.data);
-
-        pulseItem = viewRoot.findViewById(R.id.pulse_item);
-        pulseItem.setVisibility(View.GONE);
-        ((TextView)pulseItem.findViewById(R.id.data_name)).setText(R.string.pulse);
-        pulseUpdateTime = (TextView) pulseItem.findViewById(R.id.data_update_time);
-        pulseData = (TextView) pulseItem.findViewById(R.id.data);
-
-        bloodPressureItem = viewRoot.findViewById(R.id.blood_pressure_item);
-        bloodPressureItem.setVisibility(View.GONE);
-        ((TextView)bloodPressureItem.findViewById(R.id.data_name)).setText(R.string.blood_pressure);
-        bloodPressureUpdateTime = (TextView) bloodPressureItem.findViewById(R.id.data_update_time);
-        bloodPressureData = (TextView) bloodPressureItem.findViewById(R.id.data);
-
+        txtHealthCondition = (TextView) viewRoot.findViewById(R.id.health_condition);
+        healthDataList = (RecyclerView) viewRoot.findViewById(R.id.health_data_list);
+        healthDataList.setLayoutManager(new LinearLayoutManager(getContext()));
+        healthDataList.setNestedScrollingEnabled(false);
         return viewRoot;
     }
 
@@ -155,26 +142,20 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     @SuppressLint("SetTextI18n")
     private void updateDataView(){
         if(feverThermometer != null || pulseTransducer != null || turgoscope != null){
-            viewRoot.findViewById(R.id.health_condition_area).setVisibility(View.VISIBLE);
+            viewRoot.findViewById(R.id.health_data_area).setVisibility(View.VISIBLE);
             viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
+            CheckUtil.checkHealthSafetyLevel(txtHealthCondition, viewRoot.findViewById(R.id.health_condition_area),
+                    feverThermometer, pulseTransducer, turgoscope);
         }
-        if(feverThermometer != null) {
-            feverItem.setVisibility(View.VISIBLE);
-            feverUpdateTime.setText(DateTimeUtil.convertTimestamp(getContext(), feverThermometer.getTimestamp()));
-            feverData.setText(String.valueOf(feverThermometer.getTemperature()) + "°C");
-        }
-        if(pulseTransducer != null) {
-            pulseItem.setVisibility(View.VISIBLE);
-            pulseUpdateTime.setText(DateTimeUtil.convertTimestamp(getContext(), pulseTransducer.getTimestamp()));
-            pulseData.setText(String.valueOf(pulseTransducer.getPulse()) + "bpm");
-        }if(turgoscope == null){
-            bloodPressureItem.setVisibility(View.GONE);
-        }else{
-            bloodPressureItem.setVisibility(View.VISIBLE);
-            bloodPressureUpdateTime.setText(DateTimeUtil.convertTimestamp(getContext(), turgoscope.getTimestamp()));
-            bloodPressureData.setText(String.valueOf(turgoscope.getLowBloodPressure()) + '/' +
-                                      String.valueOf(turgoscope.getHighBloodPressure()) + "Pa");
-        }
+        sensorDataList.clear();
+        if(feverThermometer != null)
+            sensorDataList.add(feverThermometer);
+        if(pulseTransducer != null)
+            sensorDataList.add(pulseTransducer);
+        if(turgoscope != null)
+           sensorDataList.add(turgoscope);
+        if(!sensorDataList.isEmpty())
+            healthDataList.setAdapter(new MonitorAdapter(getContext(), sensorDataList));
     }
 }
 

@@ -1,9 +1,21 @@
 package org.micronurse.util;
 
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.TextView;
 
 import org.micronurse.R;
+import org.micronurse.model.FeverThermometer;
+import org.micronurse.model.Humidometer;
+import org.micronurse.model.PulseTransducer;
+import org.micronurse.model.SmokeTransducer;
+import org.micronurse.model.Thermometer;
+import org.micronurse.model.Turgoscope;
+
+import java.util.List;
 
 /**
  * Created by zhou-shengyun on 8/3/16.
@@ -102,5 +114,134 @@ public class CheckUtil {
 
     public static boolean checkCaptcha(String captcha){
         return !(captcha == null || captcha.isEmpty());
+    }
+
+
+    public static final int SAFETY_LEVEL_UNKNOWN = -1;
+    public static final int SAFETY_LEVEL_SAFE = 1;
+    public static final int SAFETY_LEVEL_HIDDEN_IN_DANGER = 2;
+    public static final int SAFEFT_LEVEL_DANGER = 3;
+
+    @SuppressWarnings("deprecation")
+    private static int getSafetyLevelColor(Resources r, int safetyLevel){
+        switch (safetyLevel){
+            case SAFETY_LEVEL_SAFE:
+                return r.getColor(R.color.green_500);
+            case SAFETY_LEVEL_HIDDEN_IN_DANGER:
+                return r.getColor(R.color.orange_500);
+            case SAFEFT_LEVEL_DANGER:
+                return r.getColor(R.color.red_500);
+        }
+        return r.getColor(R.color.grey_500);
+    }
+
+    public static int checkThermometerSafetyLevel(Thermometer thermometer){
+        //TODO: Return the corresponding safe level value according to the temperature.
+        return SAFETY_LEVEL_SAFE;
+    }
+
+    public static int checkThermometerSafetyLevel(TextView tv, Thermometer thermometer){
+        int checkResult = checkThermometerSafetyLevel(thermometer);
+        tv.setTextColor(getSafetyLevelColor(tv.getResources(), checkResult));
+        return checkResult;
+    }
+
+    public static int checkHumidometerSafetyLevel(Humidometer humidometer){
+        //TODO: Return the corresponding safe level value according to the humidity.
+        return SAFETY_LEVEL_SAFE;
+    }
+
+    public static int checkHumidometerSafetyLevel(TextView tv, Humidometer humidometer){
+        int checkResult = checkHumidometerSafetyLevel(humidometer);
+        tv.setTextColor(getSafetyLevelColor(tv.getResources(), checkResult));
+        return checkResult;
+    }
+
+    public static int checkSmokeTransducerSafetyLevel(SmokeTransducer smokeTransducer){
+        //TODO: Return the corresponding safe level value according to the smoke.
+        return SAFETY_LEVEL_SAFE;
+    }
+
+    public static int checkSmokeTransducerSafetyLevel(TextView tv, SmokeTransducer smokeTransducer){
+        int checkResult = checkSmokeTransducerSafetyLevel(smokeTransducer);
+        tv.setTextColor(getSafetyLevelColor(tv.getResources(), checkResult));
+        return checkResult;
+    }
+
+    public static int checkFeverThermometerSafetyLevel(FeverThermometer feverThermometer){
+        //TODO: Return the corresponding safe level value according to the body temperature.
+        return SAFETY_LEVEL_SAFE;
+    }
+
+    public static int checkFeverThermometerSafetyLevel(TextView tv, FeverThermometer feverThermometer){
+        int checkResult = checkFeverThermometerSafetyLevel(feverThermometer);
+        tv.setTextColor(getSafetyLevelColor(tv.getResources(), checkResult));
+        return checkResult;
+    }
+
+    public static int checkPulseTransducerSafetyLevel(PulseTransducer pulseTransducer){
+        //TODO: Return the corresponding safe level value according to the pulse.
+        return SAFETY_LEVEL_SAFE;
+    }
+
+    public static int checkPulseTransducerSafetyLevel(TextView tv, PulseTransducer pulseTransducer){
+        int checkResult = checkPulseTransducerSafetyLevel(pulseTransducer);
+        tv.setTextColor(getSafetyLevelColor(tv.getResources(), checkResult));
+        return checkResult;
+    }
+
+    public static int checkTurgoscopeSafetyLevel(Turgoscope turgoscope){
+        //TODO: Return the corresponding safe level value according to the blood pressure.
+        return SAFETY_LEVEL_SAFE;
+    }
+
+    public static int checkTurgoscopeSafetyLevel(TextView tv, Turgoscope turgoscope){
+        int checkResult = checkTurgoscopeSafetyLevel(turgoscope);
+        tv.setTextColor(getSafetyLevelColor(tv.getResources(), checkResult));
+        return checkResult;
+    }
+
+    public static int checkFamilySafetyLevel(@Nullable List<Thermometer> thermometer, @Nullable List<Humidometer> humidometer, @Nullable List<SmokeTransducer> smokeTransducer){
+        //TODO: Check the family safety level.
+        return SAFETY_LEVEL_SAFE;
+    }
+
+    public static int checkFamilySafetyLevel(TextView tv, View bgView, @Nullable List<Thermometer> thermometer, @Nullable List<Humidometer> humidometer, @Nullable List<SmokeTransducer> smokeTransducer){
+        int checkResult = checkFamilySafetyLevel(thermometer, humidometer, smokeTransducer);
+        bgView.setBackgroundColor(getSafetyLevelColor(bgView.getResources(), checkResult));
+        switch (checkResult){
+            case SAFETY_LEVEL_SAFE:
+                tv.setText(R.string.safe);
+                break;
+            case SAFETY_LEVEL_HIDDEN_IN_DANGER:
+                tv.setText(R.string.hidden_in_danger);
+                break;
+            case SAFEFT_LEVEL_DANGER:
+                tv.setText(R.string.danger);
+                break;
+        }
+        return checkResult;
+    }
+
+    public static int checkHealthSafetyLevel(@Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer, @Nullable Turgoscope turgoscope){
+        //TODO: Check the health safety level
+        return SAFETY_LEVEL_SAFE;
+    }
+
+    public static int checkHealthSafetyLevel(TextView tv, View bgView, @Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer, @Nullable Turgoscope turgoscope){
+        int checkResult = checkHealthSafetyLevel(feverThermometer, pulseTransducer, turgoscope);
+        bgView.setBackgroundColor(getSafetyLevelColor(bgView.getResources(), checkResult));
+        switch (checkResult){
+            case SAFETY_LEVEL_SAFE:
+                tv.setText(R.string.health_good);
+                break;
+            case SAFETY_LEVEL_HIDDEN_IN_DANGER:
+                tv.setText(R.string.health_so);
+                break;
+            case SAFEFT_LEVEL_DANGER:
+                tv.setText(R.string.health_bad);
+                break;
+        }
+        return checkResult;
     }
 }

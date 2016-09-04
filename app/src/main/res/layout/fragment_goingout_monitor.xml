@@ -63,9 +63,10 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/txt_older_location"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/older_location"
+                            android:text="@string/your_location"
                             android:textSize="@dimen/small_text_size" />
 
                         <TextView

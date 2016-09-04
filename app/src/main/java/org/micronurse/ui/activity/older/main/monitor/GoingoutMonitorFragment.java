@@ -1,8 +1,6 @@
 package org.micronurse.ui.activity.older.main.monitor;
 
-import android.graphics.Point;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
@@ -80,7 +78,7 @@ public class GoingoutMonitorFragment extends Fragment {
         if(viewRoot != null)
             return viewRoot;
 
-        viewRoot = inflater.inflate(R.layout.fragment_older_goingout_monitor, container, false);
+        viewRoot = inflater.inflate(R.layout.fragment_goingout_monitor, container, false);
         refresh = (SwipeRefreshLayout) viewRoot.findViewById(R.id.swipeLayout);
         refresh.setColorSchemeResources(R.color.colorAccent);
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
