@@ -1,12 +1,14 @@
-package org.micronurse.ui.activity.guardian.main.monitor;
+package org.micronurse.ui.fragment.monitor;
 
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -26,6 +28,7 @@ import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
 
+
 import org.micronurse.R;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
@@ -33,6 +36,8 @@ import org.micronurse.http.model.result.GPSDataListResult;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.model.GPS;
 import org.micronurse.model.Sensor;
+import org.micronurse.model.User;
+import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.ImageUtil;
@@ -43,14 +48,19 @@ import java.util.TimerTask;
 public class GoingoutMonitorFragment extends Fragment {
     private View viewRoot;
     private SwipeRefreshLayout refresh;
-    private Timer scheduleTask;
+    private FloatingActionButton btnFullScreen;
+    private ImageButton btnSetHomeLocation;
+    private OnFullScreenListener fullScreenListener;
+    private boolean isFullScreen = false;
 
+    private Timer scheduleTask;
     private GPS olderLocation;
     private MapView mMapView;
     private BaiduMap baiduMap;
     private MarkerOptions olderMarkerOptions;
     private Marker olderMarker;
     private GeoCoder geoCoder;
+    private String updateLocationURL;
 
     public GoingoutMonitorFragment() {
         // Required empty public constructor
@@ -69,6 +79,14 @@ public class GoingoutMonitorFragment extends Fragment {
                 }
             }
         });
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER)
+            updateLocationURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_GPS,
+                    String.valueOf(1));
+        else if(GlobalInfo.Guardian.monitorOlder != null){
+            updateLocationURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    Sensor.SENSOR_TYPE_GPS, String.valueOf(1));
+        }
     }
 
     @Override
@@ -78,8 +96,6 @@ public class GoingoutMonitorFragment extends Fragment {
             return viewRoot;
 
         viewRoot = inflater.inflate(R.layout.fragment_goingout_monitor, container, false);
-        ((TextView)viewRoot.findViewById(R.id.txt_older_location)).setText(R.string.older_location);
-        viewRoot.findViewById(R.id.btn_set_home_location).setVisibility(View.GONE);
         refresh = (SwipeRefreshLayout) viewRoot.findViewById(R.id.swipeLayout);
         refresh.setColorSchemeResources(R.color.colorAccent);
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -88,6 +104,40 @@ public class GoingoutMonitorFragment extends Fragment {
                 updateLocation();
             }
         });
+        btnSetHomeLocation = (ImageButton) viewRoot.findViewById(R.id.btn_set_home_location);
+        btnFullScreen = (FloatingActionButton) viewRoot.findViewById(R.id.btn_fullscreen);
+        btnFullScreen.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(!isFullScreen){
+                    isFullScreen = true;
+                    btnFullScreen.setImageResource(R.drawable.ic_fullscreen_exit);
+                    baiduMap.getUiSettings().setAllGesturesEnabled(true);
+                    refresh.setEnabled(false);
+                    mMapView.showZoomControls(true);
+                    mMapView.getChildAt(2)
+                            .setPadding(0, 0, getContext().getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin),
+                                    getContext().getResources().getDimensionPixelSize(R.dimen.map_zoom_control_padding_bottom));
+                    if(fullScreenListener != null){
+                        fullScreenListener.onEnterFullScreen();
+                    }
+                }else{
+                    isFullScreen = false;
+                    btnFullScreen.setImageResource(R.drawable.ic_fullscreen);
+                    baiduMap.getUiSettings().setAllGesturesEnabled(false);
+                    refresh.setEnabled(true);
+                    mMapView.showZoomControls(false);
+                    if(fullScreenListener != null){
+                        fullScreenListener.onExitFullScreen();
+                    }
+                }
+            }
+        });
+
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN){
+            btnSetHomeLocation.setVisibility(View.GONE);
+            ((TextView) viewRoot.findViewById(R.id.txt_older_location)).setText(R.string.older_location);
+        }
 
         mMapView = (MapView) viewRoot.findViewById(R.id.bmapView);
         mMapView.showZoomControls(false);
@@ -104,13 +154,13 @@ public class GoingoutMonitorFragment extends Fragment {
     @Override
     public void onResume() {
         mMapView.onResume();
-        refresh.setRefreshing(true);
-        if(GlobalInfo.Guardian.monitorOlder == null){
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
+                GlobalInfo.Guardian.monitorOlder == null){
             scheduleTask = null;
-            refresh.setVisibility(View.GONE);
             viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.VISIBLE);
+            viewRoot.findViewById(R.id.location_area).setVisibility(View.GONE);
+            refresh.setEnabled(false);
         }else {
-            refresh.setVisibility(View.VISIBLE);
             scheduleTask = new Timer();
             refresh.setRefreshing(true);
             updateHomeLocation();
@@ -126,30 +176,30 @@ public class GoingoutMonitorFragment extends Fragment {
 
     @Override
     public void onPause() {
-        scheduleTask.cancel();
+        if(scheduleTask != null)
+            scheduleTask.cancel();
         mMapView.onPause();
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
-        scheduleTask.cancel();
         mMapView.onDestroy();
         geoCoder.destroy();
         super.onDestroy();
     }
 
     private void updateLocation(){
-        new MicronurseAPI<GPSDataListResult>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_GPS, String.valueOf(1)), Request.Method.GET, null, GlobalInfo.token, new Response.Listener<GPSDataListResult>() {
+        new MicronurseAPI<GPSDataListResult>(getActivity(), updateLocationURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<GPSDataListResult>() {
             @Override
             public void onResponse(GPSDataListResult response) {
                 refresh.setRefreshing(false);
-                olderLocation = response.getDataList().get(0);
                 viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
                 viewRoot.findViewById(R.id.location_area).setVisibility(View.VISIBLE);
-                LatLng latLng = new LatLng(olderLocation.getLatitude(), olderLocation.getLongitude());
-                baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(latLng));
+                LatLng latLng = new LatLng(response.getDataList().get(0).getLatitude(), response.getDataList().get(0).getLongitude());
+                if(!isFullScreen || olderLocation == null)
+                    baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(latLng));
+                olderLocation = response.getDataList().get(0);
                 olderMarkerOptions.position(latLng);
                 if(olderMarker != null)
                     olderMarker.remove();
@@ -170,4 +220,9 @@ public class GoingoutMonitorFragment extends Fragment {
     private void updateHomeLocation(){
         //TODO:
     }
+
+    public void setOnFullScreenListener(OnFullScreenListener fullScreenListener) {
+        this.fullScreenListener = fullScreenListener;
+    }
+
 }

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
-        <item android:id="@+id/guardian_nav_monitor"
+        <item android:id="@+id/nav_monitor"
             android:icon="@drawable/ic_monitor"
             android:title="@string/action_monitor" />
 
-        <item android:id="@+id/guardian_nav_monitor_warning"
+        <item android:id="@+id/nav_monitor_warning"
             android:icon="@drawable/ic_warning"
             android:title="@string/action_monitor_warning"/>
 
-        <item android:id="@+id/guardian_nav_contacts"
+        <item android:id="@+id/nav_contacts"
             android:icon="@drawable/ic_contacts"
             android:title="@string/action_contacts_older"/>
 
@@ -17,11 +17,11 @@
 
     <item android:title="@string/other">
         <menu>
-            <item android:id="@+id/guardian_nav_settings"
+            <item android:id="@+id/nav_settings"
                 android:icon="@drawable/ic_settings"
                 android:title="@string/action_settings"/>
 
-            <item android:id="@+id/guardian_nav_exit"
+            <item android:id="@+id/nav_exit"
                 android:icon="@drawable/ic_exit"
                 android:title="@string/action_exit"/>
         </menu>

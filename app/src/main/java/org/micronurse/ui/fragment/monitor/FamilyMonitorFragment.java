@@ -1,4 +1,4 @@
-package org.micronurse.ui.activity.guardian.main.monitor;
+package org.micronurse.ui.fragment.monitor;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -26,6 +26,7 @@ import org.micronurse.model.Humidometer;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.SmokeTransducer;
 import org.micronurse.model.Thermometer;
+import org.micronurse.model.User;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 
@@ -46,9 +47,31 @@ public class FamilyMonitorFragment extends Fragment {
     private List<SmokeTransducer> smokeTransducerList;
 
     private Timer scheduleTask;
+    private String updateTemperatureURL;
+    private String updateHumidityURL;
+    private String updateSmokeURL;
 
     public FamilyMonitorFragment() {
         // Required empty public constructor
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            updateTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA,
+                    Sensor.SENSOR_TYPE_THERMOMETER, String.valueOf(1));
+            updateHumidityURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA,
+                    Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1));
+            updateSmokeURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA,
+                    Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1));
+        }
+        else if(GlobalInfo.Guardian.monitorOlder != null) {
+            updateTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    Sensor.SENSOR_TYPE_THERMOMETER, String.valueOf(1));
+            updateHumidityURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1));
+            updateSmokeURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1));
+        }
     }
 
     @Override
@@ -86,12 +109,13 @@ public class FamilyMonitorFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if(GlobalInfo.Guardian.monitorOlder == null){
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
+                GlobalInfo.Guardian.monitorOlder == null){
             scheduleTask = null;
-            refresh.setVisibility(View.GONE);
             viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.VISIBLE);
-        }else{
-            refresh.setVisibility(View.VISIBLE);
+            viewRoot.findViewById(R.id.family_monitor_data_area).setVisibility(View.GONE);
+            refresh.setEnabled(false);
+        }else {
             scheduleTask = new Timer();
             refresh.setRefreshing(true);
             scheduleTask.schedule(new TimerTask() {
@@ -107,14 +131,9 @@ public class FamilyMonitorFragment extends Fragment {
 
     @Override
     public void onPause() {
-        scheduleTask.cancel();
+        if(scheduleTask != null)
+            scheduleTask.cancel();
         super.onPause();
-    }
-
-    @Override
-    public void onDestroy() {
-        scheduleTask.cancel();
-        super.onDestroy();
     }
 
     private void updateSafeLevel(){
@@ -123,9 +142,7 @@ public class FamilyMonitorFragment extends Fragment {
     }
 
     private void updateTemperature(){
-        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_THERMOMETER, String.valueOf(1)),
-                Request.Method.GET, null, GlobalInfo.token, new Response.Listener<ThermometerDataListResult>() {
+        new MicronurseAPI<>(getActivity(), updateTemperatureURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<ThermometerDataListResult>() {
             @Override
             public void onResponse(ThermometerDataListResult response) {
                 viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);
@@ -145,9 +162,7 @@ public class FamilyMonitorFragment extends Fragment {
     }
 
     private void updateHumidity(){
-        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1)),
-                Request.Method.GET, null, GlobalInfo.token, new Response.Listener<HumidometerDataListResult>() {
+        new MicronurseAPI<>(getActivity(), updateHumidityURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<HumidometerDataListResult>() {
                     @Override
                     public void onResponse(HumidometerDataListResult response) {
                         viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);
@@ -167,9 +182,7 @@ public class FamilyMonitorFragment extends Fragment {
     }
 
     private void updateSmoke(){
-        new MicronurseAPI<>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1)),
-                Request.Method.GET, null, GlobalInfo.token, new Response.Listener<SmokeTransducerDataListResult>() {
+        new MicronurseAPI<>(getActivity(), updateSmokeURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<SmokeTransducerDataListResult>() {
                     @Override
                     public void onResponse(SmokeTransducerDataListResult response) {
                         viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);

@@ -34,19 +34,13 @@ import org.micronurse.http.model.result.Result;
 import org.micronurse.http.model.result.UserListResult;
 import org.micronurse.http.model.result.UserResult;
 import org.micronurse.http.model.PublicResultCode;
-import org.micronurse.model.User;
-import org.micronurse.ui.activity.guardian.GuardianMainActivity;
-import org.micronurse.ui.activity.older.OlderMainActivity;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.HttpAPIUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
 import cn.jpush.android.api.JPushInterface;
-import cn.jpush.android.api.TagAliasCallback;
 
 /**
  * A login screen that offers login via phone number/password.
@@ -213,14 +207,7 @@ public class LoginActivity extends AppCompatActivity {
                                     public void onResponse(UserResult response) {
                                         GlobalInfo.user = response.getUser();
                                         GlobalInfo.user.setPhoneNumber(phoneNumber);
-                                        switch (GlobalInfo.user.getAccountType()) {
-                                            case User.ACCOUNT_TPYE_OLDER:
-                                                loginIntent = new Intent(LoginActivity.this, OlderMainActivity.class);
-                                                break;
-                                            case User.ACCOUNT_TYPE_GUARDIAN:
-                                                loginIntent = new Intent(LoginActivity.this, GuardianMainActivity.class);
-                                                break;
-                                        }
+                                        loginIntent = new Intent(LoginActivity.this, MainActivity.class);
                                         new MicronurseAPI<UserListResult>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GUARDIANSHIP), Request.Method.GET,
                                                 null, GlobalInfo.token, new Response.Listener<UserListResult>() {
                                             @Override

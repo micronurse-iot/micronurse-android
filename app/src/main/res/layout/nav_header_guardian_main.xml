@@ -61,7 +61,6 @@
         android:id="@+id/nav_header_older_nickname"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Android Studio"
         android:singleLine="true"
         android:textSize="@dimen/small_text_size"
         android:textStyle="bold"

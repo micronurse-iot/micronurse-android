@@ -17,18 +17,12 @@ import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.http.model.result.UserListResult;
 import org.micronurse.http.model.result.UserResult;
-import org.micronurse.model.User;
-import org.micronurse.ui.activity.guardian.GuardianMainActivity;
-import org.micronurse.ui.activity.older.OlderMainActivity;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.HttpAPIUtil;
 
 import java.util.List;
-import java.util.Set;
-
 import cn.jpush.android.api.JPushInterface;
-import cn.jpush.android.api.TagAliasCallback;
 
 public class WelcomeActivity extends AppCompatActivity {
     private Intent loginIntent;
@@ -66,14 +60,7 @@ public class WelcomeActivity extends AppCompatActivity {
                                         public void onResponse(UserResult response) {
                                             GlobalInfo.user = response.getUser();
                                             GlobalInfo.user.setPhoneNumber(loginUserRecord.getPhoneNumber());
-                                            switch (GlobalInfo.user.getAccountType()) {
-                                                case User.ACCOUNT_TPYE_OLDER:
-                                                    loginIntent = new Intent(WelcomeActivity.this, OlderMainActivity.class);
-                                                    break;
-                                                case User.ACCOUNT_TYPE_GUARDIAN:
-                                                    loginIntent = new Intent(WelcomeActivity.this, GuardianMainActivity.class);
-                                                    break;
-                                            }
+                                            loginIntent = new Intent(WelcomeActivity.this, MainActivity.class);
                                             new MicronurseAPI<UserListResult>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GUARDIANSHIP), Request.Method.GET,
                                                     null, GlobalInfo.token, new Response.Listener<UserListResult>() {
                                                 @Override

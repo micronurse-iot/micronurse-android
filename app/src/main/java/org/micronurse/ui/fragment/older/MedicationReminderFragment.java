@@ -1,4 +1,4 @@
-package org.micronurse.ui.activity.guardian.main;
+package org.micronurse.ui.fragment.older;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -8,9 +8,9 @@ import android.view.ViewGroup;
 
 import org.micronurse.R;
 
-public class MonitorWarningFragment extends Fragment {
+public class MedicationReminderFragment extends Fragment {
 
-    public MonitorWarningFragment() {
+    public MedicationReminderFragment() {
         // Required empty public constructor
     }
 
@@ -18,6 +18,6 @@ public class MonitorWarningFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_older_monitor_warning, container, false);
+        return inflater.inflate(R.layout.fragment_older_medication_reminder, container, false);
     }
 }

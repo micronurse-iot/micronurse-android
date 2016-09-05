@@ -167,10 +167,10 @@ public class RegisterActivity extends AppCompatActivity{
                 gender = User.GENDER_FEMALE;
                 break;
         }
-        char accountType = User.ACCOUNT_TPYE_OLDER;
+        char accountType = User.ACCOUNT_TYPE_OLDER;
         switch (mAccountTypeGroup.getCheckedRadioButtonId()){
             case R.id.register_account_elder:
-                accountType = User.ACCOUNT_TPYE_OLDER;
+                accountType = User.ACCOUNT_TYPE_OLDER;
                 break;
             case R.id.register_account_guardian:
                 accountType = User.ACCOUNT_TYPE_GUARDIAN;

@@ -1,4 +1,4 @@
-package org.micronurse.ui.activity.older.main.monitor.goingout;
+package org.micronurse.ui.activity.older;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;

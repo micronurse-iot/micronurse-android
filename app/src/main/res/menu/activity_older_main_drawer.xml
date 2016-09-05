@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
-        <item android:id="@+id/older_nav_monitor"
+        <item android:id="@+id/nav_monitor"
             android:icon="@drawable/ic_monitor"
             android:title="@string/action_monitor" />
 
-        <item android:id="@+id/older_nav_monitor_warning"
+        <item android:id="@+id/nav_monitor_warning"
             android:icon="@drawable/ic_warning"
             android:title="@string/action_monitor_warning"/>
 
-        <item android:id="@+id/older_nav_friend_juan"
+        <item android:id="@+id/nav_friend_juan"
             android:icon="@drawable/ic_friend"
             android:title="@string/action_friend_juan"/>
 
-        <item android:id="@+id/older_nav_medication_reminder"
+        <item android:id="@+id/nav_medication_reminder"
             android:icon="@drawable/ic_alarm"
             android:title="@string/action_medication_reminder"/>
     </group>
 
     <item android:title="@string/other">
         <menu>
-            <item android:id="@+id/older_nav_settings"
+            <item android:id="@+id/nav_settings"
                 android:icon="@drawable/ic_settings"
                 android:title="@string/action_settings"/>
 
-            <item android:id="@+id/older_nav_exit"
+            <item android:id="@+id/nav_exit"
                 android:icon="@drawable/ic_exit"
                 android:title="@string/action_exit"/>
         </menu>

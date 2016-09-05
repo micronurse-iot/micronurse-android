@@ -1,4 +1,4 @@
-package org.micronurse.ui.activity.guardian;
+package org.micronurse.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,56 +13,107 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-
 import org.micronurse.R;
 import org.micronurse.database.model.Guardianship;
 import org.micronurse.model.User;
-import org.micronurse.ui.activity.guardian.main.ContactsFragment;
-import org.micronurse.ui.activity.guardian.main.MonitorFragment;
-import org.micronurse.ui.activity.guardian.main.MonitorWarningFragment;
+import org.micronurse.ui.activity.older.SettingsActivity;
+import org.micronurse.ui.fragment.guardian.ContactsFragment;
+import org.micronurse.ui.fragment.older.FriendJuanFragment;
+import org.micronurse.ui.fragment.older.MedicationReminderFragment;
+import org.micronurse.ui.fragment.MonitorFragment;
+import org.micronurse.ui.fragment.MonitorWarningFragment;
+import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
+import cn.jpush.android.api.JPushInterface;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class GuardianMainActivity extends AppCompatActivity
+public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
+    private DrawerLayout drawerLayout;
     private NavigationView mNavigationView;
     private View mNavHeaderView;
+
     private FragmentManager mFragmentManager;
     private MonitorFragment monitorFragment;
     private MonitorWarningFragment monitorWarningFragment;
+
+    private FriendJuanFragment friendJuanFragment;
+    private MedicationReminderFragment medicationReminderFragment;
+
     private ContactsFragment contactsFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_guardian_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_guardian_main);
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER)
+            setContentView(R.layout.activity_older_main);
+        else
+            setContentView(R.layout.activity_guardian_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        mNavigationView = (NavigationView) findViewById(R.id.nav_older_main);
-        mNavHeaderView = mNavigationView.getHeaderView(0);
-
+        mFragmentManager = getSupportFragmentManager();
         monitorFragment = new MonitorFragment();
         monitorWarningFragment = new MonitorWarningFragment();
-        contactsFragment = new ContactsFragment();
-        mFragmentManager = getSupportFragmentManager();
-        mFragmentManager.beginTransaction()
-                .add(R.id.guardian_main_container, monitorFragment)
-                .add(R.id.guardian_main_container, monitorWarningFragment)
-                .add(R.id.guardian_main_container, contactsFragment)
-                .commit();
 
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            friendJuanFragment = new FriendJuanFragment();
+            medicationReminderFragment = new MedicationReminderFragment();
+            mFragmentManager.beginTransaction()
+                    .add(R.id.main_container, monitorFragment)
+                    .add(R.id.main_container, monitorWarningFragment)
+                    .add(R.id.main_container, friendJuanFragment)
+                    .add(R.id.main_container, medicationReminderFragment)
+                    .commit();
+        }else{
+            contactsFragment = new ContactsFragment();
+            mFragmentManager.beginTransaction()
+                    .add(R.id.main_container, monitorFragment)
+                    .add(R.id.main_container, monitorWarningFragment)
+                    .add(R.id.main_container, contactsFragment)
+                    .commit();
+        }
+
+        mNavigationView = (NavigationView) findViewById(R.id.nav_older_main);
         mNavigationView.setNavigationItemSelectedListener(this);
         mNavigationView.getMenu().getItem(0).setChecked(true);
+        mNavHeaderView = mNavigationView.getHeaderView(0);
         onNavigationItemSelected(mNavigationView.getMenu().getItem(0));
+
+        monitorFragment.setOnFullScreenListener(new OnFullScreenListener() {
+            @Override
+            public void onEnterFullScreen() {
+                getSupportActionBar().hide();
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+            }
+
+            @Override
+            public void onExitFullScreen() {
+                getSupportActionBar().show();
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        DatabaseUtil.updateLoginRecord(GlobalInfo.user, GlobalInfo.token);
+
+        ((TextView)mNavHeaderView.findViewById(R.id.nav_header_nickname)).setText(GlobalInfo.user.getNickname());
+        ((TextView)mNavHeaderView.findViewById(R.id.nav_header_phone_num)).setText(GlobalInfo.user.getPhoneNumber());
+        if(GlobalInfo.user.getPortrait() != null)
+            ((CircleImageView)mNavHeaderView.findViewById(R.id.nav_header_portrait)).setImageBitmap(GlobalInfo.user.getPortrait());
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN){
+            updateMonitorOlder();
+        }
     }
 
     private void updateMonitorOlder(){
@@ -96,18 +147,6 @@ public class GuardianMainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        DatabaseUtil.updateLoginRecord(GlobalInfo.user, GlobalInfo.token);
-        updateMonitorOlder();
-
-        ((TextView)mNavHeaderView.findViewById(R.id.nav_header_nickname)).setText(GlobalInfo.user.getNickname());
-        ((TextView)mNavHeaderView.findViewById(R.id.nav_header_phone_num)).setText(GlobalInfo.user.getPhoneNumber());
-        if(GlobalInfo.user.getPortrait() != null)
-            ((CircleImageView)mNavHeaderView.findViewById(R.id.nav_header_portrait)).setImageBitmap(GlobalInfo.user.getPortrait());
-    }
-
-    @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -117,7 +156,6 @@ public class GuardianMainActivity extends AppCompatActivity
         }
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
@@ -126,33 +164,52 @@ public class GuardianMainActivity extends AppCompatActivity
         int id = item.getItemId();
         FragmentTransaction t;
         switch (id){
-            case R.id.guardian_nav_monitor:
+            case R.id.nav_monitor:
                 setTitle(R.string.action_monitor);
                 t = mFragmentManager.beginTransaction();
                 hideAllFragment(t);
                 t.show(monitorFragment);
                 t.commit();
                 break;
-            case R.id.guardian_nav_monitor_warning:
+            case R.id.nav_monitor_warning:
                 setTitle(R.string.action_monitor_warning);
                 t = mFragmentManager.beginTransaction();
                 hideAllFragment(t);
                 t.show(monitorWarningFragment);
                 t.commit();
                 break;
-            case R.id.guardian_nav_contacts:
+            case R.id.nav_friend_juan:
+                setTitle(R.string.action_friend_juan);
+                t = mFragmentManager.beginTransaction();
+                hideAllFragment(t);
+                t.show(friendJuanFragment);
+                t.commit();
+                break;
+            case R.id.nav_medication_reminder:
+                setTitle(R.string.action_medication_reminder);
+                t = mFragmentManager.beginTransaction();
+                hideAllFragment(t);
+                t.show(medicationReminderFragment);
+                t.commit();
+                break;
+            case R.id.nav_contacts:
                 setTitle(R.string.action_contacts_older);
                 t = mFragmentManager.beginTransaction();
                 hideAllFragment(t);
                 t.show(contactsFragment);
                 t.commit();
                 break;
-            case R.id.guardian_nav_exit:
+            case R.id.nav_exit:
                 //TODO:do something before exit
+                JPushInterface.stopPush(getApplicationContext());
                 finish();
                 break;
-            case R.id.guardian_nav_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
+            case R.id.nav_settings:
+                Intent intent;
+                if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER)
+                    intent = new Intent(this, SettingsActivity.class);
+                else
+                    intent = new Intent(this, org.micronurse.ui.activity.guardian.SettingsActivity.class);
                 startActivity(intent);
                 break;
         }
@@ -162,6 +219,11 @@ public class GuardianMainActivity extends AppCompatActivity
     private void hideAllFragment(FragmentTransaction ft){
         ft.hide(monitorFragment);
         ft.hide(monitorWarningFragment);
-        ft.hide(contactsFragment);
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            ft.hide(friendJuanFragment);
+            ft.hide(medicationReminderFragment);
+        }else {
+            ft.hide(contactsFragment);
+        }
     }
 }
