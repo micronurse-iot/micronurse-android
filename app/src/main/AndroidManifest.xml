@@ -7,20 +7,20 @@
         android:name="org.micronurse.permission.JPUSH_MESSAGE"
         android:protectionLevel="signature" />
 
-    <uses-permission android:name="org.micronurse.permission.JPUSH_MESSAGE"/>
+    <uses-permission android:name="org.micronurse.permission.JPUSH_MESSAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.RECEIVE_USER_PRESENT"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_USER_PRESENT" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"
         android:normalScreens="true"
-        android:smallScreens="true"/>
+        android:smallScreens="true" />
 
     <application
         android:name=".Application"
@@ -28,8 +28,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="false"
-        tools:replace="android:supportsRtl"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:replace="android:supportsRtl">
         <meta-data
             android:name="AA_DB_NAME"
             android:value="MicroNurse.db" />
@@ -38,23 +38,19 @@
             android:value="2" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,
-                           org.micronurse.database.model.Guardianship" />
+            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.Guardianship" />
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
-
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="EROcxOxeLvnewEAAR5hTIZpTBDWlCteD"/>
-
+            android:value="EROcxOxeLvnewEAAR5hTIZpTBDWlCteD" />
         <meta-data
             android:name="JPUSH_CHANNEL"
-            android:value="developer-default"/>
-
+            android:value="developer-default" />
         <meta-data
             android:name="JPUSH_APPKEY"
-            android:value="4a96d3acfa279d3fab851940"/>
+            android:value="4a96d3acfa279d3fab851940" />
 
         <activity
             android:name=".ui.activity.LoginActivity"
@@ -80,27 +76,32 @@
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".ui.activity.older.SettingsActivity"
             android:label="@string/action_settings" />
-        <activity android:name=".ui.activity.guardian.SettingsActivity"
+        <activity
+            android:name=".ui.activity.guardian.SettingsActivity"
             android:label="@string/action_settings" />
-        <activity android:name=".ui.activity.older.SettingHomeLocationActivity"/>
-        <activity android:name=".ui.activity.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"/>
+        <activity android:name=".ui.activity.older.SettingHomeLocationActivity" />
+        <activity
+            android:name=".ui.activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <service android:name=".service.EmergencyCallService" />
+
         <activity
             android:name="cn.jpush.android.ui.PushActivity"
             android:configChanges="orientation|keyboardHidden"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="cn.jpush.android.ui.PushActivity" />
+
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="org.micronurse"/>
+                <category android:name="org.micronurse" />
             </intent-filter>
         </activity>
 
@@ -118,19 +119,21 @@
 
         <receiver
             android:name="cn.jpush.android.service.PushReceiver"
-            android:enabled="true" >
+            android:enabled="true">
             <intent-filter android:priority="1000">
                 <action android:name="cn.jpush.android.intent.NOTIFICATION_RECEIVED_PROXY" />
-                <category android:name="org.micronurse"/>
+
+                <category android:name="org.micronurse" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.USER_PRESENT" />
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
-
         <receiver android:name="cn.jpush.android.service.AlarmReceiver" />
 
+        <activity android:name=".ui.activity.MonitorDetailActivity"
+            android:label="@string/monitor_detail"/>
     </application>
 
 </manifest>

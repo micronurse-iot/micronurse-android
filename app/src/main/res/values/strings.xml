@@ -89,4 +89,6 @@
     <string name="older_location">老人当前位置</string>
     <string name="unknown_location">未知位置</string>
     <string name="home_loaction_not_setting">家的位置未设置</string>
+
+    <string name="monitor_detail">监控详情</string>
 </resources>

@@ -127,7 +127,8 @@ public class MicronurseAPI<T extends Result> {
     public static String getApiUrl(String... urlParam){
         String url = BASE_URL;
         for(String s : urlParam){
-            url += '/' + s;
+            if(s != null && !s.isEmpty())
+                url += '/' + s;
         }
         return url;
     }

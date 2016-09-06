@@ -183,7 +183,7 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         if(turgoscope != null)
            sensorDataList.add(turgoscope);
         if(!sensorDataList.isEmpty())
-            healthDataList.setAdapter(new MonitorAdapter(getContext(), sensorDataList));
+            healthDataList.setAdapter(new MonitorAdapter(getActivity(), sensorDataList));
     }
 }
 

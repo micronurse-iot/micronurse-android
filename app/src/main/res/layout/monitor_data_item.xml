@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <TextView
+            <TextView android:id="@+id/txt_data_time"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textSize="@dimen/small_text_size"
