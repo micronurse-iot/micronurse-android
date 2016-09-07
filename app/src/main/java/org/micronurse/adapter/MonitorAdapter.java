@@ -24,10 +24,10 @@ import java.util.List;
 
 public class MonitorAdapter extends RecyclerView.Adapter<MonitorAdapter.ViewHolder> {
     private List<Object> dataList;
-    private Activity context;
+    private Context context;
     private Intent intent;
 
-    public MonitorAdapter(Activity context, List dataList) {
+    public MonitorAdapter(Context context, List dataList) {
         this.context = context;
         this.dataList = dataList;
         intent = new Intent(context, MonitorDetailActivity.class);
