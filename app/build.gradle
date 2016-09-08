@@ -49,5 +49,6 @@ dependencies {
             'com.mcxiaoke.volley:library:+',
             'de.hdodenhof:circleimageview:2.+',
             'com.michaelpardo:activeandroid:3.+',
+            'com.github.orangegangsters:swipy:1.2.3@aar',
     )
 }

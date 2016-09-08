@@ -1,16 +1,13 @@
 package org.micronurse.receiver;
 
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 
 import org.micronurse.R;
-import org.micronurse.util.GlobalInfo;
 
 import cn.jpush.android.api.JPushInterface;
 
@@ -29,7 +26,7 @@ public class MonitorWarningReceiver extends BroadcastReceiver {
         mBuilder.setContentTitle(title);
         mBuilder.setContentText(message);
         mBuilder.setSmallIcon(R.drawable.ic_warning);
-        //mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
+        mBuilder.setDefaults(NotificationCompat.DEFAULT_ALL);
         NotificationManager mNotificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(MONITOR_WARNING_NOTIFICATION_ID, mBuilder.build());

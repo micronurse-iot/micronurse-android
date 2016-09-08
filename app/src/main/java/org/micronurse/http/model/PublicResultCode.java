@@ -23,6 +23,7 @@ public class PublicResultCode {
 
     public static final int MOBILE_SENSOR_TYPE_UNSUPPORTED = 200101;
     public static final int MOBILE_SENSOR_DATA_NOT_FOUND = 200102;
+    public static final int MOBILE_SENSOR_WARNING_NOT_FOUND = 200103;
 
     public static final int MOBILE_GUARDIANSHIP_NOT_EXIST = 200201;
 }

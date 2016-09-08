@@ -15,23 +15,47 @@ public class DateTimeUtil {
     @SuppressLint("SimpleDateFormat")
     private static SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
     @SuppressLint("SimpleDateFormat")
-    private static SimpleDateFormat sdf2 = new SimpleDateFormat("MM-dd HH:mm:ss");
+    private static SimpleDateFormat sdf2 = new SimpleDateFormat("MM-dd");
     @SuppressLint("SimpleDateFormat")
-    private static SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd");
+
+    public static String convertTimestamp(Context context, Date time, boolean showDate, boolean showTime){
+        Date currentDate = new Date();
+        String timeStr = "";
+        if(time.getYear() == currentDate.getYear() && time.getMonth() == currentDate.getMonth()
+                && time.getDate() == currentDate.getDate()) {
+            if(showDate)
+                timeStr = context.getString(R.string.today);
+        }else if(time.getYear() == currentDate.getYear() && time.getMonth() == currentDate.getMonth()
+                && time.getDate() == currentDate.getDate() - 1){
+            if(showDate)
+                timeStr = context.getString(R.string.yesterday);
+        }else if(time.getYear() == currentDate.getYear()){
+            if(showDate)
+                timeStr = sdf2.format(time);
+        }else if(showDate){
+            timeStr = sdf3.format(time);
+        }
+        if(showTime){
+            if(showDate)
+                timeStr += ' ';
+            timeStr += sdf.format(time);
+        }
+        return timeStr;
+    }
 
     @SuppressWarnings("deprecation")
     public static String convertTimestamp(Context context, long timestamp){
-        Date currentDate = new Date();
-        Date specificDate = new Date(timestamp);
-        if(specificDate.getYear() == currentDate.getYear() && specificDate.getMonth() == currentDate.getMonth()
-                && specificDate.getDate() == currentDate.getDate()) {
-            return context.getString(R.string.today) + ' ' + sdf.format(specificDate);
-        }else if(specificDate.getYear() == currentDate.getYear() && specificDate.getMonth() == currentDate.getMonth()
-                && specificDate.getDate() == currentDate.getDate() - 1){
-            return context.getString(R.string.yesterday) + ' ' + sdf.format(specificDate);
-        }else if(specificDate.getYear() == currentDate.getYear()){
-            return sdf2.format(specificDate);
-        }
-        return sdf3.format(specificDate);
+        return convertTimestamp(context, new Date(timestamp), true, true);
+    }
+
+    public static String convertTimestamp(Context context, long timestamp, boolean showDate, boolean showTime){
+        return convertTimestamp(context, new Date(timestamp), showDate, showTime);
+    }
+
+    @SuppressWarnings("deprecation")
+    public static boolean isSameDay(Date d1, Date d2){
+        return d1.getYear() == d2.getYear() && d1.getMonth() == d2.getMonth()
+                && d1.getDate() == d2.getDate();
     }
 }

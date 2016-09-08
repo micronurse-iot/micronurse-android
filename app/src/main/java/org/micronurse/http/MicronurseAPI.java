@@ -29,7 +29,7 @@ import org.micronurse.util.GsonUtil;
 public class MicronurseAPI<T extends Result> {
     private static final String BASE_URL = "http://101.200.144.204:13000/micronurse/v1/mobile";
     private static RequestQueue requestQueue = null;
-    private Request<T> request;
+    private JSONRequest<T> request;
     private ProgressDialog mStatusDialog;
 
     public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
@@ -124,6 +124,10 @@ public class MicronurseAPI<T extends Result> {
         request.cancel();
     }
 
+    public void setJsonParser(JSONParser<T> jsonParser){
+        request.setJsonParser(jsonParser);
+    }
+
     public static String getApiUrl(String... urlParam){
         String url = BASE_URL;
         for(String s : urlParam){
@@ -146,9 +150,11 @@ public class MicronurseAPI<T extends Result> {
 
     public static class OlderSensorAPI{
         public static String LATEST_SENSOR_DATA = "sensor/sensor_data/older/latest";
+        public static String SENSOR_WARNING = "sensor/warning/older";
     }
 
     public static class GuardianSensorAPI{
         public static String LATEST_SENSOR_DATA = "sensor/sensor_data/guardian/latest";
+        public static String SENSOR_WARNING = "sensor/warning/guardian";
     }
 }
