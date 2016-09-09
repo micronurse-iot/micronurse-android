@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View android:id="@+id/timeline_divider"
+        android:layout_width="2dp"
+        android:layout_height="@dimen/timeline_header_height"
+        android:background="@color/indigo_500"
+        android:layout_marginLeft="15dp"
+        android:visibility="gone"/>
+
+    <ImageView android:id="@+id/timeline_circle"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginLeft="8dp"
+        android:layout_centerVertical="true"
+        android:src="@drawable/timeline_circle"
+        android:visibility="gone"/>
+
+    <TextView android:id="@+id/timeline_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/timeline_circle"
+        android:layout_centerVertical="true"
+        android:layout_margin="@dimen/item_padding"
+        android:textColor="@color/indigo_500"
+        android:textSize="@dimen/normal_text_size"
+        />
+
+</RelativeLayout>

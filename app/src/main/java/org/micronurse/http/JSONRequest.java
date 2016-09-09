@@ -23,6 +23,7 @@ class JSONRequest<T extends Result> extends Request<T> {
     private Class<T> mResultClass;
     private Object mRequestData;
     private Map<String, String> mHeaderMap = new HashMap<>();
+    private JSONParser<T> jsonParser;
 
     public JSONRequest(String url, int method, String token, Response.Listener<T> listener, Response.ErrorListener errorListener,
                        Object requestData, Class<T> resultType) {
@@ -60,8 +61,11 @@ class JSONRequest<T extends Result> extends Request<T> {
                 return Response.success(null,
                         HttpHeaderParser.parseCacheHeaders(response));
             }
-            return Response.success(GsonUtil.getGson().fromJson(jsonString, mResultClass),
-                    HttpHeaderParser.parseCacheHeaders(response));
+            if(jsonParser == null)
+                return Response.success(GsonUtil.getGson().fromJson(jsonString, mResultClass),
+                        HttpHeaderParser.parseCacheHeaders(response));
+            else
+                return Response.success(jsonParser.fromJson(jsonString), HttpHeaderParser.parseCacheHeaders(response));
         } catch (UnsupportedEncodingException e) {
             return Response.error(new ParseError(e));
         } catch (JsonSyntaxException jse) {
@@ -72,5 +76,9 @@ class JSONRequest<T extends Result> extends Request<T> {
     @Override
     protected void deliverResponse(T result) {
         mListener.onResponse(result);
+    }
+
+    public void setJsonParser(JSONParser<T> jsonParser) {
+        this.jsonParser = jsonParser;
     }
 }

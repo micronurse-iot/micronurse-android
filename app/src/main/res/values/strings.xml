@@ -64,6 +64,7 @@
 
     <string name="no_data">暂时没有数据</string>
     <string name="update_time">更新时间：</string>
+    <string name="warning_time">警报时间：</string>
     <string name="family_monitor_safe_level">安全等级</string>
     <string name="danger">危险</string>
     <string name="hidden_in_danger">存在隐患</string>
@@ -91,4 +92,7 @@
     <string name="home_loaction_not_setting">家的位置未设置</string>
 
     <string name="monitor_detail">监控详情</string>
+    <string name="no_monitor_warning">没有警报消息</string>
+    <string name="no_more_data">已经没有更多数据</string>
+    <string name="no_new_data">没有新的数据</string>
 </resources>

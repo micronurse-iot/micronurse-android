@@ -100,6 +100,10 @@ public class MainActivity extends AppCompatActivity
                 drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             }
         });
+
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN){
+            updateMonitorOlder();
+        }
     }
 
     @Override
