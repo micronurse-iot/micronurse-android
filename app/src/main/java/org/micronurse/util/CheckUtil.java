@@ -136,7 +136,13 @@ public class CheckUtil {
 
     public static int checkSafetyLevel(Thermometer thermometer){
         //TODO: Return the corresponding safe level value according to the temperature.
-        return SAFETY_LEVEL_SAFE;
+        float temperature = thermometer.getTemperature();
+        if(temperature >= 12.0 && temperature <= 38.0)
+            return SAFETY_LEVEL_SAFE;
+        else if(temperature >= 54.0)
+            return SAFEFT_LEVEL_DANGER;
+        else
+            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
     }
 
     public static int checkSafetyLevel(TextView tv, Thermometer thermometer){
@@ -147,7 +153,13 @@ public class CheckUtil {
 
     public static int checkSafetyLevel(Humidometer humidometer){
         //TODO: Return the corresponding safe level value according to the humidity.
-        return SAFETY_LEVEL_SAFE;
+        float humidity = humidometer.getHumidity();
+        if(humidity >= 0.3 && humidity <= 0.8)
+            return SAFETY_LEVEL_SAFE;
+        else if(humidity >= 0.9)
+            return SAFEFT_LEVEL_DANGER;
+        else
+            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
     }
 
     public static int checkSafetyLevel(TextView tv, Humidometer humidometer){
@@ -158,7 +170,15 @@ public class CheckUtil {
 
     public static int checkSafetyLevel(SmokeTransducer smokeTransducer){
         //TODO: Return the corresponding safe level value according to the smoke.
-        return SAFETY_LEVEL_SAFE;
+        //此处默认测量的返回值为烟雾浓度，单位以ppm计算
+        int smoke = smokeTransducer.getSmoke();
+        if(smoke <= 50)
+            return SAFETY_LEVEL_SAFE;
+        else if(smoke > 50 && smoke < 300)
+            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
+        else
+            return SAFEFT_LEVEL_DANGER;
+
     }
 
     public static int checkSafetyLevel(TextView tv, SmokeTransducer smokeTransducer){
@@ -168,8 +188,14 @@ public class CheckUtil {
     }
 
     public static int checkSafetyLevel(FeverThermometer feverThermometer){
-        //TODO: Return the corresponding safe level value according to the body temperature.
-        return SAFETY_LEVEL_SAFE;
+        //TODO: Return the corresponding safe level value according to the body temperature
+        float bodyHeat = feverThermometer.getTemperature();
+        if(bodyHeat >= 36.5 && bodyHeat <= 37.5)
+            return SAFETY_LEVEL_SAFE;
+        else if(bodyHeat <= 35.5 || bodyHeat >= 38.0)
+            return SAFEFT_LEVEL_DANGER;
+        else
+            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
     }
 
     public static int checkSafetyLevel(TextView tv, FeverThermometer feverThermometer){
@@ -180,7 +206,14 @@ public class CheckUtil {
 
     public static int checkSafetyLevel(PulseTransducer pulseTransducer){
         //TODO: Return the corresponding safe level value according to the pulse.
-        return SAFETY_LEVEL_SAFE;
+        int pulse = pulseTransducer.getPulse();
+        if(pulse >= 55 && pulse <= 100)
+            return SAFETY_LEVEL_SAFE;
+        else if(pulse <= 45 || pulse >= 110)
+            return SAFEFT_LEVEL_DANGER;
+        else
+            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
+
     }
 
     public static int checkSafetyLevel(TextView tv, PulseTransducer pulseTransducer){
@@ -191,7 +224,15 @@ public class CheckUtil {
 
     public static int checkSafetyLevel(Turgoscope turgoscope){
         //TODO: Return the corresponding safe level value according to the blood pressure.
-        return SAFETY_LEVEL_SAFE;
+        int lowBloodPressure = turgoscope.getLowBloodPressure();
+        int highBloodPressure = turgoscope.getHighBloodPressure();
+        if(highBloodPressure > 90 && highBloodPressure <= 140 && lowBloodPressure > 60 && lowBloodPressure <= 90)
+            return SAFETY_LEVEL_SAFE;
+        else if(highBloodPressure >= 141 && highBloodPressure <= 159 && lowBloodPressure >= 91 && lowBloodPressure <= 95)
+            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
+        else
+            return SAFEFT_LEVEL_DANGER;
+
     }
 
     public static int checkSafetyLevel(TextView tv, Turgoscope turgoscope){
@@ -202,7 +243,85 @@ public class CheckUtil {
 
     public static int checkFamilySafetyLevel(@Nullable List<Thermometer> thermometer, @Nullable List<Humidometer> humidometer, @Nullable List<SmokeTransducer> smokeTransducer){
         //TODO: Check the family safety level.
-        return SAFETY_LEVEL_SAFE;
+        int tempThermometerResult1 = SAFETY_LEVEL_SAFE;
+        int tempThermometerResult2 = SAFETY_LEVEL_SAFE;
+        int tempResult1 = SAFETY_LEVEL_SAFE;
+        for(int i = 0; i < thermometer.size(); i++){
+            tempThermometerResult1 = checkSafetyLevel(thermometer.get(i));
+            if(tempThermometerResult1 == SAFEFT_LEVEL_DANGER)
+                break;
+            if(tempThermometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER){
+                for(int j = i+1; j < thermometer.size(); j++){
+                    tempThermometerResult2 = checkSafetyLevel(thermometer.get(j));
+                    if(tempThermometerResult2 == SAFEFT_LEVEL_DANGER)
+                        break;
+                }
+                break;
+            }
+        }
+
+        if(tempThermometerResult1 == SAFEFT_LEVEL_DANGER || (tempThermometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempThermometerResult2 == SAFEFT_LEVEL_DANGER))
+            tempResult1 = SAFEFT_LEVEL_DANGER;
+        if(tempThermometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempThermometerResult2 != SAFEFT_LEVEL_DANGER)
+            tempResult1 = SAFETY_LEVEL_HIDDEN_IN_DANGER;
+        if(tempThermometerResult1 == SAFETY_LEVEL_SAFE)
+            tempResult1 = SAFETY_LEVEL_SAFE;
+
+        int tempHumidometerResult1 = SAFETY_LEVEL_SAFE;
+        int tempHumidometerResult2 = SAFETY_LEVEL_SAFE;
+        int tempResult2 = SAFETY_LEVEL_SAFE;
+        for(int i = 0; i < humidometer.size(); i++){
+            tempHumidometerResult1 = checkSafetyLevel(humidometer.get(i));
+            if(tempHumidometerResult1 == SAFEFT_LEVEL_DANGER)
+                break;
+            if(tempHumidometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER){
+                for(int j = i+1; j < humidometer.size(); j++){
+                    tempHumidometerResult2 = checkSafetyLevel(humidometer.get(j));
+                    if(tempHumidometerResult2 == SAFEFT_LEVEL_DANGER)
+                        break;
+                }
+                break;
+            }
+        }
+
+        if(tempHumidometerResult1 == SAFEFT_LEVEL_DANGER || (tempHumidometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempHumidometerResult2 == SAFEFT_LEVEL_DANGER))
+            tempResult2 = SAFEFT_LEVEL_DANGER;
+        if(tempHumidometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempHumidometerResult2 != SAFEFT_LEVEL_DANGER)
+            tempResult2 = SAFETY_LEVEL_HIDDEN_IN_DANGER;
+        if(tempHumidometerResult1 == SAFETY_LEVEL_SAFE)
+            tempResult2 = SAFETY_LEVEL_SAFE;
+
+        int tempSmokeTransducerResult1 = SAFETY_LEVEL_SAFE;
+        int tempSmokeTransducerResult2 = SAFETY_LEVEL_SAFE;
+        int tempResult3 = SAFETY_LEVEL_SAFE;
+        for(int i = 0; i < smokeTransducer.size(); i++){
+            tempSmokeTransducerResult1 = checkSafetyLevel(smokeTransducer.get(i));
+            if(tempSmokeTransducerResult1 == SAFEFT_LEVEL_DANGER)
+                break;
+            if(tempSmokeTransducerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER){
+                for(int j = i+1; j < smokeTransducer.size(); j++){
+                    tempSmokeTransducerResult2 = checkSafetyLevel(smokeTransducer.get(j));
+                    if(tempSmokeTransducerResult2 == SAFEFT_LEVEL_DANGER)
+                        break;
+                }
+                break;
+            }
+        }
+
+        if(tempSmokeTransducerResult1 == SAFEFT_LEVEL_DANGER || (tempSmokeTransducerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempSmokeTransducerResult2 == SAFEFT_LEVEL_DANGER))
+            tempResult3 = SAFEFT_LEVEL_DANGER;
+        if(tempSmokeTransducerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempSmokeTransducerResult2 != SAFEFT_LEVEL_DANGER)
+            tempResult3 = SAFETY_LEVEL_HIDDEN_IN_DANGER;
+        if(tempSmokeTransducerResult1 == SAFETY_LEVEL_SAFE)
+            tempResult3 = SAFETY_LEVEL_SAFE;
+
+
+        if(tempResult1 == SAFEFT_LEVEL_DANGER || tempResult2 == SAFETY_LEVEL_SAFE || tempResult3 == SAFEFT_LEVEL_DANGER)
+            return SAFEFT_LEVEL_DANGER;
+        else if(tempResult1 == SAFETY_LEVEL_SAFE && tempResult2 == SAFETY_LEVEL_SAFE && tempResult3 == SAFETY_LEVEL_SAFE)
+            return SAFETY_LEVEL_SAFE;
+        else
+            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
     }
 
     public static int checkFamilySafetyLevel(TextView tv, View bgView, @Nullable List<Thermometer> thermometer, @Nullable List<Humidometer> humidometer, @Nullable List<SmokeTransducer> smokeTransducer){
@@ -224,7 +343,17 @@ public class CheckUtil {
 
     public static int checkHealthSafetyLevel(@Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer, @Nullable Turgoscope turgoscope){
         //TODO: Check the health safety level
-        return SAFETY_LEVEL_SAFE;
+        int feverThermometerResult = checkSafetyLevel(feverThermometer);
+        int pulseTransducerResult = checkSafetyLevel(pulseTransducer);
+        int turgoscopeResult = checkSafetyLevel(turgoscope);
+
+        if(feverThermometerResult == SAFEFT_LEVEL_DANGER || pulseTransducerResult == SAFEFT_LEVEL_DANGER || turgoscopeResult == SAFEFT_LEVEL_DANGER)
+            return SAFEFT_LEVEL_DANGER;
+        else if(feverThermometerResult == SAFETY_LEVEL_SAFE && pulseTransducerResult == SAFETY_LEVEL_SAFE && turgoscopeResult == SAFETY_LEVEL_SAFE)
+            return SAFETY_LEVEL_SAFE;
+        else
+            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
+
     }
 
     public static int checkHealthSafetyLevel(TextView tv, View bgView, @Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer, @Nullable Turgoscope turgoscope){
