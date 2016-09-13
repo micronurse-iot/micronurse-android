@@ -27,4 +27,5 @@
     <dimen name="map_zoom_control_padding_bottom">100dp</dimen>
     <dimen name="timeline_height">90dp</dimen>
     <dimen name="timeline_header_height">45dp</dimen>
+    <dimen name="linechart_height">450dp</dimen>
 </resources>
