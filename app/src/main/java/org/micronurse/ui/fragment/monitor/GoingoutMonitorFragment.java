@@ -153,7 +153,11 @@ public class GoingoutMonitorFragment extends Fragment {
 
     @Override
     public void onResume() {
+        super.onResume();
         mMapView.onResume();
+    }
+
+    private void startScheduleTask(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
                 GlobalInfo.Guardian.monitorOlder == null){
             scheduleTask = null;
@@ -171,15 +175,29 @@ public class GoingoutMonitorFragment extends Fragment {
                 }
             }, 0, 5000);
         }
-        super.onResume();
     }
 
     @Override
     public void onPause() {
-        if(scheduleTask != null)
+        if(scheduleTask != null) {
             scheduleTask.cancel();
+            scheduleTask = null;
+        }
         mMapView.onPause();
         super.onPause();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if(hidden){
+            if(scheduleTask != null) {
+                scheduleTask.cancel();
+                scheduleTask = null;
+            }
+        }else{
+            startScheduleTask();
+        }
     }
 
     @Override

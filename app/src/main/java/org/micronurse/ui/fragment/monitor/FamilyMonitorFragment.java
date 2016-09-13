@@ -5,6 +5,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +36,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class FamilyMonitorFragment extends Fragment {
+    public static final String BUNDLE_KEY_FIRST_DISPLAY = "FirstDisplay";
+
     private View viewRoot;
     private TextView txtSafeLevel;
     private RecyclerView temperatureList;
@@ -50,6 +53,7 @@ public class FamilyMonitorFragment extends Fragment {
     private String updateTemperatureURL;
     private String updateHumidityURL;
     private String updateSmokeURL;
+    private boolean firstDisplay = false;
 
     public FamilyMonitorFragment() {
         // Required empty public constructor
@@ -72,6 +76,11 @@ public class FamilyMonitorFragment extends Fragment {
                     GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
                     Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1));
         }
+    }
+
+    @Override
+    public void setArguments(Bundle args) {
+        firstDisplay = args.getBoolean(BUNDLE_KEY_FIRST_DISPLAY, false);
     }
 
     @Override
@@ -102,13 +111,12 @@ public class FamilyMonitorFragment extends Fragment {
                 updateSmoke();
             }
         });
-
+        if(firstDisplay)
+            startScheduleTask();
         return viewRoot;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
+    private void startScheduleTask(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
                 GlobalInfo.Guardian.monitorOlder == null){
             scheduleTask = null;
@@ -116,6 +124,8 @@ public class FamilyMonitorFragment extends Fragment {
             viewRoot.findViewById(R.id.family_monitor_data_area).setVisibility(View.GONE);
             refresh.setEnabled(false);
         }else {
+            if(scheduleTask != null)
+                return;
             scheduleTask = new Timer();
             refresh.setRefreshing(true);
             scheduleTask.schedule(new TimerTask() {
@@ -131,9 +141,24 @@ public class FamilyMonitorFragment extends Fragment {
 
     @Override
     public void onPause() {
-        if(scheduleTask != null)
+        if(scheduleTask != null) {
             scheduleTask.cancel();
+            scheduleTask = null;
+        }
         super.onPause();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        if(hidden) {
+            if(scheduleTask != null) {
+                scheduleTask.cancel();
+                scheduleTask = null;
+            }
+        }else{
+            startScheduleTask();
+        }
+        super.onHiddenChanged(hidden);
     }
 
     private void updateSafeLevel(){

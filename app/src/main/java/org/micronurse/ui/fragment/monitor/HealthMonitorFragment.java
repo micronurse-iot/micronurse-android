@@ -90,9 +90,7 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         return viewRoot;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
+    private void startScheduleTask(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
                 GlobalInfo.Guardian.monitorOlder == null){
             scheduleTask = null;
@@ -100,6 +98,8 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             viewRoot.findViewById(R.id.health_data_area).setVisibility(View.GONE);
             swipeLayout.setEnabled(false);
         }else {
+            if(scheduleTask != null)
+                return;
             scheduleTask = new Timer();
             swipeLayout.setRefreshing(true);
             scheduleTask.schedule(new TimerTask() {
@@ -113,9 +113,24 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
 
     @Override
     public void onPause() {
-        if (scheduleTask != null)
+        if(scheduleTask != null) {
             scheduleTask.cancel();
+            scheduleTask = null;
+        }
         super.onPause();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if(hidden){
+            if(scheduleTask != null) {
+                scheduleTask.cancel();
+                scheduleTask = null;
+            }
+        }else{
+            startScheduleTask();
+        }
     }
 
     @Override

@@ -124,7 +124,7 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     }
                 });
             } else if (data instanceof SmokeTransducer) {
-                holder.dataView.setText(String.valueOf(((SmokeTransducer) data).getSmoke()));
+                holder.dataView.setText(String.valueOf(((SmokeTransducer) data).getSmoke()) + "ppm");
                 CheckUtil.checkSafetyLevel(holder.dataView, (SmokeTransducer) data);
                 holder.dataNameView.setText(((SmokeTransducer) data).getName());
                 holder.itemCardView.setOnClickListener(new View.OnClickListener() {

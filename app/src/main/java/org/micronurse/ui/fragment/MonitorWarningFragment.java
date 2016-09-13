@@ -62,6 +62,9 @@ public class MonitorWarningFragment extends Fragment {
         // Required empty public constructor
         upStartTime = Calendar.getInstance();
         downEndTime = Calendar.getInstance();
+        long currentTime = System.currentTimeMillis();
+        upStartTime.setTimeInMillis(currentTime + 1);
+        downEndTime.setTimeInMillis(currentTime);
         jsonParser = new JSONParser<SensorWarningListResult>() {
             @Override
             public SensorWarningListResult fromJson(String jsonStr) {
@@ -174,7 +177,7 @@ public class MonitorWarningFragment extends Fragment {
                     }
                     dataList.addFirst(sw.getSensorData());
                     if(i == 0){
-                        upStartTime.setTimeInMillis(sw.getSensorData().getTimestamp());
+                        upStartTime.setTimeInMillis(sw.getSensorData().getTimestamp() + 1);
                         dataList.addFirst(new Date(sw.getSensorData().getTimestamp()));
                     }
                 }
@@ -221,7 +224,7 @@ public class MonitorWarningFragment extends Fragment {
                         dataList.addLast(d);
                     }
                     dataList.addLast(sw.getSensorData());
-                    downEndTime.setTimeInMillis(sw.getSensorData().getTimestamp());
+                    downEndTime.setTimeInMillis(sw.getSensorData().getTimestamp() - 1);
                 }
                 adapter.notifyDataSetChanged();
             }

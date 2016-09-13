@@ -50,5 +50,6 @@ dependencies {
             'de.hdodenhof:circleimageview:2.+',
             'com.michaelpardo:activeandroid:3.+',
             'com.github.orangegangsters:swipy:1.2.3@aar',
+            'com.github.lecho:hellocharts-library:1.5.8@aar',
     )
 }
