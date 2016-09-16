@@ -38,8 +38,10 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.context = context;
         this.dataList = dataList;
         this.showTimeline = showTimeline;
-        txtDatatime = context.getString(R.string.update_time);
-        intent = new Intent(context, MonitorDetailActivity.class);
+        if (context != null) {
+            txtDatatime = context.getString(R.string.update_time);
+            intent = new Intent(context, MonitorDetailActivity.class);
+        }
     }
 
     public MonitorAdapter(Context context, List dataList) {

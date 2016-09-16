@@ -119,7 +119,6 @@ public class MonitorWarningFragment extends Fragment {
         viewRoot = inflater.inflate(R.layout.fragment_monitor_warning, container, false);
         dataListView = (RecyclerView) viewRoot.findViewById(R.id.data_list);
         dataListView.setLayoutManager(new LinearLayoutManager(getContext()));
-        dataList.add(new Date());
         adapter = new MonitorAdapter(getContext(), dataList, true);
         adapter.setTxtDatatime(getString(R.string.warning_time));
         dataListView.setAdapter(adapter);

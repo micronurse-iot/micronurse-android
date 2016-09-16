@@ -1,5 +1,6 @@
 package org.micronurse.ui.activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -8,6 +9,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
@@ -204,9 +206,16 @@ public class MainActivity extends AppCompatActivity
                 t.commit();
                 break;
             case R.id.nav_exit:
-                //TODO:do something before exit
-                JPushInterface.stopPush(getApplicationContext());
-                finish();
+                AlertDialog ad = new AlertDialog.Builder(this).setMessage(R.string.exit_query)
+                        .setPositiveButton(R.string.action_ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //TODO:do something before exit
+                                JPushInterface.stopPush(getApplicationContext());
+                                finish();
+                            }
+                        }).setNegativeButton(R.string.action_cancel, null).create();
+                ad.show();
                 break;
             case R.id.nav_settings:
                 Intent intent;

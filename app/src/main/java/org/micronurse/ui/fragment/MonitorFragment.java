@@ -93,12 +93,14 @@ public class MonitorFragment extends Fragment {
         super.onResume();
         if(currentFragment != null)
             currentFragment.onHiddenChanged(false);
+        else
+            currentFragment = monitorPages[0];
     }
 
     @Override
     public void onPause() {
-        super.onPause();
         currentFragment.onHiddenChanged(true);
+        super.onPause();
     }
 
     public void setOnFullScreenListener(OnFullScreenListener fullScreenListener) {

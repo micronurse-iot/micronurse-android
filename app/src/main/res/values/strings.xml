@@ -96,4 +96,8 @@
     <string name="no_monitor_warning">没有警报消息</string>
     <string name="no_more_data">已经没有更多数据</string>
     <string name="no_new_data">没有新的数据</string>
+
+    <string name="exit_query">确定要退出吗？退出后将无法接收到监控警报消息。</string>
+    <string name="action_ok">确定</string>
+    <string name="action_cancel">取消</string>
 </resources>
