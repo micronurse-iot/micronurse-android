@@ -55,6 +55,9 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
 
     public HealthMonitorFragment() {
         // Required empty public constructor
+    }
+
+    private void updateURL(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
             updateBodyTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_FEVER_THERMOMETER,
                     String.valueOf(1));
@@ -78,6 +81,8 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        if(viewRoot != null)
+            return viewRoot;
         viewRoot = inflater.inflate(R.layout.fragment_health_monitor, container, false);
         swipeLayout = (SwipeRefreshLayout)viewRoot.findViewById(R.id.swipeLayout);
         swipeLayout.setColorSchemeResources(R.color.colorAccent);
@@ -87,6 +92,8 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         healthDataList = (RecyclerView) viewRoot.findViewById(R.id.health_data_list);
         healthDataList.setLayoutManager(new LinearLayoutManager(getContext()));
         healthDataList.setNestedScrollingEnabled(false);
+
+        updateURL();
         return viewRoot;
     }
 

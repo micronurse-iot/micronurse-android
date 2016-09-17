@@ -79,6 +79,9 @@ public class GoingoutMonitorFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void updateURL(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER)
             updateLocationURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_GPS,
                     String.valueOf(1));
@@ -148,6 +151,8 @@ public class GoingoutMonitorFragment extends Fragment {
         olderMarkerOptions = new MarkerOptions()
                 .icon(BitmapDescriptorFactory.fromBitmap(ImageUtil.getBitmapFromDrawable(getContext(), R.drawable.ic_location_red)))
                 .draggable(false);
+
+        updateURL();
         return viewRoot;
     }
 

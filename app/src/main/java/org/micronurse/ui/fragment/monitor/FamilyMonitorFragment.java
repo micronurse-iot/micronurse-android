@@ -57,6 +57,9 @@ public class FamilyMonitorFragment extends Fragment {
 
     public FamilyMonitorFragment() {
         // Required empty public constructor
+    }
+
+    private void updateURL(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
             updateTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA,
                     Sensor.SENSOR_TYPE_THERMOMETER, String.valueOf(1));
@@ -101,6 +104,8 @@ public class FamilyMonitorFragment extends Fragment {
         smokeList = (RecyclerView) viewRoot.findViewById(R.id.smoke_list);
         smokeList.setLayoutManager(new LinearLayoutManager(getContext()));
         smokeList.setNestedScrollingEnabled(false);
+
+        updateURL();
 
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             //TODO refresh
