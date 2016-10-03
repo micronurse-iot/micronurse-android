@@ -1,26 +1,25 @@
 package org.micronurse.ui.fragment.monitor;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
+import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.adapter.MonitorAdapter;
 import org.micronurse.http.APIErrorListener;
@@ -31,6 +30,7 @@ import org.micronurse.http.model.result.Result;
 import org.micronurse.http.model.result.TurgoscopeDataListResult;
 import org.micronurse.model.FeverThermometer;
 import org.micronurse.model.PulseTransducer;
+import org.micronurse.model.RawSensorData;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.Turgoscope;
 import org.micronurse.model.User;
@@ -48,10 +48,11 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     private PulseTransducer pulseTransducer;
     private Turgoscope turgoscope;
     private List<Object> sensorDataList = new ArrayList<>();
-    private Timer scheduleTask;
     private String updateBodyTemperatureURL;
     private String updatePulseURL;
-    private String updateBodyBloodPressureURL;
+    private String updateBloodPressureURL;
+
+    private SensorDataReceiver receiver;
 
     public HealthMonitorFragment() {
         // Required empty public constructor
@@ -63,7 +64,7 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
                     String.valueOf(1));
             updatePulseURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_PULSE_TRANSDUCER,
                     String.valueOf(1));
-            updateBodyBloodPressureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_TURGOSCOPE,
+            updateBloodPressureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_TURGOSCOPE,
                     String.valueOf(1));
         }else if(GlobalInfo.Guardian.monitorOlder != null){
             updateBodyTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
@@ -72,9 +73,11 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             updatePulseURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
                     GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
                     Sensor.SENSOR_TYPE_PULSE_TRANSDUCER, String.valueOf(1));
-            updateBodyBloodPressureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
+            updateBloodPressureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
                     GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
                     Sensor.SENSOR_TYPE_TURGOSCOPE, String.valueOf(1));
+        }else{
+            swipeLayout.setEnabled(false);
         }
     }
 
@@ -94,50 +97,15 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         healthDataList.setNestedScrollingEnabled(false);
 
         updateURL();
-        return viewRoot;
-    }
-
-    private void startScheduleTask(){
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
-                GlobalInfo.Guardian.monitorOlder == null){
-            scheduleTask = null;
-            viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.VISIBLE);
-            viewRoot.findViewById(R.id.health_data_area).setVisibility(View.GONE);
-            swipeLayout.setEnabled(false);
-        }else {
-            if(scheduleTask != null)
-                return;
-            scheduleTask = new Timer();
+        if(swipeLayout.isEnabled()){
             swipeLayout.setRefreshing(true);
-            scheduleTask.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    updateData();
-                }
-            }, 0, 5000);
+            updateData();
         }
-    }
-
-    @Override
-    public void onPause() {
-        if(scheduleTask != null) {
-            scheduleTask.cancel();
-            scheduleTask = null;
-        }
-        super.onPause();
-    }
-
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        if(hidden){
-            if(scheduleTask != null) {
-                scheduleTask.cancel();
-                scheduleTask = null;
-            }
-        }else{
-            startScheduleTask();
-        }
+        receiver = new SensorDataReceiver();
+        IntentFilter filter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
+        filter.addCategory(getContext().getPackageName());
+        getContext().registerReceiver(receiver, filter);
+        return viewRoot;
     }
 
     @Override
@@ -145,13 +113,18 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         updateData();
     }
 
+    @Override
+    public void onDestroy() {
+        getContext().unregisterReceiver(receiver);
+        super.onDestroy();
+    }
+
     private void updateData(){
         new MicronurseAPI<>(getContext(), updateBodyTemperatureURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<FeverThermometerDataListResult>() {
             @Override
             public void onResponse(FeverThermometerDataListResult response) {
-                feverThermometer = response.getDataList().get(0);
+                updateBodyTemperature(response.getDataList().get(0));
                 swipeLayout.setRefreshing(false);
-                updateDataView();
             }
         }, new APIErrorListener() {
             @Override
@@ -163,9 +136,8 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         new MicronurseAPI<>(getContext(), updatePulseURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<PulseTransducerDataListResult>() {
             @Override
             public void onResponse(PulseTransducerDataListResult response) {
-                pulseTransducer = response.getDataList().get(0);
+                updatePulse(response.getDataList().get(0));
                 swipeLayout.setRefreshing(false);
-                updateDataView();
             }
         }, new APIErrorListener() {
             @Override
@@ -174,12 +146,11 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             }
         }, PulseTransducerDataListResult.class, false, null).startRequest();
 
-        new MicronurseAPI<>(getContext(), updateBodyBloodPressureURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<TurgoscopeDataListResult>() {
+        new MicronurseAPI<>(getContext(), updateBloodPressureURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<TurgoscopeDataListResult>() {
             @Override
             public void onResponse(TurgoscopeDataListResult response) {
-                turgoscope = response.getDataList().get(0);
+                updateBloodPressure(response.getDataList().get(0));
                 swipeLayout.setRefreshing(false);
-                updateDataView();
             }
         }, new APIErrorListener() {
             @Override
@@ -187,6 +158,33 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
                 swipeLayout.setRefreshing(false);
             }
         }, TurgoscopeDataListResult.class, false, null).startRequest();
+    }
+
+    private synchronized void updateBodyTemperature(FeverThermometer feverThermometer){
+        if(this.feverThermometer != null) {
+            if (feverThermometer.getTimestamp() <= this.feverThermometer.getTimestamp())
+                return;
+        }
+        this.feverThermometer = feverThermometer;
+        updateDataView();
+    }
+
+    private synchronized void updatePulse(PulseTransducer pulseTransducer){
+        if(this.pulseTransducer != null) {
+            if (pulseTransducer.getTimestamp() <= this.pulseTransducer.getTimestamp())
+                return;
+        }
+        this.pulseTransducer = pulseTransducer;
+        updateDataView();
+    }
+
+    private synchronized void updateBloodPressure(Turgoscope turgoscope){
+        if(this.turgoscope != null) {
+            if (turgoscope.getTimestamp() <= this.turgoscope.getTimestamp())
+                return;
+        }
+        this.turgoscope = turgoscope;
+        updateDataView();
     }
 
     @SuppressLint("SetTextI18n")
@@ -203,9 +201,38 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         if(pulseTransducer != null)
             sensorDataList.add(pulseTransducer);
         if(turgoscope != null)
-           sensorDataList.add(turgoscope);
+            sensorDataList.add(turgoscope);
         if(!sensorDataList.isEmpty())
             healthDataList.setAdapter(new MonitorAdapter(getActivity(), sensorDataList));
+    }
+
+    private class SensorDataReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
+                    !GlobalInfo.user.getPhoneNumber().equals(userId))
+                return;
+            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
+                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
+                return;
+            RawSensorData rawSensorData = (RawSensorData) intent.getSerializableExtra(Application.BUNDLE_KEY_RAW_SENSOR_DATA);
+            try {
+                if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_FEVER_THERMOMETER))
+                    updateBodyTemperature(new FeverThermometer(rawSensorData.getTimestamp(), Float.valueOf(rawSensorData.getValue())));
+                else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_PULSE_TRANSDUCER))
+                    updatePulse(new PulseTransducer(rawSensorData.getTimestamp(), Integer.valueOf(rawSensorData.getValue())));
+                else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_TURGOSCOPE)){
+                    String[] splitStr = rawSensorData.getValue().split("/", 2);
+                    if(splitStr.length != 2)
+                        return;
+                    updateBloodPressure(new Turgoscope(rawSensorData.getTimestamp(), Integer.valueOf(splitStr[0]),
+                            Integer.valueOf(splitStr[1])));
+                }
+            }catch (NumberFormatException nfe){
+                nfe.printStackTrace();
+            }
+        }
     }
 }
 

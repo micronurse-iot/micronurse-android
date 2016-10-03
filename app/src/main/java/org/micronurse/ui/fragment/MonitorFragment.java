@@ -47,9 +47,6 @@ public class MonitorFragment extends Fragment {
                 new HealthMonitorFragment(),
                 new GoingoutMonitorFragment()
         };
-        Bundle b = new Bundle();
-        b.putBoolean(FamilyMonitorFragment.BUNDLE_KEY_FIRST_DISPLAY, true);
-        monitorPages[0].setArguments(b);
         ((GoingoutMonitorFragment)monitorPages[2]).setOnFullScreenListener(new OnFullScreenListener() {
             @Override
             public void onEnterFullScreen() {

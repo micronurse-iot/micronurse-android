@@ -121,11 +121,17 @@ public class MQTTService extends Service implements MqttCallback {
         cause.printStackTrace();
         while (!exitFlag) {
             try {
-                mqttClient.reconnect();
+                Log.i(GlobalInfo.LOG_TAG, "Trying to reconnect to MQTT broker...");
+                mqttClient.connect(connOpts);
                 Log.i(GlobalInfo.LOG_TAG, "Reconnected to MQTT broker.");
                 break;
             }catch (MqttException e) {
                 e.printStackTrace();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
             }
         }
     }

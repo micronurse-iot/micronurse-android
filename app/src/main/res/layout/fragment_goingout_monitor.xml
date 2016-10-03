@@ -55,7 +55,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="@dimen/item_padding"
                         android:tint="@color/red_500"
-                        android:src="@drawable/ic_location_32dp" />
+                        app:srcCompat="@drawable/ic_location_32dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -98,7 +98,7 @@
                 </LinearLayout>
             </android.support.v7.widget.CardView>
 
-            <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+            <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/item_padding"
@@ -121,7 +121,7 @@
                         android:layout_centerVertical="true"
                         android:layout_marginRight="@dimen/item_padding"
                         android:tint="@color/indigo_500"
-                        android:src="@drawable/ic_home_32dp" />
+                        app:srcCompat="@drawable/ic_home_32dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -140,7 +140,7 @@
                         android:layout_centerVertical="true"
                         android:layout_alignParentRight="true"
                         android:tint="@color/blue_500"
-                        android:src="@drawable/ic_settings"
+                        app:srcCompat="@drawable/ic_settings"
                         style="@style/AppTheme.ImageButton" />
 
                 </RelativeLayout>
@@ -156,7 +156,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginRight="@dimen/activity_horizontal_margin"
                 android:layout_marginBottom="@dimen/activity_vertical_margin"
-                android:src="@drawable/ic_fullscreen"
+                app:srcCompat="@drawable/ic_fullscreen"
                 android:tint="@android:color/white"/>
 
         </RelativeLayout>

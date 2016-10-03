@@ -1,5 +1,9 @@
 package org.micronurse.ui.fragment.monitor;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -15,6 +19,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
+import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.adapter.MonitorAdapter;
 import org.micronurse.http.APIErrorListener;
@@ -24,6 +29,7 @@ import org.micronurse.http.model.result.Result;
 import org.micronurse.http.model.result.SmokeTransducerDataListResult;
 import org.micronurse.http.model.result.ThermometerDataListResult;
 import org.micronurse.model.Humidometer;
+import org.micronurse.model.RawSensorData;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.SmokeTransducer;
 import org.micronurse.model.Thermometer;
@@ -31,13 +37,12 @@ import org.micronurse.model.User;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class FamilyMonitorFragment extends Fragment {
-    public static final String BUNDLE_KEY_FIRST_DISPLAY = "FirstDisplay";
-
     private View viewRoot;
     private TextView txtSafeLevel;
     private RecyclerView temperatureList;
@@ -45,15 +50,15 @@ public class FamilyMonitorFragment extends Fragment {
     private RecyclerView smokeList;
     private SwipeRefreshLayout refresh;
 
-    private List<Thermometer> thermometerList;
-    private List<Humidometer> humidometerList;
-    private List<SmokeTransducer> smokeTransducerList;
+    private List<Thermometer> thermometerList = new ArrayList<>();
+    private List<Humidometer> humidometerList = new ArrayList<>();
+    private List<SmokeTransducer> smokeTransducerList = new ArrayList<>();
 
-    private Timer scheduleTask;
     private String updateTemperatureURL;
     private String updateHumidityURL;
     private String updateSmokeURL;
-    private boolean firstDisplay = false;
+
+    private SensorDataReceiver receiver;
 
     public FamilyMonitorFragment() {
         // Required empty public constructor
@@ -78,12 +83,9 @@ public class FamilyMonitorFragment extends Fragment {
             updateSmokeURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
                     GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
                     Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1));
+        }else{
+            refresh.setEnabled(false);
         }
-    }
-
-    @Override
-    public void setArguments(Bundle args) {
-        firstDisplay = args.getBoolean(BUNDLE_KEY_FIRST_DISPLAY, false);
     }
 
     @Override
@@ -105,8 +107,6 @@ public class FamilyMonitorFragment extends Fragment {
         smokeList.setLayoutManager(new LinearLayoutManager(getContext()));
         smokeList.setNestedScrollingEnabled(false);
 
-        updateURL();
-
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             //TODO refresh
             @Override
@@ -116,71 +116,41 @@ public class FamilyMonitorFragment extends Fragment {
                 updateSmoke();
             }
         });
-        if(firstDisplay)
-            startScheduleTask();
+        updateURL();
+        receiver = new SensorDataReceiver();
+        IntentFilter receiverFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
+        receiverFilter.addCategory(getContext().getPackageName());
+        getContext().registerReceiver(receiver, receiverFilter);
+
+        if(refresh.isEnabled()) {
+            refresh.setRefreshing(true);
+            updateTemperature();
+            updateHumidity();
+            updateSmoke();
+        }
         return viewRoot;
     }
 
-    private void startScheduleTask(){
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
-                GlobalInfo.Guardian.monitorOlder == null){
-            scheduleTask = null;
-            viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.VISIBLE);
-            viewRoot.findViewById(R.id.family_monitor_data_area).setVisibility(View.GONE);
-            refresh.setEnabled(false);
-        }else {
-            if(scheduleTask != null)
-                return;
-            scheduleTask = new Timer();
-            refresh.setRefreshing(true);
-            scheduleTask.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    updateTemperature();
-                    updateHumidity();
-                    updateSmoke();
-                }
-            }, 0, 5000);
-        }
-    }
-
     @Override
-    public void onPause() {
-        if(scheduleTask != null) {
-            scheduleTask.cancel();
-            scheduleTask = null;
-        }
-        super.onPause();
-    }
-
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        if(hidden) {
-            if(scheduleTask != null) {
-                scheduleTask.cancel();
-                scheduleTask = null;
-            }
-        }else{
-            startScheduleTask();
-        }
-        super.onHiddenChanged(hidden);
+    public void onDestroy() {
+        getContext().unregisterReceiver(receiver);
+        super.onDestroy();
     }
 
     private void updateSafeLevel(){
         CheckUtil.checkFamilySafetyLevel(txtSafeLevel, viewRoot.findViewById(R.id.safe_level_area),
                 thermometerList, humidometerList, smokeTransducerList);
+        smokeList.setAdapter(new MonitorAdapter(getActivity(), smokeTransducerList));
+        temperatureList.setAdapter(new MonitorAdapter(getActivity(), thermometerList));
+        humidityList.setAdapter(new MonitorAdapter(getActivity(), humidometerList));
     }
 
     private void updateTemperature(){
         new MicronurseAPI<>(getActivity(), updateTemperatureURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<ThermometerDataListResult>() {
             @Override
             public void onResponse(ThermometerDataListResult response) {
-                viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);
-                viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
-                viewRoot.findViewById(R.id.temperature_area).setVisibility(View.VISIBLE);
-                thermometerList = response.getDataList();
-                temperatureList.setAdapter(new MonitorAdapter(getActivity(), thermometerList));
-                updateSafeLevel();
+                for(Thermometer t : response.getDataList())
+                    updateTemperature(t);
                 refresh.setRefreshing(false);
             }
         }, new APIErrorListener() {
@@ -191,16 +161,30 @@ public class FamilyMonitorFragment extends Fragment {
         }, ThermometerDataListResult.class, false, null).startRequest();
     }
 
+    private synchronized void updateTemperature(Thermometer thermometer){
+        viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);
+        viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
+        viewRoot.findViewById(R.id.temperature_area).setVisibility(View.VISIBLE);
+        for(Thermometer t : thermometerList){
+            if(t.getName().equals(thermometer.getName())){
+                if(thermometer.getTimestamp() <= t.getTimestamp())
+                    return;
+                t.setTemperature(thermometer.getTemperature());
+                t.setTimestamp(thermometer.getTimestamp());
+                updateSafeLevel();
+                return;
+            }
+        }
+        thermometerList.add(thermometer);
+        updateSafeLevel();
+    }
+
     private void updateHumidity(){
         new MicronurseAPI<>(getActivity(), updateHumidityURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<HumidometerDataListResult>() {
                     @Override
                     public void onResponse(HumidometerDataListResult response) {
-                        viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);
-                        viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
-                        viewRoot.findViewById(R.id.humidity_area).setVisibility(View.VISIBLE);
-                        humidometerList = response.getDataList();
-                        humidityList.setAdapter(new MonitorAdapter(getActivity(), humidometerList));
-                        updateSafeLevel();
+                        for(Humidometer h : response.getDataList())
+                            updateHumidity(h);
                         refresh.setRefreshing(false);
                     }
                 }, new APIErrorListener() {
@@ -211,16 +195,30 @@ public class FamilyMonitorFragment extends Fragment {
                 }, HumidometerDataListResult.class, false, null).startRequest();
     }
 
+    private synchronized void updateHumidity(Humidometer humidometer){
+        viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);
+        viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
+        viewRoot.findViewById(R.id.humidity_area).setVisibility(View.VISIBLE);
+        for(Humidometer h : humidometerList){
+            if(h.getName().equals(humidometer.getName())){
+                if(humidometer.getTimestamp() <= h.getTimestamp())
+                    return;
+                h.setHumidity(humidometer.getHumidity());
+                h.setTimestamp(humidometer.getTimestamp());
+                updateSafeLevel();
+                return;
+            }
+        }
+        humidometerList.add(humidometer);
+        updateSafeLevel();
+    }
+
     private void updateSmoke(){
         new MicronurseAPI<>(getActivity(), updateSmokeURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<SmokeTransducerDataListResult>() {
                     @Override
                     public void onResponse(SmokeTransducerDataListResult response) {
-                        viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);
-                        viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
-                        viewRoot.findViewById(R.id.smoke_area).setVisibility(View.VISIBLE);
-                        smokeTransducerList = response.getDataList();
-                        smokeList.setAdapter(new MonitorAdapter(getActivity(), smokeTransducerList));
-                        updateSafeLevel();
+                        for(SmokeTransducer st : response.getDataList())
+                            updateSmoke(st);
                         refresh.setRefreshing(false);
                     }
                 }, new APIErrorListener() {
@@ -229,5 +227,47 @@ public class FamilyMonitorFragment extends Fragment {
                         refresh.setRefreshing(false);
                     }
                 }, SmokeTransducerDataListResult.class, false, null).startRequest();
+    }
+
+    private synchronized void updateSmoke(SmokeTransducer smokeTransducer){
+        viewRoot.findViewById(R.id.safe_level_area).setVisibility(View.VISIBLE);
+        viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
+        viewRoot.findViewById(R.id.smoke_area).setVisibility(View.VISIBLE);
+        for(SmokeTransducer st : smokeTransducerList){
+            if(st.getName().equals(smokeTransducer.getName())){
+                if(smokeTransducer.getTimestamp() <= st.getTimestamp())
+                    return;
+                st.setSmoke(smokeTransducer.getSmoke());
+                st.setTimestamp(smokeTransducer.getTimestamp());
+                updateSafeLevel();
+                return;
+            }
+        }
+        smokeTransducerList.add(smokeTransducer);
+        updateSafeLevel();
+    }
+
+    private class SensorDataReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
+                    !GlobalInfo.user.getPhoneNumber().equals(userId))
+                return;
+            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
+                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
+                return;
+            RawSensorData rawSensorData = (RawSensorData) intent.getSerializableExtra(Application.BUNDLE_KEY_RAW_SENSOR_DATA);
+            try {
+                if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_THERMOMETER))
+                    updateTemperature(new Thermometer(rawSensorData.getTimestamp(), rawSensorData.getName(), Float.valueOf(rawSensorData.getValue())));
+                else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_HUMIDOMETER))
+                    updateHumidity(new Humidometer(rawSensorData.getTimestamp(), rawSensorData.getName(), Float.valueOf(rawSensorData.getValue())));
+                else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER))
+                    updateSmoke(new SmokeTransducer(rawSensorData.getTimestamp(), rawSensorData.getName(), Integer.valueOf(rawSensorData.getValue())));
+            }catch (NumberFormatException nfe){
+                nfe.printStackTrace();
+            }
+        }
     }
 }

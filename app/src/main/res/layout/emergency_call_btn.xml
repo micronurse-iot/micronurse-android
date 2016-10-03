@@ -11,8 +11,9 @@
         android:layout_height="@dimen/emergency_call_btn_size"
         app:backgroundTint="@color/red_500"
         app:fabSize="normal"
-        android:src="@drawable/ic_call"
+        app:srcCompat="@drawable/ic_call"
         android:tint="@android:color/white"
-        android:clickable="true"/>
+        android:clickable="true"
+        android:alpha="0.85"/>
 
 </LinearLayout>
