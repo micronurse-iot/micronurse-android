@@ -1,9 +1,11 @@
 package org.micronurse.model;
 
+import java.io.Serializable;
+
 /**
  * Created by zhou-shengyun on 9/8/16.
  */
-public class SensorWarning {
+public class SensorWarning implements Serializable{
     private String sensorType;
     private Sensor sensorData;
 

@@ -1,20 +1,35 @@
 package org.micronurse.ui.fragment;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.gson.JsonSyntaxException;
+
+import org.micronurse.Application;
 import org.micronurse.R;
+import org.micronurse.model.RawSensorData;
+import org.micronurse.model.User;
+import org.micronurse.service.MQTTService;
 import org.micronurse.ui.fragment.monitor.FamilyMonitorFragment;
 import org.micronurse.ui.fragment.monitor.GoingoutMonitorFragment;
 import org.micronurse.ui.fragment.monitor.HealthMonitorFragment;
 import org.micronurse.ui.listener.OnFullScreenListener;
+import org.micronurse.ui.listener.OnMessageArrivedListener;
 import org.micronurse.ui.widget.ViewPager;
+import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.GsonUtil;
 
 public class MonitorFragment extends Fragment {
     private View viewRoot;
@@ -24,6 +39,7 @@ public class MonitorFragment extends Fragment {
     private Fragment currentFragment;
     private final Fragment[] monitorPages;
     private String[] pageTitles;
+    private ServiceConnection serviceConnection;
 
     public MonitorFragment() {
         monitorPages = new Fragment[]{
@@ -85,6 +101,41 @@ public class MonitorFragment extends Fragment {
         });
         tabLayout = (TabLayout) viewRoot.findViewById(R.id.tab_monitor);
         tabLayout.setupWithViewPager(viewPager);
+
+        final OnMessageArrivedListener msgListener = new OnMessageArrivedListener() {
+            @Override
+            public void onMessageArrived(Context context, String topic, String topicUserId, String message) {
+                try {
+                    Intent intent = new Intent(Application.ACTION_SENSOR_DATA_REPORT);
+                    intent.addCategory(context.getPackageName());
+                    intent.putExtra(Application.BUNDLE_KEY_USER_ID, topicUserId);
+                    intent.putExtra(Application.BUNDLE_KEY_RAW_SENSOR_DATA, GsonUtil.getGson().fromJson(message, RawSensorData.class));
+                    context.sendBroadcast(intent);
+                } catch (JsonSyntaxException jse) {
+                    jse.printStackTrace();
+                }
+            }
+        };
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder bind) {
+                MQTTService service = ((MQTTService.MQTTServiceBinder)bind).getService();
+                if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+                    service.addSubscription(GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getPhoneNumber(), 0, msgListener);
+                }else{
+                    if(GlobalInfo.guardianshipList != null){
+                        for(User u : GlobalInfo.guardianshipList){
+                            service.addSubscription(GlobalInfo.TOPIC_SENSOR_DATA_REPORT, u.getPhoneNumber(), 0, msgListener);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {}
+        };
+
+        getContext().bindService(new Intent(getContext(), MQTTService.class), serviceConnection, Context.BIND_AUTO_CREATE);
         return viewRoot;
     }
 
@@ -101,6 +152,12 @@ public class MonitorFragment extends Fragment {
     public void onPause() {
         currentFragment.onHiddenChanged(true);
         super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        getContext().unbindService(serviceConnection);
+        super.onDestroy();
     }
 
     public void setOnFullScreenListener(OnFullScreenListener fullScreenListener) {
@@ -134,4 +191,5 @@ public class MonitorFragment extends Fragment {
             currentFragment.onHiddenChanged(hidden);
         super.onHiddenChanged(hidden);
     }
+
 }

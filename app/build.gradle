@@ -32,7 +32,7 @@ android {
 }
 
 repositories {
-    mavenCentral()
+    jcenter()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
@@ -51,5 +51,6 @@ dependencies {
             'com.michaelpardo:activeandroid:3.+',
             'com.github.orangegangsters:swipy:1.2.3@aar',
             'com.github.lecho:hellocharts-library:1.5.8@aar',
+            'org.eclipse.paho:org.eclipse.paho.client.mqttv3:+',
     )
 }

@@ -18,6 +18,7 @@ import com.google.gson.JsonSyntaxException;
 import org.micronurse.R;
 import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.http.model.result.Result;
+import org.micronurse.service.MQTTService;
 import org.micronurse.ui.activity.LoginActivity;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
@@ -91,6 +92,8 @@ public class MicronurseAPI<T extends Result> {
                                 lur.setToken(null);
                                 lur.save();
                             }
+                            Intent mqttServiceIntent = new Intent(context, MQTTService.class);
+                            context.stopService(mqttServiceIntent);
                         }
                         GlobalInfo.clearLoginUserInfo();
                         context.startActivity(intent);

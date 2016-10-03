@@ -1,9 +1,11 @@
 package org.micronurse.model;
 
+import java.io.Serializable;
+
 /**
  * Created by zhou-shengyun on 8/15/16.
  */
-public class Sensor {
+public class Sensor implements Serializable {
     public static final String SENSOR_TYPE_THERMOMETER = "thermometer";
     public static final String SENSOR_TYPE_HUMIDOMETER = "humidometer";
     public static final String SENSOR_TYPE_INFRARED_TRANSDUCER = "infrared_transducer";

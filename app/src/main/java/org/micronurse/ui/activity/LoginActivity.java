@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -18,12 +17,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.activeandroid.query.Select;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-
 import org.micronurse.R;
 import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.http.APIErrorListener;
@@ -37,10 +34,8 @@ import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.HttpAPIUtil;
-
 import java.util.ArrayList;
 import java.util.List;
-import cn.jpush.android.api.JPushInterface;
 
 /**
  * A login screen that offers login via phone number/password.
@@ -147,10 +142,6 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(registerIntent);
             }
         });
-
-
-        //Set empty JPush alias to cancel receiving any user's notification.
-        HttpAPIUtil.setJPushAlias(LoginActivity.this, "");
     }
 
 
@@ -213,7 +204,6 @@ public class LoginActivity extends AppCompatActivity {
                                             @Override
                                             public void onResponse(UserListResult response) {
                                                 GlobalInfo.guardianshipList = response.getUserList();
-                                                HttpAPIUtil.setJPushAlias(LoginActivity.this, GlobalInfo.user.getPhoneNumber());
                                                 finish();
                                                 startActivity(loginIntent);
                                             }
@@ -249,12 +239,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         }, LoginResult.class, true, getString(R.string.action_logining));
         request.startRequest();
-    }
-
-    @Override
-    public void onBackPressed() {
-        JPushInterface.stopPush(getApplicationContext());
-        super.onBackPressed();
     }
 }
 

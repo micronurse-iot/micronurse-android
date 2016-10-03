@@ -4,12 +4,9 @@ import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-
 import org.micronurse.R;
 import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.http.APIErrorListener;
@@ -20,9 +17,7 @@ import org.micronurse.http.model.result.UserResult;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.HttpAPIUtil;
-
 import java.util.List;
-import cn.jpush.android.api.JPushInterface;
 
 public class WelcomeActivity extends AppCompatActivity {
     private Intent loginIntent;
@@ -49,7 +44,7 @@ public class WelcomeActivity extends AppCompatActivity {
                     loginUserRecord = records.get(0);
 
                 if(loginUserRecord != null && loginUserRecord.getToken() != null && !loginUserRecord.getToken().isEmpty()) {
-                    new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.CHECK_LOGIN), Request.Method.GET,
+                    new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.CHECK_LOGIN, loginUserRecord.getPhoneNumber()), Request.Method.GET,
                             null, loginUserRecord.getToken(), new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {
@@ -66,7 +61,6 @@ public class WelcomeActivity extends AppCompatActivity {
                                                 @Override
                                                 public void onResponse(UserListResult response) {
                                                     GlobalInfo.guardianshipList = response.getUserList();
-                                                    HttpAPIUtil.setJPushAlias(WelcomeActivity.this, GlobalInfo.user.getPhoneNumber());
                                                     finish();
                                                     startActivity(loginIntent);
                                                 }
@@ -96,9 +90,5 @@ public class WelcomeActivity extends AppCompatActivity {
                 }
             }
         }, 1000);
-
-        if(JPushInterface.isPushStopped(getApplicationContext())){
-            JPushInterface.resumePush(getApplicationContext());
-        }
     }
 }

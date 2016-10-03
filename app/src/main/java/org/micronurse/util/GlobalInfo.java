@@ -1,8 +1,6 @@
 package org.micronurse.util;
 
-import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.model.User;
-
 import java.util.List;
 
 /**
@@ -24,4 +22,8 @@ public class GlobalInfo {
         token = null;
         guardianshipList = null;
     }
+
+    public static String TOPIC_SENSOR_DATA_REPORT = "sensor_data_report";
+    public static String TOPIC_SENSOR_WARNING = "sensor_warning";
+
 }

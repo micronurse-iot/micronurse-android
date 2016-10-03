@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 /**
  * Created by zhou-shengyun on 7/1/16.
  */
-public class User {
+public class User{
     public static final char ACCOUNT_TYPE_OLDER = 'O';
     public static final char ACCOUNT_TYPE_GUARDIAN = 'G';
     public static final char GENDER_MALE = 'M';

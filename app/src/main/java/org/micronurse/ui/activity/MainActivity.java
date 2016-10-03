@@ -12,12 +12,14 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import org.micronurse.R;
 import org.micronurse.database.model.Guardianship;
 import org.micronurse.model.User;
+import org.micronurse.service.MQTTService;
 import org.micronurse.ui.activity.older.SettingsActivity;
 import org.micronurse.ui.fragment.guardian.ContactsFragment;
 import org.micronurse.ui.fragment.older.FriendJuanFragment;
@@ -27,7 +29,6 @@ import org.micronurse.ui.fragment.MonitorWarningFragment;
 import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
-import cn.jpush.android.api.JPushInterface;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity
     private MedicationReminderFragment medicationReminderFragment;
 
     private ContactsFragment contactsFragment;
+    private Intent mqttServiceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +108,9 @@ public class MainActivity extends AppCompatActivity
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN){
             updateMonitorOlder();
         }
+
+        mqttServiceIntent = new Intent(this, MQTTService.class);
+        startService(mqttServiceIntent);
     }
 
     @Override
@@ -211,7 +216,7 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 //TODO:do something before exit
-                                JPushInterface.stopPush(getApplicationContext());
+                                stopService(mqttServiceIntent);
                                 finish();
                             }
                         }).setNegativeButton(R.string.action_cancel, null).create();

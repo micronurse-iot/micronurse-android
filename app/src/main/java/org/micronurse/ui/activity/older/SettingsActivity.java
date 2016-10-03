@@ -14,6 +14,7 @@ import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.result.Result;
+import org.micronurse.service.MQTTService;
 import org.micronurse.ui.activity.AppCompatPreferenceActivity;
 import org.micronurse.ui.activity.LoginActivity;
 import org.micronurse.util.DatabaseUtil;
@@ -57,7 +58,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             lur.save();
         }
         GlobalInfo.clearLoginUserInfo();
-
+        
+        Intent mqttServiceIntent = new Intent(this, MQTTService.class);
+        stopService(mqttServiceIntent);
         startActivity(intent);
     }
 
