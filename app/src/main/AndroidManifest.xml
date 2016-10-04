@@ -82,6 +82,16 @@
             android:name=".service.MQTTService"
             android:enabled="true"
             android:exported="false"/>
+
+        <receiver android:name=".receiver.MonitorWarningReceiver"
+            android:exported="false"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="org.micronurse.action.SENSOR_WARNING"/>
+                <category android:name="org.micronurse"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

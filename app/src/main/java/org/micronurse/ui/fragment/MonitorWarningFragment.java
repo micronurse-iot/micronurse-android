@@ -1,10 +1,15 @@
 package org.micronurse.ui.fragment;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,9 +21,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 
+import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.adapter.MonitorAdapter;
 import org.micronurse.http.APIErrorListener;
@@ -32,12 +39,14 @@ import org.micronurse.model.GPS;
 import org.micronurse.model.Humidometer;
 import org.micronurse.model.InfraredTransducer;
 import org.micronurse.model.PulseTransducer;
+import org.micronurse.model.RawSensorData;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.SensorWarning;
 import org.micronurse.model.SmokeTransducer;
 import org.micronurse.model.Thermometer;
 import org.micronurse.model.Turgoscope;
 import org.micronurse.model.User;
+import org.micronurse.service.MQTTService;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
@@ -53,18 +62,13 @@ public class MonitorWarningFragment extends Fragment {
     private SwipyRefreshLayout refresh;
     private LinkedList<Object> dataList = new LinkedList<>();
     private MonitorAdapter adapter;
-
-    private Calendar upStartTime;
     private Calendar downEndTime;
     private JSONParser<SensorWarningListResult> jsonParser;
+    private boolean firstDisplay = true;
+    private ConnectedReceiver receiver;
 
     public MonitorWarningFragment() {
         // Required empty public constructor
-        upStartTime = Calendar.getInstance();
-        downEndTime = Calendar.getInstance();
-        long currentTime = System.currentTimeMillis();
-        upStartTime.setTimeInMillis(currentTime + 1);
-        downEndTime.setTimeInMillis(currentTime);
         jsonParser = new JSONParser<SensorWarningListResult>() {
             @Override
             public SensorWarningListResult fromJson(String jsonStr) {
@@ -130,7 +134,7 @@ public class MonitorWarningFragment extends Fragment {
                 if(direction == SwipyRefreshLayoutDirection.BOTTOM)
                     downLoadMore();
                 else
-                    upLoadMore();
+                    refresh();
             }
         });
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
@@ -138,62 +142,25 @@ public class MonitorWarningFragment extends Fragment {
             refresh.setEnabled(false);
         }else{
             refresh.setDirection(SwipyRefreshLayoutDirection.TOP);
-            downLoadMore();
+            refresh();
         }
+        receiver = new ConnectedReceiver();
+        IntentFilter filter = new IntentFilter(Application.ACTION_MQTT_BROKER_CONNECTED);
+        filter.addCategory(getContext().getPackageName());
+        getContext().registerReceiver(receiver, filter);
         return viewRoot;
     }
 
-    private void upLoadMore(){
-        if(dataList.isEmpty()){
-            downLoadMore();
-            return;
-        }
-        String url;
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
-            url = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.SENSOR_WARNING, String.valueOf(upStartTime.getTimeInMillis()),
-                    String.valueOf(System.currentTimeMillis()), String.valueOf(0));
-        }else{
-            url = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.SENSOR_WARNING, GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
-                    String.valueOf(upStartTime.getTimeInMillis()), String.valueOf(System.currentTimeMillis()), String.valueOf(0));
-        }
-        refresh.setRefreshing(true);
-        MicronurseAPI<SensorWarningListResult> request = new MicronurseAPI<SensorWarningListResult>(
-                getActivity(), url, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<SensorWarningListResult>() {
-            @Override
-            public void onResponse(SensorWarningListResult response) {
-                viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
-                refresh.setRefreshing(false);
-                refresh.setDirection(SwipyRefreshLayoutDirection.BOTH);
-                if(dataList.getFirst() instanceof Date){
-                    dataList.removeFirst();
-                }
-                for(int i = response.getWarningList().size() - 1; i >= 0; i--){
-                    SensorWarning sw = response.getWarningList().get(i);
-                    if(dataList.getFirst() instanceof Sensor){
-                        Date d = new Date(((Sensor) dataList.getFirst()).getTimestamp());
-                        if(!DateTimeUtil.isSameDay(new Date(sw.getSensorData().getTimestamp()), d))
-                            dataList.addFirst(d);
-                    }
-                    dataList.addFirst(sw.getSensorData());
-                    if(i == 0){
-                        upStartTime.setTimeInMillis(sw.getSensorData().getTimestamp() + 1);
-                        dataList.addFirst(new Date(sw.getSensorData().getTimestamp()));
-                    }
-                }
-                adapter.notifyDataSetChanged();
-            }
-        }, new APIErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError err, Result result) {
-                refresh.setRefreshing(false);
-                refresh.setDirection(SwipyRefreshLayoutDirection.BOTH);
-                if(result != null && result.getResultCode() == PublicResultCode.MOBILE_SENSOR_WARNING_NOT_FOUND){
-                    Snackbar.make(viewRoot, R.string.no_new_data, Snackbar.LENGTH_SHORT).show();
-                }
-            }
-        }, SensorWarningListResult.class, false, null);
-        request.setJsonParser(jsonParser);
-        request.startRequest();
+    @Override
+    public void onDestroy() {
+        getContext().unregisterReceiver(receiver);
+        super.onDestroy();
+    }
+
+    private void refresh(){
+        downEndTime = Calendar.getInstance();
+        dataList.clear();
+        downLoadMore();
     }
 
     private void downLoadMore(){
@@ -202,6 +169,10 @@ public class MonitorWarningFragment extends Fragment {
             url = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.SENSOR_WARNING, String.valueOf(downEndTime.getTimeInMillis()),
                     String.valueOf(LIMIT_NUM));
         }else{
+            if(GlobalInfo.Guardian.monitorOlder == null){
+                refresh.setRefreshing(false);
+                return;
+            }
             url = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.SENSOR_WARNING, GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
                     String.valueOf(downEndTime.getTimeInMillis()), String.valueOf(LIMIT_NUM));
         }
@@ -226,6 +197,7 @@ public class MonitorWarningFragment extends Fragment {
                     downEndTime.setTimeInMillis(sw.getSensorData().getTimestamp() - 1);
                 }
                 adapter.notifyDataSetChanged();
+                firstDisplay = false;
             }
         }, new APIErrorListener() {
             @Override
@@ -233,11 +205,36 @@ public class MonitorWarningFragment extends Fragment {
                 refresh.setRefreshing(false);
                 refresh.setDirection(SwipyRefreshLayoutDirection.BOTH);
                 if(result != null && result.getResultCode() == PublicResultCode.MOBILE_SENSOR_WARNING_NOT_FOUND){
-                    Snackbar.make(viewRoot, R.string.no_more_data, Snackbar.LENGTH_SHORT).show();
+                    if(!firstDisplay)
+                        Snackbar.make(viewRoot, R.string.no_more_data, Snackbar.LENGTH_SHORT).show();
                 }
+                firstDisplay = false;
             }
         }, SensorWarningListResult.class, false, null);
         request.setJsonParser(jsonParser);
         request.startRequest();
+    }
+
+    private class ConnectedReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            intent = new Intent(Application.ACTION_MQTT_ACTION);
+            intent.addCategory(getContext().getPackageName());
+            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+                intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
+                        GlobalInfo.TOPIC_SENSOR_WARNING, GlobalInfo.user.getPhoneNumber(), 0, Application.ACTION_SENSOR_WARNING
+                ));
+                getContext().sendBroadcast(intent);
+            }else{
+                if(GlobalInfo.guardianshipList != null){
+                    for(User u : GlobalInfo.guardianshipList){
+                        intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
+                                GlobalInfo.TOPIC_SENSOR_WARNING, u.getPhoneNumber(), 0, Application.ACTION_SENSOR_WARNING
+                        ));
+                        getContext().sendBroadcast(intent);
+                    }
+                }
+            }
+        }
     }
 }

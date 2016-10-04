@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.JsonSyntaxException;
 
 import org.micronurse.Application;
 import org.micronurse.R;
@@ -36,6 +37,7 @@ import org.micronurse.model.Thermometer;
 import org.micronurse.model.User;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.GsonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -257,16 +259,16 @@ public class FamilyMonitorFragment extends Fragment {
             else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
                     (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
                 return;
-            RawSensorData rawSensorData = (RawSensorData) intent.getSerializableExtra(Application.BUNDLE_KEY_RAW_SENSOR_DATA);
             try {
+                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
                 if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_THERMOMETER))
                     updateTemperature(new Thermometer(rawSensorData.getTimestamp(), rawSensorData.getName(), Float.valueOf(rawSensorData.getValue())));
                 else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_HUMIDOMETER))
                     updateHumidity(new Humidometer(rawSensorData.getTimestamp(), rawSensorData.getName(), Float.valueOf(rawSensorData.getValue())));
                 else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER))
                     updateSmoke(new SmokeTransducer(rawSensorData.getTimestamp(), rawSensorData.getName(), Integer.valueOf(rawSensorData.getValue())));
-            }catch (NumberFormatException nfe){
-                nfe.printStackTrace();
+            }catch (NumberFormatException | JsonSyntaxException e){
+                e.printStackTrace();
             }
         }
     }

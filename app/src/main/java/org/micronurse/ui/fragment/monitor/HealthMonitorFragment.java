@@ -17,6 +17,8 @@ import android.widget.TextView;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.JsonSyntaxException;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.micronurse.Application;
@@ -36,6 +38,7 @@ import org.micronurse.model.Turgoscope;
 import org.micronurse.model.User;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.GsonUtil;
 
 
 public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
@@ -216,8 +219,8 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
                     (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
                 return;
-            RawSensorData rawSensorData = (RawSensorData) intent.getSerializableExtra(Application.BUNDLE_KEY_RAW_SENSOR_DATA);
             try {
+                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
                 if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_FEVER_THERMOMETER))
                     updateBodyTemperature(new FeverThermometer(rawSensorData.getTimestamp(), Float.valueOf(rawSensorData.getValue())));
                 else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_PULSE_TRANSDUCER))
@@ -229,8 +232,8 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
                     updateBloodPressure(new Turgoscope(rawSensorData.getTimestamp(), Integer.valueOf(splitStr[0]),
                             Integer.valueOf(splitStr[1])));
                 }
-            }catch (NumberFormatException nfe){
-                nfe.printStackTrace();
+            }catch (NumberFormatException | JsonSyntaxException e){
+                e.printStackTrace();
             }
         }
     }

@@ -30,6 +30,8 @@ import com.baidu.mapapi.search.geocode.GeoCoder;
 import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
+import com.google.gson.JsonSyntaxException;
+
 import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.http.APIErrorListener;
@@ -43,6 +45,7 @@ import org.micronurse.model.User;
 import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.GsonUtil;
 import org.micronurse.util.ImageUtil;
 
 public class GoingoutMonitorFragment extends Fragment {
@@ -242,8 +245,8 @@ public class GoingoutMonitorFragment extends Fragment {
             else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
                     (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
                 return;
-            RawSensorData rawSensorData = (RawSensorData) intent.getSerializableExtra(Application.BUNDLE_KEY_RAW_SENSOR_DATA);
             try {
+                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
                 if(rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_GPS)){
                     String[] splitStr = rawSensorData.getValue().split(",", 2);
                     if(splitStr.length != 2)
@@ -251,8 +254,8 @@ public class GoingoutMonitorFragment extends Fragment {
                     updateLocation(new GPS(rawSensorData.getTimestamp(), Double.valueOf(splitStr[0]),
                             Double.valueOf(splitStr[1])));
                 }
-            }catch (NumberFormatException nfe){
-                nfe.printStackTrace();
+            }catch (NumberFormatException | JsonSyntaxException e){
+                e.printStackTrace();
             }
         }
     }

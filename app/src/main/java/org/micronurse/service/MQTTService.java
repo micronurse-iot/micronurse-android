@@ -1,8 +1,10 @@
 package org.micronurse.service;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Binder;
+import android.content.IntentFilter;
 import android.os.IBinder;
 import android.util.Log;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -13,9 +15,9 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.micronurse.ui.listener.OnMessageArrivedListener;
+import org.micronurse.Application;
 import org.micronurse.util.GlobalInfo;
-
+import java.io.Serializable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MQTTService extends Service implements MqttCallback {
@@ -28,6 +30,7 @@ public class MQTTService extends Service implements MqttCallback {
     private boolean exitFlag = false;
     private Thread networkThread;
     private ConcurrentLinkedQueue<Object> actionQueue = new ConcurrentLinkedQueue<>();
+    private MQTTReceiver receiver;
 
     public MQTTService() throws MqttException {
         String clientId = CLIENT_ID_PREFIX + GlobalInfo.user.getPhoneNumber();
@@ -43,12 +46,19 @@ public class MQTTService extends Service implements MqttCallback {
     @Override
     public void onCreate() {
         super.onCreate();
+        receiver = new MQTTReceiver();
+        IntentFilter filter = new IntentFilter(Application.ACTION_MQTT_ACTION);
+        filter.addCategory(getPackageName());
+        registerReceiver(receiver, filter);
         networkThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(!exitFlag){
                     try {
                         mqttClient.connect(connOpts);
+                        Intent i = new Intent(Application.ACTION_MQTT_BROKER_CONNECTED);
+                        i.addCategory(getPackageName());
+                        sendBroadcast(i);
                         Log.i(GlobalInfo.LOG_TAG, "Connected to MQTT broker.");
                         break;
                     } catch (MqttException e) {
@@ -74,12 +84,16 @@ public class MQTTService extends Service implements MqttCallback {
                             mqttClient.subscribe(topic, ((MQTTSubscriptionAction) mqttAction).qos, new IMqttMessageListener() {
                                 @Override
                                 public void messageArrived(String topic, MqttMessage message) throws Exception {
-                                    if(((MQTTSubscriptionAction) mqttAction).msgCallback != null)
-                                        ((MQTTSubscriptionAction) mqttAction).msgCallback.onMessageArrived(MQTTService.this, topic, parseTopicUser(topic), new String(message.getPayload()));
+                                    Intent intent = new Intent(((MQTTSubscriptionAction) mqttAction).action);
+                                    intent.addCategory(getPackageName());
+                                    String topicUserId = parseTopicUser(topic);
+                                    if(topicUserId != null && !topicUserId.isEmpty())
+                                        intent.putExtra(Application.BUNDLE_KEY_USER_ID, topicUserId);
+                                    intent.putExtra(Application.BUNDLE_KEY_MESSAGE, new String(message.getPayload()));
+                                    sendBroadcast(intent);
                                 }
                             });
                             Log.i(GlobalInfo.LOG_TAG, "Subscribe on topic <" + topic + "> successfully.");
-                            break;
                         }
                         actionQueue.poll();
                     } catch (InterruptedException | MqttException e) {
@@ -96,11 +110,6 @@ public class MQTTService extends Service implements MqttCallback {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        return new MQTTServiceBinder();
-    }
-
-    @Override
     public void onDestroy() {
         try {
             exitFlag = true;
@@ -112,7 +121,13 @@ public class MQTTService extends Service implements MqttCallback {
         } catch (MqttException | InterruptedException e) {
             e.printStackTrace();
         }
+        unregisterReceiver(receiver);
         super.onDestroy();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
@@ -142,10 +157,6 @@ public class MQTTService extends Service implements MqttCallback {
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {}
 
-    public void addSubscription(String topic, String topicUserId, int qos, OnMessageArrivedListener listener){
-        actionQueue.add(new MQTTSubscriptionAction(topic, topicUserId, qos, listener));
-    }
-
     private String parseTopicUser(String topic){
         if(topic == null || topic.isEmpty())
             return null;
@@ -159,23 +170,27 @@ public class MQTTService extends Service implements MqttCallback {
         return topic.substring(i + 1);
     }
 
-    public class MQTTServiceBinder extends Binder{
-        public MQTTService getService(){
-            return MQTTService.this;
-        }
-    }
-
-    private class MQTTSubscriptionAction{
+    public static class MQTTSubscriptionAction implements Serializable{
         private String topic;
         private String topicUserId;
         private int qos;
-        private OnMessageArrivedListener msgCallback;
+        private String action;
 
-        public MQTTSubscriptionAction(String topic, String topicUserId, int qos, OnMessageArrivedListener msgCallback) {
+        public MQTTSubscriptionAction(String topic, String topicUserId, int qos, String broadcastAction) {
             this.topic = topic;
             this.topicUserId = topicUserId;
             this.qos = qos;
-            this.msgCallback = msgCallback;
+            this.action = broadcastAction;
+        }
+    }
+
+    private class MQTTReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Serializable o = intent.getSerializableExtra(Application.BUNDLE_KEY_MQTT_ACTION);
+            if(o == null)
+                return;
+            actionQueue.add(o);
         }
     }
 }
