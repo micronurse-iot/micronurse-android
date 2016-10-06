@@ -68,6 +68,7 @@ public class GoingoutMonitorFragment extends Fragment {
 
     public GoingoutMonitorFragment() {
         // Required empty public constructor
+        receiver = new SensorDataReceiver();
         geoCoder = GeoCoder.newInstance();
         geoCoder.setOnGetGeoCodeResultListener(new OnGetGeoCoderResultListener() {
             @Override
@@ -103,7 +104,6 @@ public class GoingoutMonitorFragment extends Fragment {
                              Bundle savedInstanceState) {
         if(viewRoot != null)
             return viewRoot;
-
         viewRoot = inflater.inflate(R.layout.fragment_goingout_monitor, container, false);
         refresh = (SwipeRefreshLayout) viewRoot.findViewById(R.id.swipeLayout);
         refresh.setColorSchemeResources(R.color.colorAccent);
@@ -163,12 +163,11 @@ public class GoingoutMonitorFragment extends Fragment {
             refresh.setRefreshing(true);
             updateLocation();
         }
-
-        receiver = new SensorDataReceiver();
-        IntentFilter filter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
-        filter.addCategory(getContext().getPackageName());
-        getContext().registerReceiver(receiver, filter);
         return viewRoot;
+    }
+
+    public BroadcastReceiver getReceiver() {
+        return receiver;
     }
 
     @Override
@@ -187,7 +186,6 @@ public class GoingoutMonitorFragment extends Fragment {
     public void onDestroy() {
         mMapView.onDestroy();
         geoCoder.destroy();
-        getContext().unregisterReceiver(receiver);
         super.onDestroy();
     }
 
@@ -238,6 +236,8 @@ public class GoingoutMonitorFragment extends Fragment {
     private class SensorDataReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if(viewRoot == null)
+                return;
             String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
             if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
                     !GlobalInfo.user.getPhoneNumber().equals(userId))

@@ -1,7 +1,9 @@
 package org.micronurse.ui.activity;
 
+import android.content.BroadcastReceiver;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
@@ -16,6 +18,8 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+
+import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.database.model.Guardianship;
 import org.micronurse.model.User;
@@ -109,8 +113,29 @@ public class MainActivity extends AppCompatActivity
             updateMonitorOlder();
         }
 
+        startMQTTService();
+    }
+
+    private void startMQTTService(){
+        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
+        intentFilter.addCategory(getPackageName());
+        for(BroadcastReceiver br : monitorFragment.getSensorDataReceivers())
+            registerReceiver(br, intentFilter);
+        intentFilter = new IntentFilter(Application.ACTION_MQTT_BROKER_CONNECTED);
+        intentFilter.addCategory(getPackageName());
+        registerReceiver(monitorFragment.getMqttConnectedReceiver(), intentFilter);
+        registerReceiver(monitorWarningFragment.getMqttConnectedReceiver(), intentFilter);
         mqttServiceIntent = new Intent(this, MQTTService.class);
         startService(mqttServiceIntent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        for(BroadcastReceiver br : monitorFragment.getSensorDataReceivers())
+            unregisterReceiver(br);
+        unregisterReceiver(monitorFragment.getMqttConnectedReceiver());
+        unregisterReceiver(monitorWarningFragment.getMqttConnectedReceiver());
+        super.onDestroy();
     }
 
     @Override

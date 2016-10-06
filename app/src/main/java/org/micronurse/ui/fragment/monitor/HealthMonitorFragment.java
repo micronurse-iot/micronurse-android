@@ -59,6 +59,7 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
 
     public HealthMonitorFragment() {
         // Required empty public constructor
+        receiver = new SensorDataReceiver();
     }
 
     private void updateURL(){
@@ -104,10 +105,6 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             swipeLayout.setRefreshing(true);
             updateData();
         }
-        receiver = new SensorDataReceiver();
-        IntentFilter filter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
-        filter.addCategory(getContext().getPackageName());
-        getContext().registerReceiver(receiver, filter);
         return viewRoot;
     }
 
@@ -116,10 +113,8 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         updateData();
     }
 
-    @Override
-    public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
-        super.onDestroy();
+    public BroadcastReceiver getReceiver() {
+        return receiver;
     }
 
     private void updateData(){
@@ -212,6 +207,8 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     private class SensorDataReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if(viewRoot == null)
+                return;
             String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
             if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
                     !GlobalInfo.user.getPhoneNumber().equals(userId))

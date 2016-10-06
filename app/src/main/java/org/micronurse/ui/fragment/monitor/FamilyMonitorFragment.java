@@ -64,6 +64,7 @@ public class FamilyMonitorFragment extends Fragment {
 
     public FamilyMonitorFragment() {
         // Required empty public constructor
+        receiver = new SensorDataReceiver();
     }
 
     private void updateURL(){
@@ -119,10 +120,6 @@ public class FamilyMonitorFragment extends Fragment {
             }
         });
         updateURL();
-        receiver = new SensorDataReceiver();
-        IntentFilter receiverFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
-        receiverFilter.addCategory(getContext().getPackageName());
-        getContext().registerReceiver(receiver, receiverFilter);
 
         if(refresh.isEnabled()) {
             refresh.setRefreshing(true);
@@ -133,10 +130,8 @@ public class FamilyMonitorFragment extends Fragment {
         return viewRoot;
     }
 
-    @Override
-    public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
-        super.onDestroy();
+    public BroadcastReceiver getReceiver() {
+        return receiver;
     }
 
     private void updateSafeLevel(){
@@ -252,6 +247,8 @@ public class FamilyMonitorFragment extends Fragment {
     private class SensorDataReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
+            if(viewRoot == null)
+                return;
             String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
             if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
                     !GlobalInfo.user.getPhoneNumber().equals(userId))

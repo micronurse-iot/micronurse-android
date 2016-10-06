@@ -3,13 +3,11 @@ package org.micronurse.ui.fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +19,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 
@@ -39,7 +36,6 @@ import org.micronurse.model.GPS;
 import org.micronurse.model.Humidometer;
 import org.micronurse.model.InfraredTransducer;
 import org.micronurse.model.PulseTransducer;
-import org.micronurse.model.RawSensorData;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.SensorWarning;
 import org.micronurse.model.SmokeTransducer;
@@ -65,7 +61,7 @@ public class MonitorWarningFragment extends Fragment {
     private Calendar downEndTime;
     private JSONParser<SensorWarningListResult> jsonParser;
     private boolean firstDisplay = true;
-    private ConnectedReceiver receiver;
+    private final MQTTConnectedReceiver mqttConnectedReceiver;
 
     public MonitorWarningFragment() {
         // Required empty public constructor
@@ -113,6 +109,11 @@ public class MonitorWarningFragment extends Fragment {
                 return result;
             }
         };
+        mqttConnectedReceiver = new MQTTConnectedReceiver();
+    }
+
+    public BroadcastReceiver getMqttConnectedReceiver() {
+        return mqttConnectedReceiver;
     }
 
     @Override
@@ -144,17 +145,7 @@ public class MonitorWarningFragment extends Fragment {
             refresh.setDirection(SwipyRefreshLayoutDirection.TOP);
             refresh();
         }
-        receiver = new ConnectedReceiver();
-        IntentFilter filter = new IntentFilter(Application.ACTION_MQTT_BROKER_CONNECTED);
-        filter.addCategory(getContext().getPackageName());
-        getContext().registerReceiver(receiver, filter);
         return viewRoot;
-    }
-
-    @Override
-    public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
-        super.onDestroy();
     }
 
     private void refresh(){
@@ -215,21 +206,21 @@ public class MonitorWarningFragment extends Fragment {
         request.startRequest();
     }
 
-    private class ConnectedReceiver extends BroadcastReceiver {
+    private class MQTTConnectedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             intent = new Intent(Application.ACTION_MQTT_ACTION);
             intent.addCategory(getContext().getPackageName());
             if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
                 intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
-                        GlobalInfo.TOPIC_SENSOR_WARNING, GlobalInfo.user.getPhoneNumber(), 0, Application.ACTION_SENSOR_WARNING
+                        GlobalInfo.TOPIC_SENSOR_WARNING, GlobalInfo.user.getPhoneNumber(), 2, Application.ACTION_SENSOR_WARNING
                 ));
                 getContext().sendBroadcast(intent);
             }else{
                 if(GlobalInfo.guardianshipList != null){
                     for(User u : GlobalInfo.guardianshipList){
                         intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
-                                GlobalInfo.TOPIC_SENSOR_WARNING, u.getPhoneNumber(), 0, Application.ACTION_SENSOR_WARNING
+                                GlobalInfo.TOPIC_SENSOR_WARNING, u.getPhoneNumber(), 2, Application.ACTION_SENSOR_WARNING
                         ));
                         getContext().sendBroadcast(intent);
                     }

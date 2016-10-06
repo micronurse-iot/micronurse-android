@@ -39,6 +39,7 @@ public class MQTTService extends Service implements MqttCallback {
         connOpts = new MqttConnectOptions();
         connOpts.setCleanSession(false);
         connOpts.setKeepAliveInterval(30);
+        connOpts.setAutomaticReconnect(false);
         connOpts.setUserName(USERNAME_PREFIX + GlobalInfo.user.getPhoneNumber());
         connOpts.setPassword(GlobalInfo.token.toCharArray());
     }
@@ -59,7 +60,6 @@ public class MQTTService extends Service implements MqttCallback {
                         Intent i = new Intent(Application.ACTION_MQTT_BROKER_CONNECTED);
                         i.addCategory(getPackageName());
                         sendBroadcast(i);
-                        Log.i(GlobalInfo.LOG_TAG, "Connected to MQTT broker.");
                         break;
                     } catch (MqttException e) {
                         e.printStackTrace();
@@ -152,22 +152,50 @@ public class MQTTService extends Service implements MqttCallback {
     }
 
     @Override
-    public void messageArrived(String topic, MqttMessage message) throws Exception {}
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
+        String msg = new String(message.getPayload());
+        Log.i(GlobalInfo.LOG_TAG, "Offline Message Arrived: " + new String(message.getPayload()));
+        String userId = parseTopicUser(topic);
+        String realTopic = parseTopic(topic);
+        Intent intent = new Intent();
+        intent.putExtra(Application.BUNDLE_KEY_USER_ID, userId);
+        intent.putExtra(Application.BUNDLE_KEY_MESSAGE, msg);
+        intent.addCategory(getPackageName());
+        if(realTopic.equals(GlobalInfo.TOPIC_SENSOR_DATA_REPORT)){
+            intent.setAction(Application.ACTION_SENSOR_DATA_REPORT);
+        }else if(realTopic.equals(GlobalInfo.TOPIC_SENSOR_WARNING)){
+            intent.setAction(Application.ACTION_SENSOR_WARNING);
+        }
+        sendBroadcast(intent);
+    }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {}
 
-    private String parseTopicUser(String topic){
-        if(topic == null || topic.isEmpty())
+    private String parseTopic(String topicWithUser){
+        if(topicWithUser == null || topicWithUser.isEmpty())
             return null;
         int i;
-        for(i = topic.length() - 1; i >= 0; i--){
-            if(topic.charAt(i) == '/')
+        for(i = topicWithUser.length() - 1; i >= 0; i--){
+            if(topicWithUser.charAt(i) == '/')
                 break;
         }
-        if(i < 0 || i == topic.length() - 1)
+        if(i < 0)
+            return topicWithUser;
+        return topicWithUser.substring(0, i);
+    }
+
+    private String parseTopicUser(String topicWithUser){
+        if(topicWithUser == null || topicWithUser.isEmpty())
             return null;
-        return topic.substring(i + 1);
+        int i;
+        for(i = topicWithUser.length() - 1; i >= 0; i--){
+            if(topicWithUser.charAt(i) == '/')
+                break;
+        }
+        if(i < 0 || i == topicWithUser.length() - 1)
+            return null;
+        return topicWithUser.substring(i + 1);
     }
 
     public static class MQTTSubscriptionAction implements Serializable{

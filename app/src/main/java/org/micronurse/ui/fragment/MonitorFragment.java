@@ -31,7 +31,8 @@ public class MonitorFragment extends Fragment {
     private Fragment currentFragment;
     private final Fragment[] monitorPages;
     private String[] pageTitles;
-    private ConnectedReceiver receiver;
+    private final BroadcastReceiver[] receivers;
+    private final MQTTConnectedReceiver mqttConnectedReceiver;
 
     public MonitorFragment() {
         monitorPages = new Fragment[]{
@@ -39,6 +40,10 @@ public class MonitorFragment extends Fragment {
                 new HealthMonitorFragment(),
                 new GoingoutMonitorFragment()
         };
+        receivers = new BroadcastReceiver[monitorPages.length];
+        receivers[0] = ((FamilyMonitorFragment)monitorPages[0]).getReceiver();
+        receivers[1] = ((HealthMonitorFragment)monitorPages[1]).getReceiver();
+        receivers[2] = ((GoingoutMonitorFragment)monitorPages[2]).getReceiver();
         ((GoingoutMonitorFragment)monitorPages[2]).setOnFullScreenListener(new OnFullScreenListener() {
             @Override
             public void onEnterFullScreen() {
@@ -56,6 +61,15 @@ public class MonitorFragment extends Fragment {
                     fullScreenListener.onExitFullScreen();
             }
         });
+        mqttConnectedReceiver = new MQTTConnectedReceiver();
+    }
+
+    public BroadcastReceiver[] getSensorDataReceivers(){
+        return receivers;
+    }
+
+    public BroadcastReceiver getMqttConnectedReceiver() {
+        return mqttConnectedReceiver;
     }
 
     @Override
@@ -92,8 +106,6 @@ public class MonitorFragment extends Fragment {
         tabLayout.setupWithViewPager(viewPager);
         IntentFilter filter = new IntentFilter(Application.ACTION_MQTT_BROKER_CONNECTED);
         filter.addCategory(getContext().getPackageName());
-        receiver = new ConnectedReceiver();
-        getContext().registerReceiver(receiver, filter);
         return viewRoot;
     }
 
@@ -110,12 +122,6 @@ public class MonitorFragment extends Fragment {
     public void onPause() {
         currentFragment.onHiddenChanged(true);
         super.onPause();
-    }
-
-    @Override
-    public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
-        super.onDestroy();
     }
 
     public void setOnFullScreenListener(OnFullScreenListener fullScreenListener) {
@@ -150,21 +156,21 @@ public class MonitorFragment extends Fragment {
         super.onHiddenChanged(hidden);
     }
 
-    private class ConnectedReceiver extends BroadcastReceiver{
+    private class MQTTConnectedReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
             intent = new Intent(Application.ACTION_MQTT_ACTION);
             intent.addCategory(getContext().getPackageName());
             if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
                 intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
-                        GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getPhoneNumber(), 0, Application.ACTION_SENSOR_DATA_REPORT
+                        GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_SENSOR_DATA_REPORT
                 ));
                 getContext().sendBroadcast(intent);
             }else{
                 if(GlobalInfo.guardianshipList != null){
                     for(User u : GlobalInfo.guardianshipList){
                         intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
-                                GlobalInfo.TOPIC_SENSOR_DATA_REPORT, u.getPhoneNumber(), 0, Application.ACTION_SENSOR_DATA_REPORT
+                                GlobalInfo.TOPIC_SENSOR_DATA_REPORT, u.getPhoneNumber(), 1, Application.ACTION_SENSOR_DATA_REPORT
                         ));
                         getContext().sendBroadcast(intent);
                     }
