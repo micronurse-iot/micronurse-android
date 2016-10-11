@@ -74,9 +74,9 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType){
             case VIEW_TYPE_TIMELINE_HEADER:
-                return new TimelineHeaderViewHolder(LayoutInflater.from(context).inflate(R.layout.timeline_header, parent, false));
+                return new TimelineHeaderViewHolder(LayoutInflater.from(context).inflate(R.layout.item_timeline_header, parent, false));
             case VIEW_TYPE_MONITOR_ITEM:
-                return new SensorItemViewHolder(LayoutInflater.from(context).inflate(R.layout.monitor_data_item, parent, false));
+                return new SensorItemViewHolder(LayoutInflater.from(context).inflate(R.layout.item_monitor_data, parent, false));
 
         }
         return null;

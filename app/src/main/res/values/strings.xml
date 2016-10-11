@@ -100,4 +100,15 @@
     <string name="exit_query">确定要退出吗？退出后将无法接收到监控警报消息。</string>
     <string name="action_ok">确定</string>
     <string name="action_cancel">取消</string>
+
+    <string name="friend_message">消息</string>
+    <string name="friend_contacts">联系人</string>
+    <string name="friend_share">分享</string>
+
+    <string name="no_message">暂时没有消息</string>
+    <string name="empty_friend_list">好友列表为空</string>
+    <string name="guardians">监护人</string>
+    <string name="friends">好友</string>
+    <string name="add_guardian">添加监护人</string>
+    <string name="add_friend">添加好友</string>
 </resources>

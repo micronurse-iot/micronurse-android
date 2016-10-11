@@ -38,19 +38,21 @@ repositories {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-v4:24.1.1'
-    compile 'com.android.support:appcompat-v7:24.1.1'
-    compile 'com.android.support:design:24.1.1'
-    compile 'com.android.support:recyclerview-v7:24.1.1'
-    compile 'com.android.support:cardview-v7:24.1.1'
     compile(
             'com.google.code.gson:gson:2.6.+',
             'com.mcxiaoke.volley:library:+',
             'de.hdodenhof:circleimageview:2.+',
             'com.michaelpardo:activeandroid:3.+',
             'com.github.orangegangsters:swipy:1.2.3@aar',
+            'com.github.bmelnychuk:atv:1.2.+',
             'com.github.lecho:hellocharts-library:1.5.8@aar',
+            'com.github.clans:fab:1.6.4',
             'org.eclipse.paho:org.eclipse.paho.client.mqttv3:+',
     )
+    compile 'com.android.support:support-v4:24.1.1'
+    compile 'com.android.support:appcompat-v7:24.1.1'
+    compile 'com.android.support:design:24.1.1'
+    compile 'com.android.support:recyclerview-v7:24.1.1'
+    compile 'com.android.support:cardview-v7:24.1.1'
+    testCompile 'junit:junit:4.12'
 }

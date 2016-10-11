@@ -1,0 +1,18 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.micronurse.ui.fragment.older.friendjuan.MessageFragment">
+
+    <TextView
+        android:id="@+id/txt_no_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:drawableLeft="@drawable/ic_info_outline_48dp"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:textSize="@dimen/large_text_size"
+        android:text="@string/no_message"/>
+
+</RelativeLayout>

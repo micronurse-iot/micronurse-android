@@ -11,6 +11,7 @@ import org.micronurse.R;
 import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
+import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.http.model.result.UserListResult;
 import org.micronurse.http.model.result.UserResult;
@@ -67,7 +68,12 @@ public class WelcomeActivity extends AppCompatActivity {
                                             }, new APIErrorListener() {
                                                 @Override
                                                 public void onErrorResponse(VolleyError err, Result result) {
-                                                    startLoginActivity();
+                                                    if(result.getResultCode() == PublicResultCode.RESULT_NOT_FOUND){
+                                                        finish();
+                                                        startActivity(loginIntent);
+                                                    }else {
+                                                        startLoginActivity();
+                                                    }
                                                 }
                                             }, UserListResult.class, false, null).startRequest();
                                         }

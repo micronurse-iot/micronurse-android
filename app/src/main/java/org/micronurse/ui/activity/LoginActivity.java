@@ -210,7 +210,12 @@ public class LoginActivity extends AppCompatActivity {
                                         }, new APIErrorListener() {
                                             @Override
                                             public void onErrorResponse(VolleyError err, Result result) {
-                                                Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
+                                                if(result.getResultCode() == PublicResultCode.RESULT_NOT_FOUND){
+                                                    finish();
+                                                    startActivity(loginIntent);
+                                                }else {
+                                                    Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
+                                                }
                                             }
                                         }, UserListResult.class).startRequest();
                                     }

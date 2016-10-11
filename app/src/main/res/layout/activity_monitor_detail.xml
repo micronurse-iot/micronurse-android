@@ -17,7 +17,7 @@
             android:orientation="vertical">
 
             <include android:id="@+id/data_item"
-                layout="@layout/monitor_data_item"/>
+                layout="@layout/item_monitor_data"/>
             <lecho.lib.hellocharts.view.LineChartView
                 android:id="@+id/line_chart"
                 android:layout_width="fill_parent"

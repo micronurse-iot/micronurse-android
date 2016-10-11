@@ -15,13 +15,17 @@
 
     <dimen name="nav_header_portrait_size">72dp</dimen>
     <dimen name="nav_header_small_portrait_size">56dp</dimen>
+    <dimen name="smaller_icon_size">16dp</dimen>
+    <dimen name="small_icon_size">24dp</dimen>
     <dimen name="normal_icon_size">32dp</dimen>
-    <dimen name="xlarge_icon_size">128dp</dimen>
+    <dimen name="large_icon_size">48dp</dimen>
+    <dimen name="welcome_icon_size">128dp</dimen>
     <dimen name="actionbar_elevation">10dp</dimen>
 
     <dimen name="left_margin">16dp</dimen>
     <dimen name="safe_level_size">150dp</dimen>
     <dimen name="item_padding">8dp</dimen>
+    <dimen name="item_padding_large">12dp</dimen>
     <dimen name="emergency_call_btn_size">48dp</dimen>
     <dimen name="tab_layout_size">40dp</dimen>
     <dimen name="map_zoom_control_padding_bottom">100dp</dimen>

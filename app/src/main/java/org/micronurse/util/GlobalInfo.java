@@ -1,6 +1,8 @@
 package org.micronurse.util;
 
 import org.micronurse.model.User;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,7 +13,7 @@ public class GlobalInfo {
 
     public static User user = null;
     public static String token = null;
-    public static List<User> guardianshipList;
+    public static List<User> guardianshipList = new ArrayList<>();
 
     public static class Guardian{
         public static User monitorOlder;
@@ -20,7 +22,7 @@ public class GlobalInfo {
     public static void clearLoginUserInfo(){
         user = null;
         token = null;
-        guardianshipList = null;
+        guardianshipList.clear();
     }
 
     public static String TOPIC_SENSOR_DATA_REPORT = "sensor_data_report";
