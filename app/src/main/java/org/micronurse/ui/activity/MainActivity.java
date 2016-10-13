@@ -14,9 +14,9 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.micronurse.Application;
@@ -33,7 +33,6 @@ import org.micronurse.ui.fragment.MonitorWarningFragment;
 import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
-import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -146,7 +145,7 @@ public class MainActivity extends AppCompatActivity
         ((TextView)mNavHeaderView.findViewById(R.id.nav_header_nickname)).setText(GlobalInfo.user.getNickname());
         ((TextView)mNavHeaderView.findViewById(R.id.nav_header_phone_num)).setText(GlobalInfo.user.getPhoneNumber());
         if(GlobalInfo.user.getPortrait() != null)
-            ((CircleImageView)mNavHeaderView.findViewById(R.id.nav_header_portrait)).setImageBitmap(GlobalInfo.user.getPortrait());
+            ((ImageView)mNavHeaderView.findViewById(R.id.nav_header_portrait)).setImageBitmap(GlobalInfo.user.getPortrait());
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN){
             updateMonitorOlder();
         }
@@ -179,7 +178,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
         ((TextView)mNavHeaderView.findViewById(R.id.nav_header_older_nickname)).setText(GlobalInfo.Guardian.monitorOlder.getNickname());
-        ((CircleImageView)mNavHeaderView.findViewById(R.id.nav_header_older_portrait)).setImageBitmap(GlobalInfo.Guardian.monitorOlder.getPortrait());
+        ((ImageView)mNavHeaderView.findViewById(R.id.nav_header_older_portrait)).setImageBitmap(GlobalInfo.Guardian.monitorOlder.getPortrait());
     }
 
     @Override

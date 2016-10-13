@@ -1,5 +1,6 @@
 package org.micronurse.ui.fragment.older.friendjuan;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -12,6 +13,7 @@ import org.micronurse.R;
 import org.micronurse.adapter.ContactListContactHolder;
 import org.micronurse.adapter.ContactListRootHolder;
 import org.micronurse.model.User;
+import org.micronurse.ui.activity.ChatActivity;
 import org.micronurse.util.GlobalInfo;
 
 public class FriendContactsFragment extends Fragment {
@@ -54,9 +56,16 @@ public class FriendContactsFragment extends Fragment {
         AndroidTreeView atv = new AndroidTreeView(getActivity(), treeRoot);
         guardianListRoot = new TreeNode(new ContactListRootHolder.IconTextItem(R.drawable.ic_contacts_32dp, getString(R.string.guardians) + " (" + GlobalInfo.guardianshipList.size() + ')'))
                 .setViewHolder(new ContactListRootHolder(getActivity(), atv));
-        for(User u : GlobalInfo.guardianshipList){
+        for(final User u : GlobalInfo.guardianshipList){
             TreeNode node = new TreeNode(new ContactListContactHolder.IconTextItem(u.getPortrait(), u.getNickname()))
-                            .setViewHolder(new ContactListContactHolder(getActivity()));
+                            .setViewHolder(new ContactListContactHolder(getActivity(), new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(getActivity(), ChatActivity.class);
+                                    intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, u.getPhoneNumber());
+                                    startActivity(intent);
+                                }
+                            }));
             guardianListRoot.addChild(node);
         }
         olderFriendListRoot = new TreeNode(new ContactListRootHolder.IconTextItem(R.drawable.ic_friend_32dp, getString(R.string.friends) + " (" + 0 + ')'))

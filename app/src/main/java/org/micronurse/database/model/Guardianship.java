@@ -13,7 +13,8 @@ public class Guardianship extends Model {
     @Column(name = "GuardianID", notNull = true)
     private String guardianId;
 
-    @Column(name = "OlderID", notNull = true)
+    @Column(name = "OlderID", notNull = true, uniqueGroups = {"GuardianID", "OlderID"},
+            indexGroups = {"GuardianID", "OlderID"})
     private String olderId;
 
     public Guardianship(){

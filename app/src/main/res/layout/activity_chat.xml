@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_chat"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_blue_50"
+    tools:context="org.micronurse.ui.activity.ChatActivity">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/chat_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/chat_input_area"
+        android:scrollbars="vertical"/>
+
+    <RelativeLayout
+        android:id="@+id/chat_input_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/white">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/grey_200"/>
+
+        <com.rengwuxian.materialedittext.MaterialEditText
+            android:id="@+id/chat_msg_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="@dimen/item_padding"
+            android:layout_marginRight="@dimen/item_padding"
+            android:layout_toLeftOf="@+id/btn_send_msg"
+            android:layout_alignParentLeft="true"
+            app:met_clearButton="true"
+            app:met_primaryColor="@color/colorAccent"/>
+
+        <ImageButton
+            android:id="@+id/btn_send_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            app:srcCompat="@drawable/ic_send"
+            android:tint="@color/colorPrimary"
+            android:layout_marginRight="@dimen/item_padding"
+            android:layout_marginBottom="@dimen/item_padding"
+            android:layout_marginTop="@dimen/item_padding"
+            style="@style/AppTheme.ImageButton"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>

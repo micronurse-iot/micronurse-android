@@ -183,7 +183,7 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    class TimelineHeaderViewHolder extends RecyclerView.ViewHolder{
+    private class TimelineHeaderViewHolder extends RecyclerView.ViewHolder{
         private View itemView;
         private TextView timeView;
 
@@ -194,7 +194,7 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    class SensorItemViewHolder extends RecyclerView.ViewHolder{
+    private class SensorItemViewHolder extends RecyclerView.ViewHolder{
         private View itemView;
         private View itemCardView;
         private TextView dataView;

@@ -8,12 +8,10 @@
     tools:context=".ui.activity.LoginActivity">
 
     <ScrollView
-        android:id="@+id/login_form"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <LinearLayout
-            android:id="@+id/email_login_form"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -49,24 +47,24 @@
                     app:srcCompat="@drawable/ic_phone"
                     />
 
-                <android.support.design.widget.TextInputLayout
+                <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
+                    android:id="@+id/login_phone_number"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:hint="@string/prompt_phone_number"
+                    android:imeOptions="actionNext"
+                    android:inputType="phone"
+                    android:completionThreshold="1"
+                    android:maxLength="20"
+                    android:maxLines="1"
                     android:layout_toRightOf="@+id/icon_phone_login"
-                    android:layout_centerVertical="true">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/login_phone_number"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/prompt_phone_number"
-                        android:imeOptions="actionNext"
-                        android:inputType="phone"
-                        android:completionThreshold="1"
-                        android:maxLength="20"
-                        android:maxLines="1" />
-
-                </android.support.design.widget.TextInputLayout>
+                    app:met_textColorHint="@color/grey_500"
+                    app:met_underlineColor="@color/grey_500"
+                    app:met_primaryColor="@color/colorAccent"
+                    app:met_floatingLabelText="@string/prompt_phone_number"
+                    app:met_floatingLabel="highlight"
+                    app:met_clearButton="true"/>
 
             </RelativeLayout>
 
@@ -84,24 +82,27 @@
                     android:tint="@color/colorPrimary"
                     app:srcCompat="@drawable/ic_key" />
 
-                <android.support.design.widget.TextInputLayout
+                <com.rengwuxian.materialedittext.MaterialEditText
+                    android:id="@+id/login_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_toRightOf="@+id/icon_password_login"
-                    android:layout_centerVertical="true">
+                    android:imeActionLabel="@string/action_sign_in_short"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPassword"
+                    android:maxLines="1"
+                    android:layout_centerVertical="true"
+                    app:met_textColorHint="@color/grey_500"
+                    app:met_underlineColor="@color/grey_500"
+                    android:hint="@string/prompt_password"
+                    app:met_primaryColor="@color/colorAccent"
+                    app:met_floatingLabelText="@string/prompt_password"
+                    app:met_floatingLabel="highlight"
+                    app:met_minCharacters="6"
+                    app:met_maxCharacters="20"
+                    app:met_clearButton="true"
+                    android:maxLength="20"
+                    android:layout_toRightOf="@+id/icon_password_login" />
 
-                    <EditText
-                        android:id="@+id/login_password"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/prompt_password"
-                        android:imeActionLabel="@string/action_sign_in_short"
-                        android:imeOptions="actionDone"
-                        android:inputType="textPassword"
-                        android:maxLines="1"
-                        android:maxLength="20"/>
-
-                </android.support.design.widget.TextInputLayout>
             </RelativeLayout>
 
             <Button

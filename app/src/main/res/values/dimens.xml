@@ -32,4 +32,5 @@
     <dimen name="timeline_height">90dp</dimen>
     <dimen name="timeline_header_height">45dp</dimen>
     <dimen name="linechart_height">450dp</dimen>
+    <dimen name="chatbox_space">60dp</dimen>
 </resources>

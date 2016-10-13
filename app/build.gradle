@@ -47,6 +47,8 @@ dependencies {
             'com.github.bmelnychuk:atv:1.2.+',
             'com.github.lecho:hellocharts-library:1.5.8@aar',
             'com.github.clans:fab:1.6.4',
+            'me.himanshusoni.chatmessageview:chat-message-view:1.0.3',
+            'com.rengwuxian.materialedittext:library:2.1.4',
             'org.eclipse.paho:org.eclipse.paho.client.mqttv3:+',
     )
     compile 'com.android.support:support-v4:24.1.1'

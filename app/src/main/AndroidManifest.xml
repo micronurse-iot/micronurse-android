@@ -23,10 +23,12 @@
             android:value="MicroNurse.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="2" />
+            android:value="3" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.Guardianship" />
+            android:value="org.micronurse.database.model.LoginUserRecord,
+                           org.micronurse.database.model.Guardianship,
+                           org.micronurse.database.model.ChatMessageRecord" />
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
@@ -58,6 +60,7 @@
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -81,17 +84,20 @@
         <service
             android:name=".service.MQTTService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
 
-        <receiver android:name=".receiver.MonitorWarningReceiver"
-            android:exported="false"
-            android:enabled="true">
+        <receiver
+            android:name=".receiver.MonitorWarningReceiver"
+            android:enabled="true"
+            android:exported="false">
             <intent-filter>
-                <action android:name="org.micronurse.action.SENSOR_WARNING"/>
-                <category android:name="org.micronurse"/>
+                <action android:name="org.micronurse.action.SENSOR_WARNING" />
+
+                <category android:name="org.micronurse" />
             </intent-filter>
         </receiver>
 
+        <activity android:name=".ui.activity.ChatActivity"></activity>
     </application>
 
 </manifest>

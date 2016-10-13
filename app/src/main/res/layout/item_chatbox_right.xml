@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/chat_sender_portrait"
+        android:layout_width="@dimen/large_icon_size"
+        android:layout_height="@dimen/large_icon_size"
+        android:layout_alignParentRight="true"
+        android:layout_margin="@dimen/item_padding"
+        app:civ_border_width="1dp"
+        app:civ_fill_color="@color/grey_200"
+        app:civ_border_color="@android:color/white"/>
+
+    <me.himanshusoni.chatmessageview.ChatMessageView
+        android:id="@+id/chat_chatbox_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/chatbox_space"
+        android:layout_marginTop="@dimen/item_padding"
+        android:layout_marginBottom="@dimen/item_padding"
+        android:layout_toLeftOf="@+id/chat_sender_portrait"
+        app:cmv_backgroundColor="@color/teal_500"
+        app:cmv_backgroundColorPressed="@color/teal_600"
+        app:cmv_cornerRadius="5dp"
+        app:cmv_arrowGravity="start"
+        app:cmv_arrowPosition="right"
+        app:cmv_showArrow="true">
+
+    </me.himanshusoni.chatmessageview.ChatMessageView>
+
+</RelativeLayout>
