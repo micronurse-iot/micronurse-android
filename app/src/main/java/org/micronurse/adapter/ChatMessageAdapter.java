@@ -12,6 +12,7 @@ import android.widget.TextView;
 import org.micronurse.R;
 import org.micronurse.database.model.ChatMessageRecord;
 import org.micronurse.model.User;
+import org.micronurse.util.DateTimeUtil;
 
 import java.util.List;
 
@@ -62,15 +63,20 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         if(holder instanceof MessageViewHolder && obj instanceof MessageItem){
             MessageItem messageItem = (MessageItem) obj;
             ((MessageViewHolder) holder).senderPortrait.setImageBitmap(messageItem.sender.getPortrait());
+            ((MessageViewHolder) holder).messageTimeText.setText(DateTimeUtil.convertTimestamp(context, messageItem.message.getMessageTime(), true, true));
             if(messageItem.message.getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT)){
-                TextView chatText = new TextView(context);
+                TextView chatText = (TextView) ((MessageViewHolder) holder).chatMessageView.findViewWithTag("text");
+                if(chatText == null) {
+                    chatText = new TextView(context);
+                    chatText.setTag("text");
+                    chatText.setTextIsSelectable(true);
+                    if(messageItem.position == MessageItem.POSITION_LEFT)
+                        chatText.setTextColor(Color.BLACK);
+                    else
+                        chatText.setTextColor(Color.WHITE);
+                    ((MessageViewHolder) holder).chatMessageView.addView(chatText);
+                }
                 chatText.setText(messageItem.message.getContent());
-                chatText.setTextIsSelectable(true);
-                if(messageItem.position == MessageItem.POSITION_LEFT)
-                    chatText.setTextColor(Color.BLACK);
-                else
-                    chatText.setTextColor(Color.WHITE);
-                ((MessageViewHolder) holder).chatMessageView.addView(chatText);
             }
         }
     }
@@ -84,12 +90,14 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private View itemView;
         private ImageView senderPortrait;
         private ViewGroup chatMessageView;
+        private TextView messageTimeText;
 
         public MessageViewHolder(View itemView) {
             super(itemView);
             this.itemView = itemView;
             senderPortrait = (ImageView) itemView.findViewById(R.id.chat_sender_portrait);
             chatMessageView = (ViewGroup) itemView.findViewById(R.id.chat_chatbox_view);
+            messageTimeText = (TextView) itemView.findViewById(R.id.chat_msg_time);
         }
     }
 

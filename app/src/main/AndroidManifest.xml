@@ -23,12 +23,10 @@
             android:value="MicroNurse.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="3" />
+            android:value="5" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,
-                           org.micronurse.database.model.Guardianship,
-                           org.micronurse.database.model.ChatMessageRecord" />
+            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.Guardianship,                            org.micronurse.database.model.ChatMessageRecord" />
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
@@ -92,12 +90,21 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="org.micronurse.action.SENSOR_WARNING" />
-
                 <category android:name="org.micronurse" />
             </intent-filter>
         </receiver>
 
-        <activity android:name=".ui.activity.ChatActivity"></activity>
+        <activity android:name=".ui.activity.ChatActivity" />
+
+        <receiver
+            android:name=".receiver.ChatMessageSentReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.micronurse.action.CHAT_MESSAGE_SENT" />
+                <category android:name="org.micronurse" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

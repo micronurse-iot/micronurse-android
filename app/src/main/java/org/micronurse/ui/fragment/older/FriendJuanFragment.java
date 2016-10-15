@@ -1,5 +1,6 @@
 package org.micronurse.ui.fragment.older;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -28,6 +29,10 @@ public class FriendJuanFragment extends Fragment {
         friendJuanPages[0] = new MessageFragment();
         friendJuanPages[1] = new FriendContactsFragment();
         friendJuanPages[2] = new ShareFragment();
+    }
+
+    public static FriendJuanFragment getInstance(Context context){
+        return new FriendJuanFragment();
     }
 
     @Override

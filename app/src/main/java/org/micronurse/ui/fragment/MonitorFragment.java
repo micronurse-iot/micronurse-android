@@ -19,31 +19,51 @@ import org.micronurse.service.MQTTService;
 import org.micronurse.ui.fragment.monitor.FamilyMonitorFragment;
 import org.micronurse.ui.fragment.monitor.GoingoutMonitorFragment;
 import org.micronurse.ui.fragment.monitor.HealthMonitorFragment;
+import org.micronurse.ui.listener.OnBindMQTTServiceListener;
 import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.ui.widget.ViewPager;
 import org.micronurse.util.GlobalInfo;
 
-public class MonitorFragment extends Fragment {
+public class MonitorFragment extends Fragment implements OnBindMQTTServiceListener{
     private View viewRoot;
     private ViewPager viewPager;
     private TabLayout tabLayout;
     private OnFullScreenListener fullScreenListener;
     private Fragment currentFragment;
-    private final Fragment[] monitorPages;
+    private Fragment[] monitorPages;
     private String[] pageTitles;
-    private final BroadcastReceiver[] receivers;
-    private final MQTTConnectedReceiver mqttConnectedReceiver;
 
-    public MonitorFragment() {
-        monitorPages = new Fragment[]{
-                new FamilyMonitorFragment(),
-                new HealthMonitorFragment(),
-                new GoingoutMonitorFragment()
+    public MonitorFragment() {}
+
+    public static MonitorFragment getInstance(Context context){
+        MonitorFragment fragment = new MonitorFragment();
+        fragment.monitorPages = new Fragment[]{
+                FamilyMonitorFragment.getInstance(context),
+                HealthMonitorFragment.getInstance(context),
+                GoingoutMonitorFragment.getInstance(context)
         };
-        receivers = new BroadcastReceiver[monitorPages.length];
-        receivers[0] = ((FamilyMonitorFragment)monitorPages[0]).getReceiver();
-        receivers[1] = ((HealthMonitorFragment)monitorPages[1]).getReceiver();
-        receivers[2] = ((GoingoutMonitorFragment)monitorPages[2]).getReceiver();
+        return fragment;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        if(viewRoot != null)
+            return viewRoot;
+
+        if(monitorPages == null) {
+            monitorPages = new Fragment[]{
+                    FamilyMonitorFragment.getInstance(getContext()),
+                    HealthMonitorFragment.getInstance(getContext()),
+                    GoingoutMonitorFragment.getInstance(getContext())
+            };
+        }
+        pageTitles = new String[]{
+                getString(R.string.action_family_monitor),
+                getString(R.string.action_health_monitor),
+                getString(R.string.action_going_out_monitor),
+        };
         ((GoingoutMonitorFragment)monitorPages[2]).setOnFullScreenListener(new OnFullScreenListener() {
             @Override
             public void onEnterFullScreen() {
@@ -61,28 +81,6 @@ public class MonitorFragment extends Fragment {
                     fullScreenListener.onExitFullScreen();
             }
         });
-        mqttConnectedReceiver = new MQTTConnectedReceiver();
-    }
-
-    public BroadcastReceiver[] getSensorDataReceivers(){
-        return receivers;
-    }
-
-    public BroadcastReceiver getMqttConnectedReceiver() {
-        return mqttConnectedReceiver;
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        if(viewRoot != null)
-            return viewRoot;
-        pageTitles = new String[]{
-                getString(R.string.action_family_monitor),
-                getString(R.string.action_health_monitor),
-                getString(R.string.action_going_out_monitor),
-        };
         viewRoot = inflater.inflate(R.layout.fragment_monitor, container, false);
         viewPager = (ViewPager) viewRoot.findViewById(R.id.tab_viewpager_monitor);
         viewPager.setAdapter(new MonitorPagerAdapter(getFragmentManager()));
@@ -104,8 +102,6 @@ public class MonitorFragment extends Fragment {
         });
         tabLayout = (TabLayout) viewRoot.findViewById(R.id.tab_monitor);
         tabLayout.setupWithViewPager(viewPager);
-        IntentFilter filter = new IntentFilter(Application.ACTION_MQTT_BROKER_CONNECTED);
-        filter.addCategory(getContext().getPackageName());
         return viewRoot;
     }
 
@@ -116,6 +112,23 @@ public class MonitorFragment extends Fragment {
             currentFragment.onHiddenChanged(false);
         else
             currentFragment = monitorPages[0];
+    }
+
+    @Override
+    public void onBind(MQTTService service) {
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
+                    GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_SENSOR_DATA_REPORT
+            ));
+        }else{
+            if(GlobalInfo.guardianshipList != null){
+                for(User u : GlobalInfo.guardianshipList){
+                    service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
+                            GlobalInfo.TOPIC_SENSOR_DATA_REPORT, u.getPhoneNumber(), 1, Application.ACTION_SENSOR_DATA_REPORT
+                    ));
+                }
+            }
+        }
     }
 
     @Override
@@ -156,26 +169,4 @@ public class MonitorFragment extends Fragment {
         super.onHiddenChanged(hidden);
     }
 
-    private class MQTTConnectedReceiver extends BroadcastReceiver{
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            intent = new Intent(Application.ACTION_MQTT_ACTION);
-            intent.addCategory(getContext().getPackageName());
-            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
-                intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
-                        GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_SENSOR_DATA_REPORT
-                ));
-                getContext().sendBroadcast(intent);
-            }else{
-                if(GlobalInfo.guardianshipList != null){
-                    for(User u : GlobalInfo.guardianshipList){
-                        intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
-                                GlobalInfo.TOPIC_SENSOR_DATA_REPORT, u.getPhoneNumber(), 1, Application.ACTION_SENSOR_DATA_REPORT
-                        ));
-                        getContext().sendBroadcast(intent);
-                    }
-                }
-            }
-        }
-    }
 }

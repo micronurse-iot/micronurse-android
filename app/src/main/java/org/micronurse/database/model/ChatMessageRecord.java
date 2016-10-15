@@ -3,7 +3,9 @@ package org.micronurse.database.model;
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
+import com.google.gson.annotations.Expose;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -11,32 +13,43 @@ import java.util.Date;
  */
 
 @Table(name = "ChatMessageRecord")
-public class ChatMessageRecord extends Model {
+public class ChatMessageRecord extends Model implements Serializable {
     public static final String MESSAGE_TYPE_TEXT = "text";
+
+    @Column(name = "ChatterAId", notNull = true)
+    private String chatterAId;
+
+    @Column(name = "ChatterBId", notNull = true)
+    private String chatterBId;
 
     @Column(name = "SenderId", notNull = true)
     private String senderId;
 
-    @Column(name = "ReceiverId", notNull = true)
-    private String receiverId;
-
-    @Column(name = "MessageTime", notNull = true, uniqueGroups = {"SenderId", "ReceiverId", "MessageTime"},
-            indexGroups = {"SenderId", "ReceiverId", "MessageTime"})
+    @Column(name = "MessageTime", notNull = true, uniqueGroups = {"ChatterAId", "ChatterBId", "MessageTime"},
+            indexGroups = {"ChatterAId", "ChatterBId", "MessageTime"})
+    @Expose
     private Date messageTime;
 
     @Column(name = "MessageType", notNull = true, length = 10)
+    @Expose
     private String messageType;
 
     @Column(name = "Content", notNull = true)
+    @Expose
     private String content;
 
     public ChatMessageRecord(){
         super();
     }
 
-    public ChatMessageRecord(String senderId, String receiverId, Date messageTime, String messageType, String content) {
+    public ChatMessageRecord(String chatterAId, String chatterBId, String senderId, String messageType, String content) {
+        this(chatterAId, chatterBId, senderId, new Date(), messageType, content);
+    }
+
+    public ChatMessageRecord(String chatterAId, String chatterBId, String senderId, Date messageTime, String messageType, String content) {
+        this.chatterAId = chatterAId;
+        this.chatterBId = chatterBId;
         this.senderId = senderId;
-        this.receiverId = receiverId;
         this.messageTime = messageTime;
         this.messageType = messageType;
         this.content = content;
@@ -58,20 +71,28 @@ public class ChatMessageRecord extends Model {
         this.content = content;
     }
 
+    public String getChatterAId() {
+        return chatterAId;
+    }
+
+    public void setChatterAId(String chatterAId) {
+        this.chatterAId = chatterAId;
+    }
+
+    public String getChatterBId() {
+        return chatterBId;
+    }
+
+    public void setChatterBId(String chatterBId) {
+        this.chatterBId = chatterBId;
+    }
+
     public String getSenderId() {
         return senderId;
     }
 
     public void setSenderId(String senderId) {
         this.senderId = senderId;
-    }
-
-    public String getReceiverId() {
-        return receiverId;
-    }
-
-    public void setReceiverId(String receiverId) {
-        this.receiverId = receiverId;
     }
 
     public Date getMessageTime() {

@@ -62,6 +62,14 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         receiver = new SensorDataReceiver();
     }
 
+    public static HealthMonitorFragment getInstance(Context context){
+        HealthMonitorFragment fragment = new HealthMonitorFragment();
+        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
+        intentFilter.addCategory(context.getPackageName());
+        context.registerReceiver(fragment.receiver, intentFilter);
+        return fragment;
+    }
+
     private void updateURL(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
             updateBodyTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_FEVER_THERMOMETER,
@@ -113,8 +121,10 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
         updateData();
     }
 
-    public BroadcastReceiver getReceiver() {
-        return receiver;
+    @Override
+    public void onDestroy() {
+        getContext().unregisterReceiver(receiver);
+        super.onDestroy();
     }
 
     private void updateData(){

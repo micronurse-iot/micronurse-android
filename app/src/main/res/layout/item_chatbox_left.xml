@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -21,6 +20,7 @@
         android:layout_marginRight="@dimen/chatbox_space"
         android:layout_marginTop="@dimen/item_padding"
         android:layout_marginBottom="@dimen/item_padding"
+        android:layout_toRightOf="@+id/chat_sender_portrait"
         app:cmv_backgroundColor="@android:color/white"
         app:cmv_backgroundColorPressed="@color/grey_200"
         app:cmv_cornerRadius="5dp"
@@ -30,4 +30,26 @@
 
     </me.himanshusoni.chatmessageview.ChatMessageView>
 
-</LinearLayout>
+    <me.himanshusoni.chatmessageview.ChatMessageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/item_padding"
+        android:layout_toRightOf="@+id/chat_sender_portrait"
+        android:layout_below="@+id/chat_chatbox_view"
+        app:cmv_backgroundColor="@android:color/black"
+        android:clickable="false"
+        android:alpha="0.3"
+        app:cmv_contentPadding="3dp"
+        app:cmv_cornerRadius="3dp"
+        app:cmv_showArrow="false">
+
+        <TextView
+            android:id="@+id/chat_msg_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/smaller_text_size"/>
+
+    </me.himanshusoni.chatmessageview.ChatMessageView>
+
+</RelativeLayout>

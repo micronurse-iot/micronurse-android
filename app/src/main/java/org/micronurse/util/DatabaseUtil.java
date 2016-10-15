@@ -2,6 +2,7 @@ package org.micronurse.util;
 
 import com.activeandroid.query.Select;
 
+import org.micronurse.database.model.ChatMessageRecord;
 import org.micronurse.database.model.Guardianship;
 import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.model.User;
@@ -41,5 +42,15 @@ public class DatabaseUtil {
     public static Guardianship findDefaultMonitorOlder(String guardianId){
         return new Select().from(Guardianship.class).where("GuardianID=?", guardianId)
                 .executeSingle();
+    }
+
+    public static List<ChatMessageRecord> findChatMessageRecords(String chatterAId, String chatterBId, Date endTime, int limit){
+        return new Select().from(ChatMessageRecord.class)
+                .where("ChatterAId=?", chatterAId)
+                .where("ChatterBId=?", chatterBId)
+                .where("MessageTime<=?", endTime.getTime())
+                .orderBy("MessageTime DESC")
+                .limit(limit)
+                .execute();
     }
 }

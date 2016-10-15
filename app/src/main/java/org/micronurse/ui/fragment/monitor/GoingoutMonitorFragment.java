@@ -86,6 +86,14 @@ public class GoingoutMonitorFragment extends Fragment {
         });
     }
 
+    public static GoingoutMonitorFragment getInstance(Context context){
+        GoingoutMonitorFragment fragment = new GoingoutMonitorFragment();
+        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
+        intentFilter.addCategory(context.getPackageName());
+        context.registerReceiver(fragment.receiver, intentFilter);
+        return fragment;
+    }
+
     private void updateURL(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER)
             updateLocationURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_GPS,
@@ -166,10 +174,6 @@ public class GoingoutMonitorFragment extends Fragment {
         return viewRoot;
     }
 
-    public BroadcastReceiver getReceiver() {
-        return receiver;
-    }
-
     @Override
     public void onResume() {
         super.onResume();
@@ -184,6 +188,7 @@ public class GoingoutMonitorFragment extends Fragment {
 
     @Override
     public void onDestroy() {
+        getContext().unregisterReceiver(receiver);
         mMapView.onDestroy();
         geoCoder.destroy();
         super.onDestroy();

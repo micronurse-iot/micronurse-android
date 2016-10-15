@@ -32,4 +32,26 @@
 
     </me.himanshusoni.chatmessageview.ChatMessageView>
 
+    <me.himanshusoni.chatmessageview.ChatMessageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/item_padding"
+        android:layout_toLeftOf="@+id/chat_sender_portrait"
+        android:layout_below="@+id/chat_chatbox_view"
+        app:cmv_backgroundColor="@android:color/black"
+        android:clickable="false"
+        android:alpha="0.3"
+        app:cmv_contentPadding="3dp"
+        app:cmv_cornerRadius="3dp"
+        app:cmv_showArrow="false">
+
+        <TextView
+            android:id="@+id/chat_msg_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/smaller_text_size"/>
+
+    </me.himanshusoni.chatmessageview.ChatMessageView>
+
 </RelativeLayout>

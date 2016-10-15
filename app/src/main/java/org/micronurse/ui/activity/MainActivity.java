@@ -1,10 +1,14 @@
 package org.micronurse.ui.activity;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -49,6 +53,7 @@ public class MainActivity extends AppCompatActivity
 
     private ContactsFragment contactsFragment;
     private Intent mqttServiceIntent;
+    private ServiceConnection mqttServiceConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +72,11 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         mFragmentManager = getSupportFragmentManager();
-        monitorFragment = new MonitorFragment();
-        monitorWarningFragment = new MonitorWarningFragment();
+        monitorFragment = MonitorFragment.getInstance(this);
+        monitorWarningFragment = MonitorWarningFragment.getInstance(this);
 
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
-            friendJuanFragment = new FriendJuanFragment();
+            friendJuanFragment = FriendJuanFragment.getInstance(this);
             medicationReminderFragment = new MedicationReminderFragment();
             mFragmentManager.beginTransaction()
                     .add(R.id.main_container, monitorFragment)
@@ -112,36 +117,26 @@ public class MainActivity extends AppCompatActivity
             updateMonitorOlder();
         }
 
-        startMQTTService();
-    }
-
-    private void startMQTTService(){
-        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
-        intentFilter.addCategory(getPackageName());
-        for(BroadcastReceiver br : monitorFragment.getSensorDataReceivers())
-            registerReceiver(br, intentFilter);
-        intentFilter = new IntentFilter(Application.ACTION_MQTT_BROKER_CONNECTED);
-        intentFilter.addCategory(getPackageName());
-        registerReceiver(monitorFragment.getMqttConnectedReceiver(), intentFilter);
-        registerReceiver(monitorWarningFragment.getMqttConnectedReceiver(), intentFilter);
         mqttServiceIntent = new Intent(this, MQTTService.class);
         startService(mqttServiceIntent);
-    }
+        mqttServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                MQTTService mqttService = ((MQTTService.MQTTServiceBinder) service).getService();
+                monitorFragment.onBind(mqttService);
+                monitorWarningFragment.onBind(mqttService);
+            }
 
-    @Override
-    protected void onDestroy() {
-        for(BroadcastReceiver br : monitorFragment.getSensorDataReceivers())
-            unregisterReceiver(br);
-        unregisterReceiver(monitorFragment.getMqttConnectedReceiver());
-        unregisterReceiver(monitorWarningFragment.getMqttConnectedReceiver());
-        super.onDestroy();
+            @Override
+            public void onServiceDisconnected(ComponentName name) {}
+        };
+        bindService(mqttServiceIntent, mqttServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         DatabaseUtil.updateLoginRecord(GlobalInfo.user, GlobalInfo.token);
-
         ((TextView)mNavHeaderView.findViewById(R.id.nav_header_nickname)).setText(GlobalInfo.user.getNickname());
         ((TextView)mNavHeaderView.findViewById(R.id.nav_header_phone_num)).setText(GlobalInfo.user.getPhoneNumber());
         if(GlobalInfo.user.getPortrait() != null)
@@ -189,6 +184,12 @@ public class MainActivity extends AppCompatActivity
         } else {
             moveTaskToBack(true);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        unbindService(mqttServiceConnection);
+        super.onDestroy();
     }
 
     @Override

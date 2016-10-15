@@ -24,7 +24,7 @@ import java.lang.reflect.Type;
  * @author buptsse-zero <GGGZ-1101-28@Live.cn>
  */
 public class GsonUtil {
-    private static GsonBuilder getDefaultGsonBuilder(){
+    public static GsonBuilder getDefaultGsonBuilder(){
         return new GsonBuilder()
                    .setDateFormat("yyyy-MM-dd HH:mm:ss")
                    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)

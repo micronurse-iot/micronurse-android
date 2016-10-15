@@ -43,6 +43,7 @@ import org.micronurse.model.Thermometer;
 import org.micronurse.model.Turgoscope;
 import org.micronurse.model.User;
 import org.micronurse.service.MQTTService;
+import org.micronurse.ui.listener.OnBindMQTTServiceListener;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
@@ -50,7 +51,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 
-public class MonitorWarningFragment extends Fragment {
+public class MonitorWarningFragment extends Fragment implements OnBindMQTTServiceListener {
     private static final int LIMIT_NUM = 20;
 
     private View viewRoot;
@@ -61,7 +62,6 @@ public class MonitorWarningFragment extends Fragment {
     private Calendar downEndTime;
     private JSONParser<SensorWarningListResult> jsonParser;
     private boolean firstDisplay = true;
-    private final MQTTConnectedReceiver mqttConnectedReceiver;
 
     public MonitorWarningFragment() {
         // Required empty public constructor
@@ -109,11 +109,27 @@ public class MonitorWarningFragment extends Fragment {
                 return result;
             }
         };
-        mqttConnectedReceiver = new MQTTConnectedReceiver();
     }
 
-    public BroadcastReceiver getMqttConnectedReceiver() {
-        return mqttConnectedReceiver;
+    public static MonitorWarningFragment getInstance(Context context){
+        return new MonitorWarningFragment();
+    }
+
+    @Override
+    public void onBind(MQTTService service) {
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
+                    GlobalInfo.TOPIC_SENSOR_WARNING, GlobalInfo.user.getPhoneNumber(), 2, Application.ACTION_SENSOR_WARNING
+            ));
+        }else{
+            if(GlobalInfo.guardianshipList != null){
+                for(User u : GlobalInfo.guardianshipList){
+                    service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
+                            GlobalInfo.TOPIC_SENSOR_WARNING, u.getPhoneNumber(), 2, Application.ACTION_SENSOR_WARNING
+                    ));
+                }
+            }
+        }
     }
 
     @Override
@@ -204,28 +220,5 @@ public class MonitorWarningFragment extends Fragment {
         }, SensorWarningListResult.class, false, null);
         request.setJsonParser(jsonParser);
         request.startRequest();
-    }
-
-    private class MQTTConnectedReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            intent = new Intent(Application.ACTION_MQTT_ACTION);
-            intent.addCategory(getContext().getPackageName());
-            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
-                intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
-                        GlobalInfo.TOPIC_SENSOR_WARNING, GlobalInfo.user.getPhoneNumber(), 2, Application.ACTION_SENSOR_WARNING
-                ));
-                getContext().sendBroadcast(intent);
-            }else{
-                if(GlobalInfo.guardianshipList != null){
-                    for(User u : GlobalInfo.guardianshipList){
-                        intent.putExtra(Application.BUNDLE_KEY_MQTT_ACTION, new MQTTService.MQTTSubscriptionAction(
-                                GlobalInfo.TOPIC_SENSOR_WARNING, u.getPhoneNumber(), 2, Application.ACTION_SENSOR_WARNING
-                        ));
-                        getContext().sendBroadcast(intent);
-                    }
-                }
-            }
-        }
     }
 }

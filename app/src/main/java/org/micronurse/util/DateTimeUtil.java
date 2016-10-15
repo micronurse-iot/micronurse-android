@@ -24,23 +24,28 @@ public class DateTimeUtil {
         String timeStr = "";
         if(time.getYear() == currentDate.getYear() && time.getMonth() == currentDate.getMonth()
                 && time.getDate() == currentDate.getDate()) {
-            if(showDate)
+            if(showDate && !showTime)
                 timeStr = context.getString(R.string.today);
         }else if(time.getYear() == currentDate.getYear() && time.getMonth() == currentDate.getMonth()
                 && time.getDate() == currentDate.getDate() - 1){
-            if(showDate)
+            if(showDate) {
                 timeStr = context.getString(R.string.yesterday);
+                if(showTime)
+                    timeStr += ' ';
+            }
         }else if(time.getYear() == currentDate.getYear()){
-            if(showDate)
+            if(showDate) {
                 timeStr = sdf2.format(time);
+                if(showTime)
+                    timeStr += ' ';
+            }
         }else if(showDate){
             timeStr = sdf3.format(time);
-        }
-        if(showTime){
-            if(showDate)
+            if(showTime)
                 timeStr += ' ';
-            timeStr += sdf.format(time);
         }
+        if(showTime)
+            timeStr += sdf.format(time);
         return timeStr;
     }
 

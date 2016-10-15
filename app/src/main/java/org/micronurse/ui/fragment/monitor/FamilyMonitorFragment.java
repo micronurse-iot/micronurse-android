@@ -67,6 +67,14 @@ public class FamilyMonitorFragment extends Fragment {
         receiver = new SensorDataReceiver();
     }
 
+    public static FamilyMonitorFragment getInstance(Context context){
+        FamilyMonitorFragment fragment = new FamilyMonitorFragment();
+        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
+        intentFilter.addCategory(context.getPackageName());
+        context.registerReceiver(fragment.receiver, intentFilter);
+        return fragment;
+    }
+
     private void updateURL(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
             updateTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA,
@@ -242,6 +250,12 @@ public class FamilyMonitorFragment extends Fragment {
         }
         smokeTransducerList.add(smokeTransducer);
         updateSafeLevel();
+    }
+
+    @Override
+    public void onDestroy() {
+        getContext().unregisterReceiver(receiver);
+        super.onDestroy();
     }
 
     private class SensorDataReceiver extends BroadcastReceiver{
