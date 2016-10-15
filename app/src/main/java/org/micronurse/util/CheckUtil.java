@@ -156,7 +156,7 @@ public class CheckUtil {
         float humidity = humidometer.getHumidity();
         if(humidity >= 0.3 && humidity <= 0.8)
             return SAFETY_LEVEL_SAFE;
-        else if(humidity >= 0.9)
+        else if(humidity >= 0.9 || humidity <= 0.1)
             return SAFETY_LEVEL_DANGER;
         else
             return SAFETY_LEVEL_HIDDEN_IN_DANGER;
