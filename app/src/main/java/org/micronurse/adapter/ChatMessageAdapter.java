@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.micronurse.R;
@@ -76,6 +77,12 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         chatText.setTextColor(Color.WHITE);
                     ((MessageViewHolder) holder).chatMessageView.addView(chatText);
                 }
+                if(((MessageViewHolder) holder).progressBar != null){
+                    if(messageItem.sending)
+                        ((MessageViewHolder) holder).progressBar.setVisibility(View.VISIBLE);
+                    else
+                        ((MessageViewHolder) holder).progressBar.setVisibility(View.GONE);
+                }
                 chatText.setText(messageItem.message.getContent());
             }
         }
@@ -91,6 +98,7 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private ImageView senderPortrait;
         private ViewGroup chatMessageView;
         private TextView messageTimeText;
+        private ProgressBar progressBar;
 
         public MessageViewHolder(View itemView) {
             super(itemView);
@@ -98,6 +106,7 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             senderPortrait = (ImageView) itemView.findViewById(R.id.chat_sender_portrait);
             chatMessageView = (ViewGroup) itemView.findViewById(R.id.chat_chatbox_view);
             messageTimeText = (TextView) itemView.findViewById(R.id.chat_msg_time);
+            progressBar = (ProgressBar) itemView.findViewById(R.id.chat_send_progress);
         }
     }
 
@@ -108,11 +117,37 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private int position;
         private User sender;
         private ChatMessageRecord message;
+        private boolean sending = false;
 
         public MessageItem(int position, User sender, ChatMessageRecord message) {
             this.position = position;
             this.sender = sender;
             this.message = message;
+        }
+
+        public MessageItem(int position, User sender, ChatMessageRecord message, boolean sending) {
+            this(position, sender, message);
+            this.sending = sending;
+        }
+
+        public ChatMessageRecord getMessage() {
+            return message;
+        }
+
+        public User getSender() {
+            return sender;
+        }
+
+        public int getPosition() {
+            return position;
+        }
+
+        public boolean isSending() {
+            return sending;
+        }
+
+        public void setSending(boolean sending) {
+            this.sending = sending;
         }
     }
 }

@@ -29,13 +29,14 @@
         app:cmv_arrowGravity="start"
         app:cmv_arrowPosition="right"
         app:cmv_showArrow="true">
-
     </me.himanshusoni.chatmessageview.ChatMessageView>
 
     <me.himanshusoni.chatmessageview.ChatMessageView
+        android:id="@+id/chat_time_box"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/item_padding"
+        android:layout_marginLeft="@dimen/item_padding"
         android:layout_toLeftOf="@+id/chat_sender_portrait"
         android:layout_below="@+id/chat_chatbox_view"
         app:cmv_backgroundColor="@android:color/black"
@@ -53,5 +54,14 @@
             android:textSize="@dimen/smaller_text_size"/>
 
     </me.himanshusoni.chatmessageview.ChatMessageView>
+
+    <ProgressBar
+        android:id="@+id/chat_send_progress"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/chat_time_box"
+        android:layout_below="@+id/chat_chatbox_view"
+        android:layout_marginBottom="@dimen/item_padding" />
 
 </RelativeLayout>

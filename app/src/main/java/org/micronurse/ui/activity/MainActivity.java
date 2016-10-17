@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity
                     .add(R.id.main_container, medicationReminderFragment)
                     .commit();
         }else{
-            contactsFragment = new ContactsFragment();
+            contactsFragment = ContactsFragment.getInstance(this);
             mFragmentManager.beginTransaction()
                     .add(R.id.main_container, monitorFragment)
                     .add(R.id.main_container, monitorWarningFragment)
@@ -125,6 +125,10 @@ public class MainActivity extends AppCompatActivity
                 MQTTService mqttService = ((MQTTService.MQTTServiceBinder) service).getService();
                 monitorFragment.onBind(mqttService);
                 monitorWarningFragment.onBind(mqttService);
+                if(friendJuanFragment != null)
+                    friendJuanFragment.onBind(mqttService);
+                if(contactsFragment != null)
+                    contactsFragment.onBind(mqttService);
             }
 
             @Override

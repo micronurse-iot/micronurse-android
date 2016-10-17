@@ -5,6 +5,7 @@ import com.activeandroid.query.Select;
 import org.micronurse.database.model.ChatMessageRecord;
 import org.micronurse.database.model.Guardianship;
 import org.micronurse.database.model.LoginUserRecord;
+import org.micronurse.database.model.SessionMessageRecord;
 import org.micronurse.model.User;
 
 import java.util.Date;
@@ -52,5 +53,12 @@ public class DatabaseUtil {
                 .orderBy("MessageTime DESC")
                 .limit(limit)
                 .execute();
+    }
+
+    public static SessionMessageRecord findSessionMessageRecord(String fromUserId, String toUserId){
+        return new Select().from(SessionMessageRecord.class)
+                .where("FromUserId=?", fromUserId)
+                .where("ToUserId=?", toUserId)
+                .executeSingle();
     }
 }

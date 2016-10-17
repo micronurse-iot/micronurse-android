@@ -105,6 +105,7 @@
     <string name="friend_contacts">联系人</string>
     <string name="friend_share">分享</string>
 
+    <string name="no_contacts">暂无联系人</string>
     <string name="no_message">暂时没有消息</string>
     <string name="empty_friend_list">好友列表为空</string>
     <string name="guardians">监护人</string>

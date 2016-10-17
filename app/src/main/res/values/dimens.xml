@@ -20,6 +20,7 @@
     <dimen name="small_icon_size">24dp</dimen>
     <dimen name="normal_icon_size">32dp</dimen>
     <dimen name="large_icon_size">48dp</dimen>
+    <dimen name="larger_icon_size">56dp</dimen>
     <dimen name="welcome_icon_size">128dp</dimen>
     <dimen name="actionbar_elevation">10dp</dimen>
 

@@ -11,12 +11,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.micronurse.Application;
 import org.micronurse.R;
+import org.micronurse.model.User;
+import org.micronurse.service.MQTTService;
 import org.micronurse.ui.fragment.older.friendjuan.FriendContactsFragment;
 import org.micronurse.ui.fragment.older.friendjuan.MessageFragment;
 import org.micronurse.ui.fragment.older.friendjuan.ShareFragment;
+import org.micronurse.ui.listener.OnBindMQTTServiceListener;
+import org.micronurse.util.GlobalInfo;
 
-public class FriendJuanFragment extends Fragment {
+public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceListener {
     private View viewRoot;
     private ViewPager viewPager;
     private TabLayout tabLayout;
@@ -33,6 +38,14 @@ public class FriendJuanFragment extends Fragment {
 
     public static FriendJuanFragment getInstance(Context context){
         return new FriendJuanFragment();
+    }
+
+    @Override
+    public void onBind(MQTTService service) {
+        for(User u : GlobalInfo.guardianshipList) {
+            service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(GlobalInfo.TOPIC_CHATTING,
+                    u.getPhoneNumber(), GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
+        }
     }
 
     @Override

@@ -15,6 +15,7 @@ import java.util.Date;
 @Table(name = "ChatMessageRecord")
 public class ChatMessageRecord extends Model implements Serializable {
     public static final String MESSAGE_TYPE_TEXT = "text";
+    private static final String MESSAGE_ID_PREFIX = "ChatMessage_";
 
     @Column(name = "ChatterAId", notNull = true)
     private String chatterAId;
@@ -101,5 +102,9 @@ public class ChatMessageRecord extends Model implements Serializable {
 
     public void setMessageTime(Date messageTime) {
         this.messageTime = messageTime;
+    }
+
+    public String getMessageId(){
+        return MESSAGE_ID_PREFIX + messageTime.getTime() + '/' + chatterBId + '/' + chatterAId;
     }
 }

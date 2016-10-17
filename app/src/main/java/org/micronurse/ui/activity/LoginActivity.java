@@ -210,6 +210,8 @@ public class LoginActivity extends AppCompatActivity {
                                         }, new APIErrorListener() {
                                             @Override
                                             public void onErrorResponse(VolleyError err, Result result) {
+                                                if(result == null)
+                                                    return;
                                                 if(result.getResultCode() == PublicResultCode.RESULT_NOT_FOUND){
                                                     finish();
                                                     startActivity(loginIntent);

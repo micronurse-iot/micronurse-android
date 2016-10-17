@@ -15,4 +15,11 @@
         android:textSize="@dimen/large_text_size"
         android:text="@string/no_message"/>
 
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/session_msg_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible"
+        android:scrollbars="vertical"/>
+
 </RelativeLayout>

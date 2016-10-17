@@ -1,8 +1,10 @@
 package org.micronurse.ui.activity;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -10,7 +12,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -27,6 +28,8 @@ import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -44,6 +47,7 @@ public class ChatActivity extends AppCompatActivity {
     private Calendar endTime;
     private ServiceConnection serviceConnection;
     private MQTTService mqttService;
+    private ChatMessageSentCachedReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,13 +93,35 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onServiceDisconnected(ComponentName name) {}
         };
+        receiver = new ChatMessageSentCachedReceiver();
+        updateChatHistory();
+        for(ChatMessageRecord cmr : GlobalInfo.sendMessageQueue){
+            if(cmr.getChatterAId().equals(GlobalInfo.user.getPhoneNumber()) && cmr.getChatterBId().equals(receiverId)){
+                messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, cmr, true));
+            }
+        }
+        Collections.sort(messageList, new Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                if(((ChatMessageAdapter.MessageItem) o1).getMessage().getMessageTime().getTime() <
+                        ((ChatMessageAdapter.MessageItem) o2).getMessage().getMessageTime().getTime())
+                    return -1;
+                return 1;
+            }
+        });
+        if(!messageList.isEmpty()) {
+            adapter.notifyDataSetChanged();
+            chatListView.smoothScrollToPosition(messageList.size() - 1);
+        }
+        chatListView.setVisibility(View.VISIBLE);
+        IntentFilter intentFilter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SENT);
+        intentFilter.addCategory(getPackageName());
+        registerReceiver(receiver, intentFilter);
         Intent intent = new Intent(this, MQTTService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        updateChatHistory();
     }
 
     private void updateChatHistory(){
-        Log.i(GlobalInfo.LOG_TAG, "End time: " + endTime.getTime());
         List<ChatMessageRecord> records = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
                 chatReceiver.getPhoneNumber(), endTime.getTime(), 20);
         if(records != null){
@@ -123,13 +149,13 @@ public class ChatActivity extends AppCompatActivity {
         ChatMessageRecord newMessage = new ChatMessageRecord(GlobalInfo.user.getPhoneNumber(), chatReceiver.getPhoneNumber(),
                 GlobalInfo.user.getPhoneNumber(), ChatMessageRecord.MESSAGE_TYPE_TEXT, message);
         GlobalInfo.sendMessageQueue.add(newMessage);
-        messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, newMessage));
+        messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, newMessage, true));
         adapter.notifyItemInserted(messageList.size() - 1);
         chatListView.smoothScrollToPosition(messageList.size() - 1);
         mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(
                 GlobalInfo.TOPIC_CHATTING, GlobalInfo.user.getPhoneNumber(), chatReceiver.getPhoneNumber(),
                 1, GsonUtil.getDefaultGsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(newMessage),
-                "Hello", Application.ACTION_CHAT_MESSAGE_SENT
+                newMessage.getMessageId(), Application.ACTION_CHAT_MESSAGE_SENT
         ));
         editChatMsg.setText("");
     }
@@ -146,7 +172,31 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        unregisterReceiver(receiver);
         unbindService(serviceConnection);
         super.onDestroy();
+    }
+
+    private class ChatMessageSentCachedReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String topicUserId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            String receiverId = intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID);
+            if(!GlobalInfo.user.getPhoneNumber().equals(topicUserId) || !chatReceiver.getPhoneNumber().equals(receiverId))
+                return;
+            String messageId = intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE_ID);
+            if(messageId == null || messageId.isEmpty())
+                return;
+            for(int i = messageList.size() - 1; i >= 0; i--){
+                Object item = messageList.get(i);
+                if(item instanceof ChatMessageAdapter.MessageItem){
+                    if(messageId.equals(((ChatMessageAdapter.MessageItem) item).getMessage().getMessageId())){
+                        ((ChatMessageAdapter.MessageItem) item).setSending(false);
+                        adapter.notifyItemChanged(i);
+                        return;
+                    }
+                }
+            }
+        }
     }
 }
