@@ -43,12 +43,13 @@ import org.micronurse.model.RawSensorData;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.User;
 import org.micronurse.ui.listener.OnFullScreenListener;
+import org.micronurse.ui.listener.OnSensorDataReceivedListener;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 import org.micronurse.util.ImageUtil;
 
-public class GoingoutMonitorFragment extends Fragment {
+public class GoingoutMonitorFragment extends Fragment implements OnSensorDataReceivedListener{
     private View viewRoot;
     private SwipeRefreshLayout refresh;
     private FloatingActionButton btnFullScreen;
@@ -64,11 +65,8 @@ public class GoingoutMonitorFragment extends Fragment {
     private GeoCoder geoCoder;
     private String updateLocationURL;
 
-    private SensorDataReceiver receiver;
-
     public GoingoutMonitorFragment() {
         // Required empty public constructor
-        receiver = new SensorDataReceiver();
         geoCoder = GeoCoder.newInstance();
         geoCoder.setOnGetGeoCodeResultListener(new OnGetGeoCoderResultListener() {
             @Override
@@ -88,9 +86,6 @@ public class GoingoutMonitorFragment extends Fragment {
 
     public static GoingoutMonitorFragment getInstance(Context context){
         GoingoutMonitorFragment fragment = new GoingoutMonitorFragment();
-        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
-        intentFilter.addCategory(context.getPackageName());
-        context.registerReceiver(fragment.receiver, intentFilter);
         return fragment;
     }
 
@@ -188,7 +183,6 @@ public class GoingoutMonitorFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
         mMapView.onDestroy();
         geoCoder.destroy();
         super.onDestroy();
@@ -238,30 +232,20 @@ public class GoingoutMonitorFragment extends Fragment {
         this.fullScreenListener = fullScreenListener;
     }
 
-    private class SensorDataReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(viewRoot == null)
-                return;
-            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
-                    !GlobalInfo.user.getPhoneNumber().equals(userId))
-                return;
-            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
-                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
-                return;
-            try {
-                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
-                if(rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_GPS)){
-                    String[] splitStr = rawSensorData.getValue().split(",", 2);
-                    if(splitStr.length != 2)
-                        return;
-                    updateLocation(new GPS(rawSensorData.getTimestamp(), Double.valueOf(splitStr[0]),
-                            Double.valueOf(splitStr[1])));
-                }
-            }catch (NumberFormatException | JsonSyntaxException e){
-                e.printStackTrace();
+    @Override
+    public void onSensorDataReceived(RawSensorData rawSensorData) {
+        if(viewRoot == null)
+            return;
+        try {
+            if(rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_GPS)){
+                String[] splitStr = rawSensorData.getValue().split(",", 2);
+                if(splitStr.length != 2)
+                    return;
+                updateLocation(new GPS(rawSensorData.getTimestamp(), Double.valueOf(splitStr[0]),
+                        Double.valueOf(splitStr[1])));
             }
+        }catch (NumberFormatException e){
+            e.printStackTrace();
         }
     }
 }

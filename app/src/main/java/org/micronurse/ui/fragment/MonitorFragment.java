@@ -12,8 +12,12 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.gson.JsonSyntaxException;
+
 import org.micronurse.Application;
 import org.micronurse.R;
+import org.micronurse.model.RawSensorData;
 import org.micronurse.model.User;
 import org.micronurse.service.MQTTService;
 import org.micronurse.ui.fragment.monitor.FamilyMonitorFragment;
@@ -21,19 +25,23 @@ import org.micronurse.ui.fragment.monitor.GoingoutMonitorFragment;
 import org.micronurse.ui.fragment.monitor.HealthMonitorFragment;
 import org.micronurse.ui.listener.OnBindMQTTServiceListener;
 import org.micronurse.ui.listener.OnFullScreenListener;
+import org.micronurse.ui.listener.OnSensorDataReceivedListener;
 import org.micronurse.ui.widget.ViewPager;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.GsonUtil;
 
 public class MonitorFragment extends Fragment implements OnBindMQTTServiceListener{
     private View viewRoot;
     private ViewPager viewPager;
     private TabLayout tabLayout;
     private OnFullScreenListener fullScreenListener;
-    private Fragment currentFragment;
     private Fragment[] monitorPages;
     private String[] pageTitles;
+    private SensorDataReceiver receiver;
 
-    public MonitorFragment() {}
+    public MonitorFragment() {
+        receiver = new SensorDataReceiver();
+    }
 
     public static MonitorFragment getInstance(Context context){
         MonitorFragment fragment = new MonitorFragment();
@@ -42,6 +50,9 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
                 HealthMonitorFragment.getInstance(context),
                 GoingoutMonitorFragment.getInstance(context)
         };
+        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
+        intentFilter.addCategory(context.getPackageName());
+        context.registerReceiver(fragment.receiver, intentFilter);
         return fragment;
     }
 
@@ -49,10 +60,10 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        if(viewRoot != null)
+        if (viewRoot != null)
             return viewRoot;
 
-        if(monitorPages == null) {
+        if (monitorPages == null) {
             monitorPages = new Fragment[]{
                     FamilyMonitorFragment.getInstance(getContext()),
                     HealthMonitorFragment.getInstance(getContext()),
@@ -64,12 +75,12 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
                 getString(R.string.action_health_monitor),
                 getString(R.string.action_going_out_monitor),
         };
-        ((GoingoutMonitorFragment)monitorPages[2]).setOnFullScreenListener(new OnFullScreenListener() {
+        ((GoingoutMonitorFragment) monitorPages[2]).setOnFullScreenListener(new OnFullScreenListener() {
             @Override
             public void onEnterFullScreen() {
                 viewPager.setPagingEnabled(false);
                 tabLayout.setVisibility(View.GONE);
-                if(fullScreenListener != null)
+                if (fullScreenListener != null)
                     fullScreenListener.onEnterFullScreen();
             }
 
@@ -77,41 +88,16 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
             public void onExitFullScreen() {
                 viewPager.setPagingEnabled(true);
                 tabLayout.setVisibility(View.VISIBLE);
-                if(fullScreenListener != null)
+                if (fullScreenListener != null)
                     fullScreenListener.onExitFullScreen();
             }
         });
         viewRoot = inflater.inflate(R.layout.fragment_monitor, container, false);
         viewPager = (ViewPager) viewRoot.findViewById(R.id.tab_viewpager_monitor);
         viewPager.setAdapter(new MonitorPagerAdapter(getFragmentManager()));
-        viewPager.addOnPageChangeListener(new android.support.v4.view.ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
-
-            @Override
-            public void onPageSelected(int position) {
-                if(currentFragment == null)
-                    currentFragment = monitorPages[0];
-                currentFragment.onHiddenChanged(true);
-                currentFragment = monitorPages[position];
-                currentFragment.onHiddenChanged(false);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {}
-        });
         tabLayout = (TabLayout) viewRoot.findViewById(R.id.tab_monitor);
         tabLayout.setupWithViewPager(viewPager);
         return viewRoot;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if(currentFragment != null)
-            currentFragment.onHiddenChanged(false);
-        else
-            currentFragment = monitorPages[0];
     }
 
     @Override
@@ -129,12 +115,6 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
                 }
             }
         }
-    }
-
-    @Override
-    public void onPause() {
-        currentFragment.onHiddenChanged(true);
-        super.onPause();
     }
 
     public void setOnFullScreenListener(OnFullScreenListener fullScreenListener) {
@@ -163,10 +143,31 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
     }
 
     @Override
-    public void onHiddenChanged(boolean hidden) {
-        if(currentFragment != null)
-            currentFragment.onHiddenChanged(hidden);
-        super.onHiddenChanged(hidden);
+    public void onDestroy() {
+        getContext().unregisterReceiver(receiver);
+        super.onDestroy();
+    }
+
+    private class SensorDataReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
+                    !GlobalInfo.user.getPhoneNumber().equals(userId))
+                return;
+            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
+                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
+                return;
+            try {
+                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
+                for(Fragment f : monitorPages){
+                    if(f instanceof OnSensorDataReceivedListener)
+                        ((OnSensorDataReceivedListener) f).onSensorDataReceived(rawSensorData);
+                }
+            }catch (JsonSyntaxException e){
+                e.printStackTrace();
+            }
+        }
     }
 
 }

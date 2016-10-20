@@ -17,6 +17,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
+import com.google.gson.JsonSyntaxException;
+
 import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.adapter.ChatMessageAdapter;
@@ -35,6 +37,9 @@ import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
     public static final String BUNDLE_KEY_RECEIVER_ID = "ReceiverId";
+    public static final String BUNDLE_KEY_SENDING = "Sending";
+    public static final String BUNDLE_KEY_LAST_TEXT_MESSAGE = "LastTextMessage";
+    public static final String BUNDLE_KEY_LAST_MESSAGE_TIMESTAMP = "LastMessageTimeStamp";
 
     private SwipeRefreshLayout refresh;
     private RecyclerView chatListView;
@@ -47,12 +52,18 @@ public class ChatActivity extends AppCompatActivity {
     private Calendar endTime;
     private ServiceConnection serviceConnection;
     private MQTTService mqttService;
-    private ChatMessageSentCachedReceiver receiver;
+    private ChatMessageSentReceiver msgSentReceiver;
+    private ChatMessageArrivedReceiver msgArrivedReceiver;
+
+    private Intent resultData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         endTime = Calendar.getInstance();
+        resultData = new Intent();
+        setResult(0, resultData);
+
         setContentView(R.layout.activity_chat);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         refresh = (SwipeRefreshLayout) findViewById(R.id.refresh_layout);
@@ -93,7 +104,18 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onServiceDisconnected(ComponentName name) {}
         };
-        receiver = new ChatMessageSentCachedReceiver();
+
+        msgSentReceiver = new ChatMessageSentReceiver();
+        IntentFilter intentFilter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SENT);
+        intentFilter.addCategory(getPackageName());
+        registerReceiver(msgSentReceiver, intentFilter);
+        msgArrivedReceiver = new ChatMessageArrivedReceiver();
+        intentFilter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_RECEIVED);
+        intentFilter.addCategory(getPackageName());
+        registerReceiver(msgArrivedReceiver, intentFilter);
+        Intent intent = new Intent(this, MQTTService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+
         updateChatHistory();
         for(ChatMessageRecord cmr : GlobalInfo.sendMessageQueue){
             if(cmr.getChatterAId().equals(GlobalInfo.user.getPhoneNumber()) && cmr.getChatterBId().equals(receiverId)){
@@ -114,11 +136,6 @@ public class ChatActivity extends AppCompatActivity {
             chatListView.smoothScrollToPosition(messageList.size() - 1);
         }
         chatListView.setVisibility(View.VISIBLE);
-        IntentFilter intentFilter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SENT);
-        intentFilter.addCategory(getPackageName());
-        registerReceiver(receiver, intentFilter);
-        Intent intent = new Intent(this, MQTTService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void updateChatHistory(){
@@ -152,6 +169,8 @@ public class ChatActivity extends AppCompatActivity {
         messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, newMessage, true));
         adapter.notifyItemInserted(messageList.size() - 1);
         chatListView.smoothScrollToPosition(messageList.size() - 1);
+        updateResultData(newMessage);
+        resultData.putExtra(BUNDLE_KEY_SENDING, true);
         mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(
                 GlobalInfo.TOPIC_CHATTING, GlobalInfo.user.getPhoneNumber(), chatReceiver.getPhoneNumber(),
                 1, GsonUtil.getDefaultGsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(newMessage),
@@ -172,12 +191,13 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(receiver);
+        unregisterReceiver(msgArrivedReceiver);
+        unregisterReceiver(msgSentReceiver);
         unbindService(serviceConnection);
         super.onDestroy();
     }
 
-    private class ChatMessageSentCachedReceiver extends BroadcastReceiver{
+    private class ChatMessageSentReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
             String topicUserId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
@@ -193,9 +213,46 @@ public class ChatActivity extends AppCompatActivity {
                     if(messageId.equals(((ChatMessageAdapter.MessageItem) item).getMessage().getMessageId())){
                         ((ChatMessageAdapter.MessageItem) item).setSending(false);
                         adapter.notifyItemChanged(i);
+                        resultData.putExtra(BUNDLE_KEY_SENDING, false);
+                        updateResultData(((ChatMessageAdapter.MessageItem) item).getMessage());
                         return;
                     }
                 }
+            }
+        }
+    }
+
+    private void updateResultData(ChatMessageRecord cmr){
+        if(cmr.getMessageTime().getTime() > resultData.getLongExtra(BUNDLE_KEY_LAST_MESSAGE_TIMESTAMP, -1)) {
+            resultData.putExtra(BUNDLE_KEY_LAST_MESSAGE_TIMESTAMP, cmr.getMessageTime().getTime());
+            if(cmr.getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT))
+                resultData.putExtra(BUNDLE_KEY_LAST_TEXT_MESSAGE, cmr.getContent());
+        }
+    }
+
+    private class ChatMessageArrivedReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(!GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
+                return;
+            String senderId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            if(!chatReceiver.getPhoneNumber().equals(senderId))
+                return;
+            try {
+                ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
+                        ChatMessageRecord.class);
+                cmr.setChatterAId(GlobalInfo.user.getPhoneNumber());
+                cmr.setChatterBId(senderId);
+                cmr.setSenderId(senderId);
+                messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_LEFT, chatReceiver, cmr));
+                boolean scrollFlag = !chatListView.canScrollVertically(1);
+                adapter.notifyItemInserted(messageList.size() - 1);
+                if(scrollFlag)
+                    chatListView.smoothScrollToPosition(messageList.size() - 1);
+                resultData.putExtra(BUNDLE_KEY_SENDING, false);
+                updateResultData(cmr);
+            }catch (JsonSyntaxException jse){
+                jse.printStackTrace();
             }
         }
     }

@@ -35,6 +35,7 @@ import org.micronurse.model.Sensor;
 import org.micronurse.model.SmokeTransducer;
 import org.micronurse.model.Thermometer;
 import org.micronurse.model.User;
+import org.micronurse.ui.listener.OnSensorDataReceivedListener;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
@@ -44,7 +45,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class FamilyMonitorFragment extends Fragment {
+public class FamilyMonitorFragment extends Fragment implements OnSensorDataReceivedListener{
     private View viewRoot;
     private TextView txtSafeLevel;
     private RecyclerView temperatureList;
@@ -60,18 +61,12 @@ public class FamilyMonitorFragment extends Fragment {
     private String updateHumidityURL;
     private String updateSmokeURL;
 
-    private SensorDataReceiver receiver;
-
     public FamilyMonitorFragment() {
         // Required empty public constructor
-        receiver = new SensorDataReceiver();
     }
 
     public static FamilyMonitorFragment getInstance(Context context){
         FamilyMonitorFragment fragment = new FamilyMonitorFragment();
-        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
-        intentFilter.addCategory(context.getPackageName());
-        context.registerReceiver(fragment.receiver, intentFilter);
         return fragment;
     }
 
@@ -136,10 +131,6 @@ public class FamilyMonitorFragment extends Fragment {
             updateSmoke();
         }
         return viewRoot;
-    }
-
-    public BroadcastReceiver getReceiver() {
-        return receiver;
     }
 
     private void updateSafeLevel(){
@@ -253,34 +244,19 @@ public class FamilyMonitorFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
-        super.onDestroy();
-    }
-
-    private class SensorDataReceiver extends BroadcastReceiver{
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(viewRoot == null)
-                return;
-            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
-                    !GlobalInfo.user.getPhoneNumber().equals(userId))
-                return;
-            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
-                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
-                return;
-            try {
-                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
-                if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_THERMOMETER))
-                    updateTemperature(new Thermometer(rawSensorData.getTimestamp(), rawSensorData.getName(), Float.valueOf(rawSensorData.getValue())));
-                else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_HUMIDOMETER))
-                    updateHumidity(new Humidometer(rawSensorData.getTimestamp(), rawSensorData.getName(), Float.valueOf(rawSensorData.getValue())));
-                else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER))
-                    updateSmoke(new SmokeTransducer(rawSensorData.getTimestamp(), rawSensorData.getName(), Integer.valueOf(rawSensorData.getValue())));
-            }catch (NumberFormatException | JsonSyntaxException e){
-                e.printStackTrace();
-            }
+    public void onSensorDataReceived(RawSensorData rawSensorData) {
+        if(viewRoot == null)
+            return;
+        try {
+            if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_THERMOMETER))
+                updateTemperature(new Thermometer(rawSensorData.getTimestamp(), rawSensorData.getName(), Float.valueOf(rawSensorData.getValue())));
+            else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_HUMIDOMETER))
+                updateHumidity(new Humidometer(rawSensorData.getTimestamp(), rawSensorData.getName(), Float.valueOf(rawSensorData.getValue())));
+            else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER))
+                updateSmoke(new SmokeTransducer(rawSensorData.getTimestamp(), rawSensorData.getName(), Integer.valueOf(rawSensorData.getValue())));
+        }catch (NumberFormatException e){
+            e.printStackTrace();
         }
     }
+
 }
