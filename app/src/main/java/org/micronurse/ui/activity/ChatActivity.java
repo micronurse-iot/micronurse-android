@@ -23,6 +23,7 @@ import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.adapter.ChatMessageAdapter;
 import org.micronurse.database.model.ChatMessageRecord;
+import org.micronurse.database.model.SessionMessageRecord;
 import org.micronurse.model.User;
 import org.micronurse.service.MQTTService;
 import org.micronurse.util.DatabaseUtil;
@@ -37,9 +38,6 @@ import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
     public static final String BUNDLE_KEY_RECEIVER_ID = "ReceiverId";
-    public static final String BUNDLE_KEY_SENDING = "Sending";
-    public static final String BUNDLE_KEY_LAST_TEXT_MESSAGE = "LastTextMessage";
-    public static final String BUNDLE_KEY_LAST_MESSAGE_TIMESTAMP = "LastMessageTimeStamp";
 
     private SwipeRefreshLayout refresh;
     private RecyclerView chatListView;
@@ -55,14 +53,10 @@ public class ChatActivity extends AppCompatActivity {
     private ChatMessageSentReceiver msgSentReceiver;
     private ChatMessageArrivedReceiver msgArrivedReceiver;
 
-    private Intent resultData;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         endTime = Calendar.getInstance();
-        resultData = new Intent();
-        setResult(0, resultData);
 
         setContentView(R.layout.activity_chat);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -81,8 +75,10 @@ public class ChatActivity extends AppCompatActivity {
         chatListView.setNestedScrollingEnabled(false);
         String receiverId = getIntent().getStringExtra(BUNDLE_KEY_RECEIVER_ID);
         for (User u : GlobalInfo.guardianshipList){
-            if(u.getPhoneNumber().equals(receiverId))
+            if(u.getPhoneNumber().equals(receiverId)) {
                 chatReceiver = u;
+                GlobalInfo.currentChatReceiver = receiverId;
+            }
         }
         setTitle(chatReceiver.getNickname());
         adapter = new ChatMessageAdapter(this, messageList);
@@ -165,18 +161,29 @@ public class ChatActivity extends AppCompatActivity {
             return;
         ChatMessageRecord newMessage = new ChatMessageRecord(GlobalInfo.user.getPhoneNumber(), chatReceiver.getPhoneNumber(),
                 GlobalInfo.user.getPhoneNumber(), ChatMessageRecord.MESSAGE_TYPE_TEXT, message);
+        sendMessage(newMessage);
+        editChatMsg.setText("");
+    }
+
+    private void sendMessage(ChatMessageRecord newMessage){
         GlobalInfo.sendMessageQueue.add(newMessage);
         messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, newMessage, true));
         adapter.notifyItemInserted(messageList.size() - 1);
         chatListView.smoothScrollToPosition(messageList.size() - 1);
-        updateResultData(newMessage);
-        resultData.putExtra(BUNDLE_KEY_SENDING, true);
+
+        Intent intent = new Intent(Application.ACTION_CHAT_MESSAGE_SEND_START);
+        intent.addCategory(getPackageName());
+        intent.putExtra(Application.BUNDLE_KEY_MESSAGE, newMessage.getLiteralContent());
+        intent.putExtra(Application.BUNDLE_KEY_MESSAGE_ID, newMessage.getMessageId());
+        intent.putExtra(Application.BUNDLE_KEY_RECEIVER_ID, chatReceiver.getPhoneNumber());
+        intent.putExtra(Application.BUNDLE_KEY_MESSAGE_TIMESTAMP, newMessage.getMessageTime().getTime());
+        sendBroadcast(intent);
+
         mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(
                 GlobalInfo.TOPIC_CHATTING, GlobalInfo.user.getPhoneNumber(), chatReceiver.getPhoneNumber(),
                 1, GsonUtil.getDefaultGsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(newMessage),
                 newMessage.getMessageId(), Application.ACTION_CHAT_MESSAGE_SENT
         ));
-        editChatMsg.setText("");
     }
 
     @Override
@@ -213,20 +220,10 @@ public class ChatActivity extends AppCompatActivity {
                     if(messageId.equals(((ChatMessageAdapter.MessageItem) item).getMessage().getMessageId())){
                         ((ChatMessageAdapter.MessageItem) item).setSending(false);
                         adapter.notifyItemChanged(i);
-                        resultData.putExtra(BUNDLE_KEY_SENDING, false);
-                        updateResultData(((ChatMessageAdapter.MessageItem) item).getMessage());
                         return;
                     }
                 }
             }
-        }
-    }
-
-    private void updateResultData(ChatMessageRecord cmr){
-        if(cmr.getMessageTime().getTime() > resultData.getLongExtra(BUNDLE_KEY_LAST_MESSAGE_TIMESTAMP, -1)) {
-            resultData.putExtra(BUNDLE_KEY_LAST_MESSAGE_TIMESTAMP, cmr.getMessageTime().getTime());
-            if(cmr.getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT))
-                resultData.putExtra(BUNDLE_KEY_LAST_TEXT_MESSAGE, cmr.getContent());
         }
     }
 
@@ -249,8 +246,6 @@ public class ChatActivity extends AppCompatActivity {
                 adapter.notifyItemInserted(messageList.size() - 1);
                 if(scrollFlag)
                     chatListView.smoothScrollToPosition(messageList.size() - 1);
-                resultData.putExtra(BUNDLE_KEY_SENDING, false);
-                updateResultData(cmr);
             }catch (JsonSyntaxException jse){
                 jse.printStackTrace();
             }

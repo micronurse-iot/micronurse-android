@@ -114,6 +114,10 @@ public class SessionMessageAdapter extends RecyclerView.Adapter<SessionMessageAd
         private SessionMessageRecord sessionMessageRecord;
         private boolean sending = false;
 
+        public MessageItem(Bitmap portrait, String displayName, SessionMessageRecord sessionMessageRecord){
+            this(portrait, displayName, null, null, sessionMessageRecord);
+        }
+
         public MessageItem(Bitmap portrait, String displayName, Date sessionTime, String sessionMsg, SessionMessageRecord sessionMessageRecord, boolean sending) {
             this(portrait, displayName, sessionTime, sessionMsg, sessionMessageRecord);
             this.sending = sending;
