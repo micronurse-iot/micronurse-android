@@ -112,4 +112,6 @@
     <string name="friends">好友</string>
     <string name="add_guardian">添加监护人</string>
     <string name="add_friend">添加好友</string>
+
+    <string name="emergency_call_btn">急救按钮</string>
 </resources>

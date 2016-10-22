@@ -1,11 +1,9 @@
 package org.micronurse.ui.activity;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -17,16 +15,19 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.database.model.Guardianship;
 import org.micronurse.model.User;
+import org.micronurse.service.EmergencyCallService;
 import org.micronurse.service.MQTTService;
 import org.micronurse.ui.activity.older.SettingsActivity;
 import org.micronurse.ui.fragment.guardian.ContactsFragment;
@@ -54,6 +55,9 @@ public class MainActivity extends AppCompatActivity
     private ContactsFragment contactsFragment;
     private Intent mqttServiceIntent;
     private ServiceConnection mqttServiceConnection;
+    private Intent emergencyCallServiceIntent;
+    private EmergencyCallService emergencyCallService;
+    private ServiceConnection emergencyCallServiceConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +139,20 @@ public class MainActivity extends AppCompatActivity
             public void onServiceDisconnected(ComponentName name) {}
         };
         bindService(mqttServiceIntent, mqttServiceConnection, Context.BIND_AUTO_CREATE);
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            emergencyCallServiceIntent = new Intent(this, EmergencyCallService.class);
+            startService(emergencyCallServiceIntent);
+            emergencyCallServiceConnection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
+                    emergencyCallService = ((EmergencyCallService.EmergencyCallServiceBinder)service).getService();
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName name) {}
+            };
+            bindService(emergencyCallServiceIntent, emergencyCallServiceConnection, Context.BIND_AUTO_CREATE);
+        }
     }
 
     @Override
@@ -192,8 +210,26 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+        if(emergencyCallServiceConnection != null)
+            unbindService(emergencyCallServiceConnection);
         unbindService(mqttServiceConnection);
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            getMenuInflater().inflate(R.menu.activity_older_main_menu, menu);
+            MenuItem item = menu.findItem(R.id.menu_switch_call_btn);
+            SwitchCompat switchBtn = (SwitchCompat) item.getActionView().findViewById(R.id.switch_emergency_call_btn);
+            switchBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    emergencyCallService.setShowCallButton(isChecked);
+                }
+            });
+        }
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -245,6 +281,8 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 //TODO:do something before exit
+                                if(emergencyCallServiceIntent != null)
+                                    stopService(emergencyCallServiceIntent);
                                 stopService(mqttServiceIntent);
                                 finish();
                             }

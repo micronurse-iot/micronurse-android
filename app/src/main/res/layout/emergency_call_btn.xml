@@ -14,6 +14,6 @@
         app:srcCompat="@drawable/ic_call"
         android:tint="@android:color/white"
         android:clickable="true"
-        android:alpha="0.85"/>
+        android:alpha="0.9"/>
 
 </LinearLayout>
