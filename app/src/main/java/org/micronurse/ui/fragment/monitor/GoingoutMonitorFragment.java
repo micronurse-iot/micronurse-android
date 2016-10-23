@@ -42,6 +42,7 @@ import org.micronurse.model.GPS;
 import org.micronurse.model.RawSensorData;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.User;
+import org.micronurse.ui.activity.older.SettingHomeLocationActivity;
 import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
@@ -63,6 +64,8 @@ public class GoingoutMonitorFragment extends Fragment {
     private Marker olderMarker;
     private GeoCoder geoCoder;
     private String updateLocationURL;
+    private MarkerOptions homeMarkerOptions;
+    private Marker homeMarker;
 
     private SensorDataReceiver receiver;
 
@@ -122,6 +125,14 @@ public class GoingoutMonitorFragment extends Fragment {
             }
         });
         btnSetHomeLocation = (ImageButton) viewRoot.findViewById(R.id.btn_set_home_location);
+        btnSetHomeLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setClass(GoingoutMonitorFragment.this.getContext(), SettingHomeLocationActivity.class);
+                GoingoutMonitorFragment.this.startActivity(intent);
+            }
+        });
         btnFullScreen = (FloatingActionButton) viewRoot.findViewById(R.id.btn_fullscreen);
         btnFullScreen.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -164,6 +175,9 @@ public class GoingoutMonitorFragment extends Fragment {
 
         olderMarkerOptions = new MarkerOptions()
                 .icon(BitmapDescriptorFactory.fromBitmap(ImageUtil.getBitmapFromDrawable(getContext(), R.drawable.ic_location_red)))
+                .draggable(false);
+        homeMarkerOptions = new MarkerOptions()
+                .icon(BitmapDescriptorFactory.fromBitmap(ImageUtil.getBitmapFromDrawable(getContext(), R.drawable.ic_location_32dp)))
                 .draggable(false);
 
         updateURL();
@@ -231,37 +245,46 @@ public class GoingoutMonitorFragment extends Fragment {
     }
 
     private void updateHomeLocation(){
-        //TODO:
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
+            new MicronurseAPI<SetHomeLocationResult>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.SET_HOME_LOCATION, GlobalInfo.token), Request.Method.POST, new SaveHomeLocationRequest(
+                    mCurrentLongitude, mCurrentLatitude
+            ), null, new Response.Listener<SetHomeLocationResult>() {
+                @Override
+                public void onResponse(SetHomeLocationResult response) {
+                    Toast.makeText(SettingHomeLocationActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(SettingHomeLocationActivity.this, GoingoutMonitorFragment.class);
+                    intent.putExtra(LoginActivity.BUNDLE_AUTO_LOGIN_KEY, true);
+                    intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, actvPhoneNumberView.getText().toString());
+                    intent.putExtra(LoginActivity.BUNDLE_PREFER_PASSWORD_KEY, etPasswordView.getText().toString());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    SettingHomeLocationActivity.this.startActivity(intent);
+                }
+            }, new APIErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError err, Result result) {
+                    if (result != null) {
+                        switch (result.getResultCode()) {
+                            case PublicResultCode.HOME_ADDRESS_INVALID:
+                                txtCity.setError(result.getMessage());
+                                txtAddr.setText(R.string.error_homeaddress_empty);
+                                txtCity.requestFocus();
+                                break;
+                            case PublicResultCode.USER_IS_FORBIDDEN:
+                                Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                                //TODO:获取家的位置
+                                break;
+                            default:
+                                Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }, Result.class, true, getString(R.string.action_save_home_location)).startRequest();
+        }
+        }
     }
 
     public void setOnFullScreenListener(OnFullScreenListener fullScreenListener) {
         this.fullScreenListener = fullScreenListener;
     }
 
-    private class SensorDataReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(viewRoot == null)
-                return;
-            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
-                    !GlobalInfo.user.getPhoneNumber().equals(userId))
-                return;
-            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
-                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
-                return;
-            try {
-                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
-                if(rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_GPS)){
-                    String[] splitStr = rawSensorData.getValue().split(",", 2);
-                    if(splitStr.length != 2)
-                        return;
-                    updateLocation(new GPS(rawSensorData.getTimestamp(), Double.valueOf(splitStr[0]),
-                            Double.valueOf(splitStr[1])));
-                }
-            }catch (NumberFormatException | JsonSyntaxException e){
-                e.printStackTrace();
-            }
-        }
-    }
 }

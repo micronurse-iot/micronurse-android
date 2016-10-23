@@ -26,4 +26,7 @@ public class PublicResultCode {
     public static final int MOBILE_SENSOR_WARNING_NOT_FOUND = 200103;
 
     public static final int MOBILE_GUARDIANSHIP_NOT_EXIST = 200201;
+
+    public static final int HOME_ADDRESS_INVALID = 200204;
+    public static final int USER_IS_FORBIDDEN = 200202;
 }

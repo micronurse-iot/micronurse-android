@@ -1,4 +1,3 @@
-
 package org.micronurse.ui.activity;
 
 import android.annotation.SuppressLint;
@@ -177,10 +176,10 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((Thermometer) dataList.get(pointNum - i - 1)).getTemperature()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart("\n\n\n\n\n卧室温度变化情况", "温度/°C", "#FFCD41");
+                    initLineChart(((Thermometer) dataList.get(0)).getName(), "温度/°C",R.color.orange_500);
                 }
 
-                }
+            }
         }, new APIErrorListener() {
             @Override
             public void onErrorResponse(VolleyError err, Result result) {
@@ -217,7 +216,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((Humidometer) dataList.get(pointNum - i - 1)).getHumidity()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart("\n\n\n\n\n卧室湿度变化情况", "湿度/%","#FFCD41");
+                    initLineChart(((Humidometer) dataList.get(0)).getName(), "湿度/%",R.color.orange_500);
                 }
             }
         }, new APIErrorListener() {
@@ -256,7 +255,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((SmokeTransducer) dataList.get(pointNum - i - 1)).getSmoke()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart("\n\n\n\n\n客厅烟雾浓度变化情况", "浓度", "#FFCD41");
+                    initLineChart(((SmokeTransducer) dataList.get(0)).getName(), "浓度", R.color.orange_500);
                 }
             }
         }, new APIErrorListener() {
@@ -295,7 +294,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((FeverThermometer) dataList.get(pointNum - i - 1)).getTemperature()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart("\n\n\n\n\n体温变化情况", "温度/°C", "#FFCD41");
+                    initLineChart(getString(R.string.fever), getString(R.string.temperature_unit), R.color.orange_500);
                 }
 
             }
@@ -335,7 +334,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((PulseTransducer) dataList.get(pointNum - i - 1)).getPulse()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart("\n\n\n\n\n脉搏变化情况", "脉搏/bpm", "#FFCD41");
+                    initLineChart(getString(R.string.pulse),getString(R.string.pulse_unit) , R.color.orange_500);
                 }
             }
         }, new APIErrorListener() {
@@ -375,11 +374,11 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((Turgoscope) dataList.get(pointNum - i - 1)).getHighBloodPressure()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart("\n\n\n\n\n血压", "高压/低压", "#FFCD41");
+                    initLineChart(getString(R.string.blood_pressure), "高压/低压", R.color.orange_500);
                     for (int i = 0; i < pointNum; i++) {
                         mPointValues.add(new PointValue(i, ((Turgoscope) dataList.get(pointNum - i - 1)).getLowBloodPressure()));
                     }
-                    initLineChart("\n\n\n\n\n血压", "高压/低压", "#FFFF00");
+                    initLineChart(getString(R.string.blood_pressure), "高压/低压", R.color.blue_500);
                 }
             }
         }, new APIErrorListener() {
@@ -401,13 +400,13 @@ public class MonitorDetailActivity extends AppCompatActivity {
     }
 
 
-    private void initLineChart(String tableName, String yName, String color) {
-        Line line = new Line(mPointValues).setColor(Color.parseColor(color));
+    private void initLineChart(String tableName, String yName, int color) {
+        Line line = new Line(mPointValues).setColor(color);
         List<Line> lines = new ArrayList<Line>();
         line.setShape(ValueShape.CIRCLE);
         line.setCubic(false);
         line.setFilled(false);
-       // line.setHasLabels(true);//曲线的数据坐标是否加上备注
+        // line.setHasLabels(true);//曲线的数据坐标是否加上备注
         line.setHasLabelsOnlyForSelected(true);//点击数据坐标提示数据（设置了这个line.setHasLabels(true);就无效）
         line.setHasLines(true);
         line.setHasPoints(true);//是否显示圆点 如果为false 则没有原点只有点显示（每个数据点都是个大的圆点）

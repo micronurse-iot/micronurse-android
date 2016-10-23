@@ -23,13 +23,10 @@
             android:value="MicroNurse.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="6" />
+            android:value="3" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,
-                           org.micronurse.database.model.Guardianship,
-                           org.micronurse.database.model.ChatMessageRecord,
-                           org.micronurse.database.model.SessionMessageRecord"/>
+            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.Guardianship,                            org.micronurse.database.model.ChatMessageRecord" />
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
@@ -61,6 +58,7 @@
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -92,22 +90,12 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="org.micronurse.action.SENSOR_WARNING" />
+
                 <category android:name="org.micronurse" />
             </intent-filter>
         </receiver>
 
         <activity android:name=".ui.activity.ChatActivity" />
-
-        <receiver
-            android:name=".receiver.ChatMessageReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="org.micronurse.action.CHAT_MESSAGE_SENT" />
-                <action android:name="org.micronurse.action.CHAT_MESSAGE_RECEIVED"/>
-                <category android:name="org.micronurse" />
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

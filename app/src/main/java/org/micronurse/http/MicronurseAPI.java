@@ -149,6 +149,10 @@ public class MicronurseAPI<T extends Result> {
         public static String LOGOUT = "account/logout";
         public static String RESET_PASSWORD = "account/reset_password";
         public static String GUARDIANSHIP = "account/guardianship";
+        public static String SET_HOME_LOCATION ="account/set_home_address";
+        public static String GET_HOME_ADDRESS_FROME_OLDER = "account/get_home_address_from_older";
+        public static String GET_HOME_ADDRESS_FROME_GUARDIAN = "account/get_home_address_from_guardian";
+
     }
 
     public static class OlderSensorAPI{
