@@ -1,6 +1,7 @@
 package org.micronurse.util;
 
 import org.micronurse.database.model.ChatMessageRecord;
+import org.micronurse.database.model.SessionMessageRecord;
 import org.micronurse.model.User;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ public class GlobalInfo {
     public static String token = null;
     public static List<User> guardianshipList = new ArrayList<>();
     public static ConcurrentLinkedQueue<ChatMessageRecord> sendMessageQueue = new ConcurrentLinkedQueue<>();
+    public static String currentChatReceiver = null;
 
     public static class Guardian{
         public static User monitorOlder;
@@ -26,6 +28,8 @@ public class GlobalInfo {
         user = null;
         token = null;
         guardianshipList.clear();
+        sendMessageQueue.clear();
+        currentChatReceiver = null;
     }
 
     public static String TOPIC_SENSOR_DATA_REPORT = "sensor_data_report";

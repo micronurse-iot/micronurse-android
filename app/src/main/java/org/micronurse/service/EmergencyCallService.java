@@ -4,9 +4,11 @@ import android.app.Application;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -14,6 +16,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import org.micronurse.R;
+import org.micronurse.util.GlobalInfo;
 
 /**
  * Created by zhou-shengyun on 8/20/16.
@@ -27,6 +30,8 @@ public class EmergencyCallService extends Service {
     private int btnStartY;
     private int startX;
     private int startY;
+    private int maxDeltaX;
+    private int maxDeltaY;
 
     @Override
     public void onCreate() {
@@ -34,10 +39,9 @@ public class EmergencyCallService extends Service {
         createFloatView();
     }
 
-    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return new EmergencyCallServiceBinder();
     }
 
     private void createFloatView(){
@@ -64,24 +68,53 @@ public class EmergencyCallService extends Service {
                         btnStartY = wmParams.y;
                         startX = (int)motionEvent.getRawX();
                         startY = (int)motionEvent.getRawY();
-                        break;
+                        maxDeltaX = maxDeltaY = 0;
+                        return true;
                     case MotionEvent.ACTION_MOVE:
                         int deltaX = startX - (int)motionEvent.getRawX();
                         int deltaY = startY - (int)motionEvent.getRawY();
+                        if(Math.abs(deltaX) > maxDeltaX)
+                            maxDeltaX = Math.abs(deltaX);
+                        if(Math.abs(deltaY) > maxDeltaY)
+                            maxDeltaY = Math.abs(deltaY);
                         wmParams.x = btnStartX - deltaX;
                         wmParams.y = btnStartY - deltaY;
                         windowManager.updateViewLayout(floatView, wmParams);
-                        break;
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        if(maxDeltaX <= 5 && maxDeltaY <= 5){
+                            callButton.performClick();
+                        }
+                        return true;
                 }
                 return false;
             }
         });
-
+        callButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //TODO:Emergency call
+                Log.i(GlobalInfo.LOG_TAG, "Emergency call button clicked.");
+            }
+        });
     }
 
     @Override
     public void onDestroy() {
         windowManager.removeViewImmediate(floatView);
         super.onDestroy();
+    }
+
+    public void setShowCallButton(boolean show){
+        if(!show)
+            floatView.setVisibility(View.GONE);
+        else
+            floatView.setVisibility(View.VISIBLE);
+    }
+
+    public class EmergencyCallServiceBinder extends Binder {
+        public EmergencyCallService getService(){
+            return EmergencyCallService.this;
+        }
     }
 }

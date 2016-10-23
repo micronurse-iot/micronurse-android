@@ -1,5 +1,6 @@
 package org.micronurse.ui.fragment.older.friendjuan;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -13,6 +14,10 @@ import org.micronurse.R;
 public class ShareFragment extends Fragment {
     public ShareFragment() {
         // Required empty public constructor
+    }
+
+    public static ShareFragment getInstance(Context context){
+        return new ShareFragment();
     }
 
     @Override

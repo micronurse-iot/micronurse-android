@@ -36,12 +36,13 @@ import org.micronurse.model.RawSensorData;
 import org.micronurse.model.Sensor;
 import org.micronurse.model.Turgoscope;
 import org.micronurse.model.User;
+import org.micronurse.ui.listener.OnSensorDataReceivedListener;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 
 
-public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, OnSensorDataReceivedListener {
     private View viewRoot;
     private TextView txtHealthCondition;
     private SwipeRefreshLayout swipeLayout;
@@ -55,18 +56,12 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     private String updatePulseURL;
     private String updateBloodPressureURL;
 
-    private SensorDataReceiver receiver;
-
     public HealthMonitorFragment() {
         // Required empty public constructor
-        receiver = new SensorDataReceiver();
     }
 
     public static HealthMonitorFragment getInstance(Context context){
         HealthMonitorFragment fragment = new HealthMonitorFragment();
-        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
-        intentFilter.addCategory(context.getPackageName());
-        context.registerReceiver(fragment.receiver, intentFilter);
         return fragment;
     }
 
@@ -119,12 +114,6 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     @Override
     public void onRefresh() {
         updateData();
-    }
-
-    @Override
-    public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
-        super.onDestroy();
     }
 
     private void updateData(){
@@ -214,34 +203,24 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             healthDataList.setAdapter(new MonitorAdapter(getActivity(), sensorDataList));
     }
 
-    private class SensorDataReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(viewRoot == null)
-                return;
-            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
-                    !GlobalInfo.user.getPhoneNumber().equals(userId))
-                return;
-            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
-                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
-                return;
-            try {
-                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
-                if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_FEVER_THERMOMETER))
-                    updateBodyTemperature(new FeverThermometer(rawSensorData.getTimestamp(), Float.valueOf(rawSensorData.getValue())));
-                else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_PULSE_TRANSDUCER))
-                    updatePulse(new PulseTransducer(rawSensorData.getTimestamp(), Integer.valueOf(rawSensorData.getValue())));
-                else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_TURGOSCOPE)){
-                    String[] splitStr = rawSensorData.getValue().split("/", 2);
-                    if(splitStr.length != 2)
-                        return;
-                    updateBloodPressure(new Turgoscope(rawSensorData.getTimestamp(), Integer.valueOf(splitStr[0]),
-                            Integer.valueOf(splitStr[1])));
-                }
-            }catch (NumberFormatException | JsonSyntaxException e){
-                e.printStackTrace();
+    @Override
+    public void onSensorDataReceived(RawSensorData rawSensorData) {
+        if(viewRoot == null)
+            return;
+        try {
+            if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_FEVER_THERMOMETER))
+                updateBodyTemperature(new FeverThermometer(rawSensorData.getTimestamp(), Float.valueOf(rawSensorData.getValue())));
+            else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_PULSE_TRANSDUCER))
+                updatePulse(new PulseTransducer(rawSensorData.getTimestamp(), Integer.valueOf(rawSensorData.getValue())));
+            else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_TURGOSCOPE)){
+                String[] splitStr = rawSensorData.getValue().split("/", 2);
+                if(splitStr.length != 2)
+                    return;
+                updateBloodPressure(new Turgoscope(rawSensorData.getTimestamp(), Integer.valueOf(splitStr[0]),
+                        Integer.valueOf(splitStr[1])));
             }
+        }catch (NumberFormatException | JsonSyntaxException e){
+            e.printStackTrace();
         }
     }
 }

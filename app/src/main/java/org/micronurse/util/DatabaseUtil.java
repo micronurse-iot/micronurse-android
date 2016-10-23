@@ -55,6 +55,12 @@ public class DatabaseUtil {
                 .execute();
     }
 
+    public static List<SessionMessageRecord> findSessionMessageRecords(String fromUserId){
+        return new Select().from(SessionMessageRecord.class)
+                .where("FromUserId=?", fromUserId)
+                .execute();
+    }
+
     public static SessionMessageRecord findSessionMessageRecord(String fromUserId, String toUserId){
         return new Select().from(SessionMessageRecord.class)
                 .where("FromUserId=?", fromUserId)

@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.google.gson.JsonSyntaxException;
+
 import org.micronurse.Application;
 import org.micronurse.database.model.ChatMessageRecord;
 import org.micronurse.util.GlobalInfo;
@@ -23,11 +25,17 @@ public class ChatMessageReceiver extends BroadcastReceiver {
             if(!GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
                 return;
             String senderId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
-                    ChatMessageRecord.class);
-            cmr = new ChatMessageRecord(GlobalInfo.user.getPhoneNumber(), senderId, senderId, cmr.getMessageTime(), cmr.getMessageType(), cmr.getContent());
-            cmr.save();
-            Log.i(GlobalInfo.LOG_TAG, "Cache a message from user " + senderId + " successfully.");
+            if(senderId == null || senderId.isEmpty())
+                return;
+            try {
+                ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
+                        ChatMessageRecord.class);
+                cmr = new ChatMessageRecord(GlobalInfo.user.getPhoneNumber(), senderId, senderId, cmr.getMessageTime(), cmr.getMessageType(), cmr.getContent());
+                cmr.save();
+                Log.i(GlobalInfo.LOG_TAG, "Cache a message from user " + senderId + " successfully.");
+            }catch (JsonSyntaxException jse){
+                jse.printStackTrace();
+            }
         }
     }
 }

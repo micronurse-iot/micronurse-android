@@ -1,7 +1,9 @@
 package org.micronurse.ui.fragment.guardian;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -22,6 +24,7 @@ import org.micronurse.ui.activity.ChatActivity;
 import org.micronurse.ui.listener.OnBindMQTTServiceListener;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.GsonUtil;
 
 import java.util.Collections;
 import java.util.Date;
@@ -34,13 +37,29 @@ public class ContactsFragment extends Fragment implements OnBindMQTTServiceListe
     private FloatingActionButton btnAddContact;
     private LinkedList<SessionMessageAdapter.MessageItem> contactsSessionList = new LinkedList<>();
     private SessionMessageAdapter adapter;
+    private MessageArrivedReceiver msgArrivedReceiver;
+    private MessageSentReceiver msgSentReceiver;
+    private MessageSendStartReceiver msgSendStartReceiver;
 
     public ContactsFragment() {
         // Required empty public constructor
+        msgArrivedReceiver = new MessageArrivedReceiver();
+        msgSentReceiver = new MessageSentReceiver();
+        msgSendStartReceiver = new MessageSendStartReceiver();
     }
 
     public static ContactsFragment getInstance(Context context){
-        return new ContactsFragment();
+        ContactsFragment fragment = new ContactsFragment();
+        IntentFilter filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_RECEIVED);
+        filter.addCategory(context.getPackageName());
+        context.registerReceiver(fragment.msgArrivedReceiver, filter);
+        filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SENT);
+        filter.addCategory(context.getPackageName());
+        context.registerReceiver(fragment.msgSentReceiver, filter);
+        filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SEND_START);
+        filter.addCategory(context.getPackageName());
+        context.registerReceiver(fragment.msgSendStartReceiver, filter);
+        return fragment;
     }
 
     @Override
@@ -66,33 +85,46 @@ public class ContactsFragment extends Fragment implements OnBindMQTTServiceListe
         if(GlobalInfo.guardianshipList.isEmpty())
             return viewRoot;
         viewRoot.findViewById(R.id.txt_no_contact).setVisibility(View.GONE);
-        for(User u : GlobalInfo.guardianshipList){
-            SessionMessageRecord smr = DatabaseUtil.findSessionMessageRecord(GlobalInfo.user.getPhoneNumber(),
-                    u.getPhoneNumber());
-            if(smr == null) {
-                smr = new SessionMessageRecord(GlobalInfo.user.getPhoneNumber(), u.getPhoneNumber());
-                smr.save();
+        List<SessionMessageRecord> records = DatabaseUtil.findSessionMessageRecords(GlobalInfo.user.getPhoneNumber());
+        for(SessionMessageRecord smr : records){
+            for(User u : GlobalInfo.guardianshipList){
+                if(u.getPhoneNumber().equals(smr.getToUserId())){
+                    List<ChatMessageRecord> chatRecords = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
+                            smr.getToUserId(), new Date(), 1);
+                    if(chatRecords != null && !chatRecords.isEmpty()) {
+                        if (chatRecords.get(0).getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT)) {
+                            contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
+                                    chatRecords.get(0).getMessageTime(), chatRecords.get(0).getContent(), smr));
+                            break;
+                        }
+                    }
+                    contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
+                            null, null, smr));
+                    break;
+                }
             }
-            List<ChatMessageRecord> recordList = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
-                    u.getPhoneNumber(), new Date(), 1);
-            ChatMessageRecord cmr = null;
-            if(recordList != null && !recordList.isEmpty())
-                cmr = recordList.get(0);
-            if (cmr == null) {
-                contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(),
-                        u.getNickname(), null, null, smr));
-            } else {
-                String content = null;
-                if (cmr.getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT))
-                    content = cmr.getContent();
-                contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(),
-                        u.getNickname(), cmr.getMessageTime(), content, smr));
+        }
+        for(User u : GlobalInfo.guardianshipList) {
+            boolean findFlag = false;
+            for (SessionMessageAdapter.MessageItem mi : contactsSessionList) {
+                if (u.getPhoneNumber().equals(mi.getSessionMessageRecord().getToUserId())) {
+                    findFlag = true;
+                    break;
+                }
+            }
+            if(!findFlag){
+                SessionMessageRecord smr = new SessionMessageRecord(GlobalInfo.user.getPhoneNumber(), u.getPhoneNumber());
+                smr.save();
+                contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(), smr));
             }
         }
         Collections.sort(contactsSessionList);
         adapter = new SessionMessageAdapter(getContext(), contactsSessionList, new SessionMessageAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(SessionMessageAdapter.MessageItem item) {
+            public void onItemClick(int position, SessionMessageAdapter.MessageItem item) {
+                item.getSessionMessageRecord().setUnreadMessageNum(0);
+                item.getSessionMessageRecord().save();
+                adapter.notifyItemChanged(position);
                 Intent intent = new Intent(getContext(), ChatActivity.class);
                 intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, item.getSessionMessageRecord().getToUserId());
                 startActivity(intent);
@@ -110,6 +142,123 @@ public class ContactsFragment extends Fragment implements OnBindMQTTServiceListe
                     GlobalInfo.TOPIC_CHATTING, u.getPhoneNumber(), GlobalInfo.user.getPhoneNumber(),
                     1, Application.ACTION_CHAT_MESSAGE_RECEIVED
             ));
+        }
+    }
+
+    @Override
+    public void onResume() {
+        if(GlobalInfo.currentChatReceiver != null && !GlobalInfo.currentChatReceiver.isEmpty()){
+            int pos = 0;
+            for(SessionMessageAdapter.MessageItem mi : contactsSessionList){
+                if(mi.getSessionMessageRecord().getToUserId().equals(GlobalInfo.currentChatReceiver)){
+                    mi.getSessionMessageRecord().setUnreadMessageNum(0);
+                    mi.getSessionMessageRecord().save();
+                    adapter.notifyItemChanged(pos);
+                    break;
+                }
+                pos++;
+            }
+            GlobalInfo.currentChatReceiver = null;
+        }
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        getContext().unregisterReceiver(msgArrivedReceiver);
+        getContext().unregisterReceiver(msgSentReceiver);
+        getContext().unregisterReceiver(msgSendStartReceiver);
+        super.onDestroy();
+    }
+
+    private void updateArrivedMessage(ChatMessageRecord cmr){
+        SessionMessageAdapter.MessageItem messageItem = null;
+        for(SessionMessageAdapter.MessageItem mi : contactsSessionList){
+            if(mi.getSessionMessageRecord().getToUserId().equals(cmr.getChatterBId())){
+                messageItem = mi;
+                break;
+            }
+        }
+        if(messageItem == null)
+            return;
+        messageItem.setSessionTime(cmr.getMessageTime());
+        messageItem.setSessionMsg(cmr.getLiteralContent());
+        messageItem.getSessionMessageRecord().setUnreadMessageNum(
+                messageItem.getSessionMessageRecord().getUnreadMessageNum() + 1
+        );
+        messageItem.getSessionMessageRecord().save();
+        Collections.sort(contactsSessionList);
+        adapter.notifyDataSetChanged();
+    }
+
+    private class MessageArrivedReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(!GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
+                return;
+            String senderId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            if(senderId == null || senderId.isEmpty())
+                return;
+            if(viewRoot == null){
+                SessionMessageRecord smr = DatabaseUtil.findSessionMessageRecord(GlobalInfo.user.getPhoneNumber(), senderId);
+                if(smr == null)
+                    smr = new SessionMessageRecord(GlobalInfo.user.getPhoneNumber(), senderId);
+                smr.setUnreadMessageNum(smr.getUnreadMessageNum() + 1);
+                smr.save();
+                return;
+            }
+            ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
+                    ChatMessageRecord.class);
+            cmr.setChatterAId(GlobalInfo.user.getPhoneNumber());
+            cmr.setChatterBId(senderId);
+            cmr.setSenderId(senderId);
+            updateArrivedMessage(cmr);
+        }
+    }
+
+    private class MessageSentReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(viewRoot == null)
+                return;
+            String topicUserId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            if(!GlobalInfo.user.getPhoneNumber().equals(topicUserId))
+                return;
+            String receiverId = intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID);
+            if(receiverId == null || receiverId.isEmpty())
+                return;
+            int pos = 0;
+            for(SessionMessageAdapter.MessageItem mi : contactsSessionList){
+                if(mi.getSessionMessageRecord().getToUserId().equals(receiverId)){
+                    mi.setSending(false);
+                    adapter.notifyItemChanged(pos);
+                    break;
+                }
+                pos++;
+            }
+        }
+    }
+
+    private class MessageSendStartReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(viewRoot == null)
+                return;
+            String receiverId = intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID);
+            Date msgTime = new Date(intent.getLongExtra(Application.BUNDLE_KEY_MESSAGE_TIMESTAMP, -1));
+            String msg = intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE);
+            if(receiverId == null || receiverId.isEmpty())
+                return;
+            for(SessionMessageAdapter.MessageItem mi : contactsSessionList){
+                if(mi.getSessionMessageRecord().getToUserId().equals(receiverId)){
+                    mi.setSessionMsg(msg);
+                    mi.setSessionTime(msgTime);
+                    mi.setSending(true);
+                    Collections.sort(contactsSessionList);
+                    adapter.notifyDataSetChanged();
+                    break;
+                }
+            }
         }
     }
 }

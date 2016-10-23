@@ -107,4 +107,10 @@ public class ChatMessageRecord extends Model implements Serializable {
     public String getMessageId(){
         return MESSAGE_ID_PREFIX + messageTime.getTime() + '/' + chatterBId + '/' + chatterAId;
     }
+
+    public String getLiteralContent(){
+        if(messageType.equals(MESSAGE_TYPE_TEXT))
+            return getContent();
+        return null;
+    }
 }

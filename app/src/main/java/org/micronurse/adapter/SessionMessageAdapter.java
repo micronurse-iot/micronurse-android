@@ -49,7 +49,7 @@ public class SessionMessageAdapter extends RecyclerView.Adapter<SessionMessageAd
     }
 
     @Override
-    public void onBindViewHolder(SessionMessageViewHolder holder, int position) {
+    public void onBindViewHolder(SessionMessageViewHolder holder, final int position) {
         final MessageItem messageItem = sessionList.get(position);
         if(messageItem.sending)
             holder.sendingProgress.setVisibility(View.VISIBLE);
@@ -77,7 +77,7 @@ public class SessionMessageAdapter extends RecyclerView.Adapter<SessionMessageAd
             @Override
             public void onClick(View v) {
                 if(listener != null)
-                    listener.onItemClick(messageItem);
+                    listener.onItemClick(position, messageItem);
             }
         });
     }
@@ -103,7 +103,7 @@ public class SessionMessageAdapter extends RecyclerView.Adapter<SessionMessageAd
     }
 
     public interface OnItemClickListener{
-        void onItemClick(MessageItem item);
+        void onItemClick(int position, MessageItem item);
     }
 
     public static class MessageItem implements Comparable<MessageItem>{
@@ -113,6 +113,10 @@ public class SessionMessageAdapter extends RecyclerView.Adapter<SessionMessageAd
         private String displayName;
         private SessionMessageRecord sessionMessageRecord;
         private boolean sending = false;
+
+        public MessageItem(Bitmap portrait, String displayName, SessionMessageRecord sessionMessageRecord){
+            this(portrait, displayName, null, null, sessionMessageRecord);
+        }
 
         public MessageItem(Bitmap portrait, String displayName, Date sessionTime, String sessionMsg, SessionMessageRecord sessionMessageRecord, boolean sending) {
             this(portrait, displayName, sessionTime, sessionMsg, sessionMessageRecord);

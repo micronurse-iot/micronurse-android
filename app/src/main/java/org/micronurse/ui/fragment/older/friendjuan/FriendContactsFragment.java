@@ -1,5 +1,6 @@
 package org.micronurse.ui.fragment.older.friendjuan;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.unnamed.b.atv.model.TreeNode;
 import com.unnamed.b.atv.view.AndroidTreeView;
+
 import org.micronurse.R;
 import org.micronurse.adapter.ContactListContactHolder;
 import org.micronurse.adapter.ContactListRootHolder;
@@ -26,6 +28,10 @@ public class FriendContactsFragment extends Fragment {
 
     public FriendContactsFragment() {
         // Required empty public constructor
+    }
+
+    public static FriendContactsFragment getInstance(Context context){
+        return new FriendContactsFragment();
     }
 
     @Override

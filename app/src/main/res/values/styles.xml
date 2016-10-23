@@ -24,4 +24,8 @@
         <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
     </style>
 
+    <style name="SwitchOnActionBar">
+        <item name="colorControlActivated">@color/orange_500</item>
+    </style>
+
 </resources>
