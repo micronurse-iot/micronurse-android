@@ -75,7 +75,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
     private List<AxisValue> mAxisXValues = new ArrayList<AxisValue>();
 
     private int pointNum = 0;
-    private static int MAX_POINT_NUM = 20;
+    private static int MAX_POINT_NUM = 15;
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -176,7 +176,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((Thermometer) dataList.get(pointNum - i - 1)).getTemperature()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart(((Thermometer) dataList.get(0)).getName(), "温度/°C",R.color.orange_500);
+                    initLineChart(((Thermometer) dataList.get(0)).getName(),getString(R.string.temperature_unit),R.color.orange_500, -100, 100);
                 }
 
             }
@@ -216,7 +216,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((Humidometer) dataList.get(pointNum - i - 1)).getHumidity()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart(((Humidometer) dataList.get(0)).getName(), "湿度/%",R.color.orange_500);
+                    initLineChart(((Humidometer) dataList.get(0)).getName(), getString(R.string.humidity_unit),R.color.orange_500, 0, 100);
                 }
             }
         }, new APIErrorListener() {
@@ -255,7 +255,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((SmokeTransducer) dataList.get(pointNum - i - 1)).getSmoke()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart(((SmokeTransducer) dataList.get(0)).getName(), "浓度", R.color.orange_500);
+                    initLineChart(((SmokeTransducer) dataList.get(0)).getName(), getString(R.string.smoke), R.color.orange_500, 0, 10000);
                 }
             }
         }, new APIErrorListener() {
@@ -294,7 +294,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((FeverThermometer) dataList.get(pointNum - i - 1)).getTemperature()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart(getString(R.string.fever), getString(R.string.temperature_unit), R.color.orange_500);
+                    initLineChart(getString(R.string.fever), getString(R.string.temperature_unit), R.color.orange_500, 20, 50);
                 }
 
             }
@@ -334,7 +334,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((PulseTransducer) dataList.get(pointNum - i - 1)).getPulse()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart(getString(R.string.pulse),getString(R.string.pulse_unit) , R.color.orange_500);
+                    initLineChart(getString(R.string.pulse),getString(R.string.pulse_unit) , R.color.orange_500, 0, 100);
                 }
             }
         }, new APIErrorListener() {
@@ -374,11 +374,12 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         mPointValues.add(new PointValue(i, ((Turgoscope) dataList.get(pointNum - i - 1)).getHighBloodPressure()));
                     }
                     lineChart.postInvalidate();
-                    initLineChart(getString(R.string.blood_pressure), "高压/低压", R.color.orange_500);
+                    initLineChart(getString(R.string.blood_pressure),getString(R.string.high_low_blood_pleasure), R.color.orange_500, 0, 200);
+                    mPointValues.clear();
                     for (int i = 0; i < pointNum; i++) {
                         mPointValues.add(new PointValue(i, ((Turgoscope) dataList.get(pointNum - i - 1)).getLowBloodPressure()));
                     }
-                    initLineChart(getString(R.string.blood_pressure), "高压/低压", R.color.blue_500);
+                    initLineChart(getString(R.string.blood_pressure), getString(R.string.high_low_blood_pleasure), R.color.blue_500, 0, 200);
                 }
             }
         }, new APIErrorListener() {
@@ -400,7 +401,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
     }
 
 
-    private void initLineChart(String tableName, String yName, int color) {
+    private void initLineChart(String tableName, String yName, int color, int minYValue, int maxYValue) {
         Line line = new Line(mPointValues).setColor(color);
         List<Line> lines = new ArrayList<Line>();
         line.setShape(ValueShape.CIRCLE);
@@ -416,20 +417,29 @@ public class MonitorDetailActivity extends AppCompatActivity {
 
         //坐标轴
         Axis axisX = new Axis(); //X轴
-        axisX.setHasTiltedLabels(true);  //X坐标轴字体是斜的显示还是直的，true是斜的显示
+        axisX.setHasTiltedLabels(false);  //X坐标轴字体是斜的显示还是直的，true是斜的显示
         axisX.setTextColor(Color.BLUE);  //设置字体颜色
-        axisX.setName(tableName);  //表格名称
-        axisX.setTextSize(10);//设置字体大小
-        axisX.setMaxLabelChars(20); //最多几个X轴坐标，意思就是你的缩放让X轴上数据的个数7<=x<=mAxisXValues.length
+        axisX.setName("\n\n\n\n\n"+ tableName);  //表格名称
+        axisX.setTextSize(15);//设置字体大小
+        axisX.setMaxLabelChars(15); //最多几个X轴坐标，意思就是你的缩放让X轴上数据的个数7<=x<=mAxisXValues.length
         axisX.setValues(mAxisXValues);  //填充X轴的坐标名称
         data.setAxisXBottom(axisX); //x 轴在底部
         axisX.setHasLines(true); //x 轴分割线
 
         Axis axisY = new Axis();  //Y轴
         axisY.setName(yName);//y轴标注
-        axisY.setTextSize(10);//设置字体大小
+        axisY.setTextSize(15);//设置字体大小
         axisY.setTextColor(Color.BLUE);
         data.setAxisYLeft(axisY);  //Y轴设置在左边
+        List<AxisValue> values = new ArrayList<>();
+        int unit = (int)(maxYValue-minYValue)/10;
+        for(int i = minYValue; i < maxYValue; i+= unit){
+            AxisValue value = new AxisValue(i);
+            String label = "";
+            value.setLabel(label);
+            values.add(value);
+        }
+        axisY.setValues(values);
 
 
         lineChart.setInteractive(true);

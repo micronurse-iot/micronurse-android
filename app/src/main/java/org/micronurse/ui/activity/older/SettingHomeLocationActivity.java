@@ -2,7 +2,6 @@ package org.micronurse.ui.activity.older;
 
 import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -11,6 +10,8 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -39,14 +40,10 @@ import org.micronurse.R;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.PublicResultCode;
-import org.micronurse.http.model.request.ResetPasswordRequest;
 import org.micronurse.http.model.request.SaveHomeLocationRequest;
-import org.micronurse.http.model.result.LoginResult;
+import org.micronurse.http.model.result.GetHomeLocationResult;
 import org.micronurse.http.model.result.Result;
-import org.micronurse.http.model.result.SetHomeLocationResult;
-import org.micronurse.http.model.result.UserListResult;
-import org.micronurse.http.model.result.UserResult;
-import org.micronurse.ui.activity.LoginActivity;
+import org.micronurse.model.User;
 import org.micronurse.ui.activity.MainActivity;
 import org.micronurse.ui.fragment.monitor.GoingoutMonitorFragment;
 import org.micronurse.ui.listener.OnFullScreenListener;
@@ -55,22 +52,16 @@ import org.micronurse.util.ImageUtil;
 
 public class SettingHomeLocationActivity extends AppCompatActivity  implements
         OnGetGeoCoderResultListener {
-    private View viewRoot;
-    private SwipeRefreshLayout refresh;
     private EditText txtCity;
     private EditText txtAddr;
-    private FloatingActionButton btnFullScreen;
-    private ImageButton btnSearchLocation;
-    private ImageButton btnSave;
-    private OnFullScreenListener fullScreenListener;
-    private boolean isFullScreen = false;
+    private Button btnSearchLocation;
+    private Button btnSave;
 
     private MapView mMapView;
     private BaiduMap baiduMap;
     private MarkerOptions homeMarkerOptions;
     private Marker homeMarker;
     private GeoCoder mSearch;
-    private String updateLocationURL;
     private String cityName;
     private String addrDetail;
     private Double mCurrentLatitude, mCurrentLongitude;
@@ -82,7 +73,7 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting_home_location);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        txtCity = (EditText) viewRoot.findViewById(R.id.edit_city);
+        txtCity = (EditText)findViewById(R.id.txt_city);
         txtCity.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -97,7 +88,7 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
                 return true;
             }
         });
-        txtAddr = (EditText) viewRoot.findViewById(R.id.edit_home_location);
+        txtAddr = (EditText)findViewById(R.id.txt_home_location);
         txtAddr.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -105,50 +96,26 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
                 return true;
             }
         });
-        btnSearchLocation = (ImageButton) viewRoot.findViewById(R.id.btn_search_location);
+        btnSearchLocation = (Button)findViewById(R.id.btn_search_location);
         btnSearchLocation.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO:updateSearchLocation();
+                txtCity.setImeOptions(EditorInfo.IME_ACTION_DONE);
+                txtAddr.setImeOptions(EditorInfo.IME_ACTION_DONE);
+               searchLocation();
             }
         });
-        btnSave = (ImageButton) viewRoot.findViewById(R.id.btn_save_home_location);
+        btnSave = (Button) findViewById(R.id.btn_save_home_location);
         btnSave.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO:saveHomeLocation();
-            }
-        });
-        btnFullScreen = (FloatingActionButton) viewRoot.findViewById(R.id.btn_fullscreen);
-        btnFullScreen.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!isFullScreen) {
-                    isFullScreen = true;
-                    btnFullScreen.setImageResource(R.drawable.ic_fullscreen_exit);
-                    baiduMap.getUiSettings().setAllGesturesEnabled(true);
-                    refresh.setEnabled(false);
-                    mMapView.showZoomControls(true);
-                    mMapView.getChildAt(2)
-                            .setPadding(0, 0, getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin),
-                                    getResources().getDimensionPixelSize(R.dimen.map_zoom_control_padding_bottom));
-                    if (fullScreenListener != null) {
-                        fullScreenListener.onEnterFullScreen();
-                    }
-                } else {
-                    isFullScreen = false;
-                    btnFullScreen.setImageResource(R.drawable.ic_fullscreen);
-                    baiduMap.getUiSettings().setAllGesturesEnabled(false);
-                    refresh.setEnabled(true);
-                    mMapView.showZoomControls(false);
-                    if (fullScreenListener != null) {
-                        fullScreenListener.onExitFullScreen();
-                    }
-                }
+                txtCity.setImeOptions(EditorInfo.IME_ACTION_DONE);
+                txtAddr.setImeOptions(EditorInfo.IME_ACTION_DONE);
+                saveHomeLocation();
             }
         });
 
-        mMapView = (MapView) viewRoot.findViewById(R.id.bmapView);
+        mMapView = (MapView)findViewById(R.id.bmapView);
         mMapView.showZoomControls(false);
         baiduMap = mMapView.getMap();
         baiduMap.getUiSettings().setAllGesturesEnabled(false);
@@ -174,7 +141,14 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
 
         mSearch = GeoCoder.newInstance();
         mSearch.setOnGetGeoCodeResultListener(this);
+        getHomeLocation();
+        baiduMap.getUiSettings().setAllGesturesEnabled(true);
+        mMapView.showZoomControls(true);
+        mMapView.getChildAt(2)
+                .setPadding(0, 0, getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin),
+                        getResources().getDimensionPixelSize(R.dimen.map_zoom_control_padding_bottom));
     }
+
 
     private boolean searchLocation() {
         txtCity.setError(null);
@@ -192,26 +166,53 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
             addrDetail = txtAddr.getText().toString();
             mSearch.geocode(new GeoCodeOption()
                     .city(cityName)
-                    .address(addrDetail));
+                    .address(cityName+addrDetail));
 
         }
         return true;
     }
 
-
+    private void getHomeLocation() {
+        if (GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            new MicronurseAPI<GetHomeLocationResult>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GET_HOME_ADDRESS_FROME_OLDER, GlobalInfo.token), Request.Method.GET,
+                    null, GlobalInfo.token, new Response.Listener<GetHomeLocationResult>() {
+                @Override
+                public void onResponse(GetHomeLocationResult response) {
+                    mCurrentLongitude = response.getLongitude();
+                    mCurrentLatitude = response.getLatitude();
+                    LatLng homeAddress = new LatLng(mCurrentLatitude, mCurrentLongitude);
+                    homeMarkerOptions.position(homeAddress);
+                    if (homeMarker != null)
+                        homeMarker.remove();
+                    homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
+                    mSearch.reverseGeoCode(new ReverseGeoCodeOption()
+                            .location(homeAddress));
+                }
+            }, new APIErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError err, Result result) {
+                    if (result != null) {
+                        switch (result.getResultCode()) {
+                            case PublicResultCode.HOME_LOCATION_UNSETTED:
+                                ((TextView) findViewById(R.id.txt_home_location)).setHint(R.string.error_homeaddress_empty);
+                                break;
+                            default:
+                                Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }, GetHomeLocationResult.class, false, null).startRequest();
+        }
+    }
     private void saveHomeLocation() {
         if (searchLocation()) {
-            new MicronurseAPI<SetHomeLocationResult>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.SET_HOME_LOCATION, GlobalInfo.token), Request.Method.POST, new SaveHomeLocationRequest(
+            new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.SET_HOME_LOCATION, GlobalInfo.token), Request.Method.POST, new SaveHomeLocationRequest(
                     mCurrentLongitude, mCurrentLatitude
-            ), null, new Response.Listener<SetHomeLocationResult>() {
+            ), GlobalInfo.token, new Response.Listener<Result>() {
                 @Override
-                public void onResponse(SetHomeLocationResult response) {
-                    Toast.makeText(SettingHomeLocationActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(SettingHomeLocationActivity.this, GoingoutMonitorFragment.class);
-                    intent.putExtra(LoginActivity.BUNDLE_AUTO_LOGIN_KEY, true);
-                    intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, actvPhoneNumberView.getText().toString());
-                    intent.putExtra(LoginActivity.BUNDLE_PREFER_PASSWORD_KEY, etPasswordView.getText().toString());
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                public void onResponse(Result response) {
+                    Intent intent = new Intent();
+                    intent.setClass(SettingHomeLocationActivity.this, MainActivity.class);
                     SettingHomeLocationActivity.this.startActivity(intent);
                 }
             }, new APIErrorListener() {
@@ -221,12 +222,11 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
                         switch (result.getResultCode()) {
                             case PublicResultCode.HOME_ADDRESS_INVALID:
                                 txtCity.setError(result.getMessage());
-                                txtAddr.setText(R.string.error_homeaddress_empty);
+                                txtAddr.setHint(R.string.error_address_notfind);
                                 txtCity.requestFocus();
                                 break;
                             case PublicResultCode.USER_IS_FORBIDDEN:
                                 Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-                                //TODO:获取家的位置
                                 break;
                             default:
                                 Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
@@ -301,8 +301,9 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
             homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
             baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(reverseGeoCodeResult
                     .getLocation()));
-            txtCity.setText(reverseGeoCodeResult.getAddressDetail().city);
-            txtAddr.setText(reverseGeoCodeResult.getAddress());
+            ReverseGeoCodeResult.AddressComponent address = reverseGeoCodeResult.getAddressDetail();
+            txtCity.setText(address.city);
+            txtAddr.setText(address.district + address.street + address.streetNumber);
 
         }
     }

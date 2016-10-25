@@ -113,15 +113,20 @@
     <string name="add_guardian">添加监护人</string>
     <string name="add_friend">添加好友</string>
 
+    <string name="emergency_call_btn">急救按钮</string>
+
     <string name="temperature_unit">温度/°C</string>
     <string name="humidity_unit">湿度/%</string>
     <string name="pulse_unit">脉搏/bpm</string>
+    <string name="smoke">浓度</string>
+    <string name="high_low_blood_pleasure">高压/低压</string>
 
-    <string name="city_name">城市</string>
-    <string name="address_detail">家庭住址</string>
     <string name="error_cityname_empty">请输入城市名</string>
     <string name="error_homeaddress_empty">请输入详细地址</string>
     <string name="error_address_notfind">抱歉，未能找到结果</string>
     <string name="action_save_home_location">正在保存……</string>
-
+    <string name="action_search">搜索</string>
+    <string name="action_save">保存</string>
+    <string name="action_release">发布</string>
+    <string name="show_news">发布朋友圈</string>
 </resources>

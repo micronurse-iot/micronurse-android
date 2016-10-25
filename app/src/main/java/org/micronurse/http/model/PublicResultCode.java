@@ -29,4 +29,7 @@ public class PublicResultCode {
 
     public static final int HOME_ADDRESS_INVALID = 200204;
     public static final int USER_IS_FORBIDDEN = 200202;
+    public static final int HOME_LOCATION_UNSETTED=200203;
+    public static final int RELATION_NOT_EXIST=200003;
+
 }

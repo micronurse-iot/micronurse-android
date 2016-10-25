@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -36,7 +38,9 @@ import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
+import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.http.model.result.GPSDataListResult;
+import org.micronurse.http.model.result.GetHomeLocationResult;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.model.GPS;
 import org.micronurse.model.RawSensorData;
@@ -49,7 +53,8 @@ import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 import org.micronurse.util.ImageUtil;
 
-public class GoingoutMonitorFragment extends Fragment {
+public class GoingoutMonitorFragment extends Fragment  implements
+        OnGetGeoCoderResultListener {
     private View viewRoot;
     private SwipeRefreshLayout refresh;
     private FloatingActionButton btnFullScreen;
@@ -64,29 +69,17 @@ public class GoingoutMonitorFragment extends Fragment {
     private Marker olderMarker;
     private GeoCoder geoCoder;
     private String updateLocationURL;
-    private MarkerOptions homeMarkerOptions;
     private Marker homeMarker;
+    private MarkerOptions homeMarkerOptions;
+    private LatLng homeAddress;
 
     private SensorDataReceiver receiver;
 
-    public GoingoutMonitorFragment() {
+    public GoingoutMonitorFragment(){
         // Required empty public constructor
         receiver = new SensorDataReceiver();
         geoCoder = GeoCoder.newInstance();
-        geoCoder.setOnGetGeoCodeResultListener(new OnGetGeoCoderResultListener() {
-            @Override
-            public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {}
-
-            @Override
-            public void onGetReverseGeoCodeResult(ReverseGeoCodeResult reverseGeoCodeResult) {
-                if (reverseGeoCodeResult == null || reverseGeoCodeResult.error != SearchResult.ERRORNO.NO_ERROR) {
-                    Log.e(GlobalInfo.LOG_TAG, "Geo reverse error:" + reverseGeoCodeResult.error);
-                    ((TextView)viewRoot.findViewById(R.id.older_location)).setText(R.string.unknown_location);
-                }else{
-                    ((TextView)viewRoot.findViewById(R.id.older_location)).setText(reverseGeoCodeResult.getAddress());
-                }
-            }
-        });
+        geoCoder.setOnGetGeoCodeResultListener(this);
     }
 
     public static GoingoutMonitorFragment getInstance(Context context){
@@ -116,6 +109,7 @@ public class GoingoutMonitorFragment extends Fragment {
         if(viewRoot != null)
             return viewRoot;
         viewRoot = inflater.inflate(R.layout.fragment_goingout_monitor, container, false);
+        updateHomeLocation();
         refresh = (SwipeRefreshLayout) viewRoot.findViewById(R.id.swipeLayout);
         refresh.setColorSchemeResources(R.color.colorAccent);
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -131,6 +125,7 @@ public class GoingoutMonitorFragment extends Fragment {
                 Intent intent = new Intent();
                 intent.setClass(GoingoutMonitorFragment.this.getContext(), SettingHomeLocationActivity.class);
                 GoingoutMonitorFragment.this.startActivity(intent);
+
             }
         });
         btnFullScreen = (FloatingActionButton) viewRoot.findViewById(R.id.btn_fullscreen);
@@ -177,7 +172,7 @@ public class GoingoutMonitorFragment extends Fragment {
                 .icon(BitmapDescriptorFactory.fromBitmap(ImageUtil.getBitmapFromDrawable(getContext(), R.drawable.ic_location_red)))
                 .draggable(false);
         homeMarkerOptions = new MarkerOptions()
-                .icon(BitmapDescriptorFactory.fromBitmap(ImageUtil.getBitmapFromDrawable(getContext(), R.drawable.ic_location_32dp)))
+                .icon(BitmapDescriptorFactory.fromBitmap(ImageUtil.getBitmapFromDrawable(getContext(), R.drawable.ic_home_32dp)))
                 .draggable(false);
 
         updateURL();
@@ -246,45 +241,115 @@ public class GoingoutMonitorFragment extends Fragment {
 
     private void updateHomeLocation(){
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
-            new MicronurseAPI<SetHomeLocationResult>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.SET_HOME_LOCATION, GlobalInfo.token), Request.Method.POST, new SaveHomeLocationRequest(
-                    mCurrentLongitude, mCurrentLatitude
-            ), null, new Response.Listener<SetHomeLocationResult>() {
+            new MicronurseAPI<GetHomeLocationResult>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GET_HOME_ADDRESS_FROME_OLDER, GlobalInfo.token), Request.Method.GET,
+                    null, GlobalInfo.token, new Response.Listener<GetHomeLocationResult>() {
                 @Override
-                public void onResponse(SetHomeLocationResult response) {
-                    Toast.makeText(SettingHomeLocationActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(SettingHomeLocationActivity.this, GoingoutMonitorFragment.class);
-                    intent.putExtra(LoginActivity.BUNDLE_AUTO_LOGIN_KEY, true);
-                    intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, actvPhoneNumberView.getText().toString());
-                    intent.putExtra(LoginActivity.BUNDLE_PREFER_PASSWORD_KEY, etPasswordView.getText().toString());
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    SettingHomeLocationActivity.this.startActivity(intent);
+                public void onResponse(GetHomeLocationResult response) {
+                    homeAddress = new LatLng(response.getLatitude(), response.getLongitude());
+                    homeMarkerOptions.position(homeAddress);
+                    if(homeMarker != null)
+                        homeMarker.remove();
+                    homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
+                    GeoCoder searchHome = GeoCoder.newInstance();
+                    searchHome.setOnGetGeoCodeResultListener(new OnGetGeoCoderResultListener() {
+                        @Override
+                        public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {}
+
+                        @Override
+                        public void onGetReverseGeoCodeResult(ReverseGeoCodeResult reverseGeoCodeResult) {
+                            ((TextView)viewRoot.findViewById(R.id.home_location)).setText(reverseGeoCodeResult.getAddress());
+                        }
+                    });
+                    searchHome.reverseGeoCode(new ReverseGeoCodeOption()
+                            .location(homeAddress));
                 }
             }, new APIErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError err, Result result) {
                     if (result != null) {
                         switch (result.getResultCode()) {
-                            case PublicResultCode.HOME_ADDRESS_INVALID:
-                                txtCity.setError(result.getMessage());
-                                txtAddr.setText(R.string.error_homeaddress_empty);
-                                txtCity.requestFocus();
-                                break;
-                            case PublicResultCode.USER_IS_FORBIDDEN:
-                                Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-                                //TODO:获取家的位置
+                            case PublicResultCode.HOME_LOCATION_UNSETTED:
+                                ((TextView)viewRoot.findViewById(R.id.home_location)).setText(R.string.home_loaction_not_setting);
                                 break;
                             default:
-                                Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(GoingoutMonitorFragment.this.getContext(), result.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
-            }, Result.class, true, getString(R.string.action_save_home_location)).startRequest();
+            }, GetHomeLocationResult.class, false, null).startRequest();
         }
+        else if(GlobalInfo.Guardian.monitorOlder != null){
+            new MicronurseAPI<GetHomeLocationResult>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GET_HOME_ADDRESS_FROME_GUARDIAN, GlobalInfo.Guardian.monitorOlder.getPhoneNumber()),
+                    Request.Method.GET, null, GlobalInfo.token, new Response.Listener<GetHomeLocationResult>() {
+                @Override
+                public void onResponse(GetHomeLocationResult response) {
+                    homeAddress = new LatLng(response.getLatitude(), response.getLongitude());
+                    homeMarkerOptions.position(homeAddress);
+                    if(homeMarker != null)
+                        homeMarker.remove();
+                    homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
+                    geoCoder.reverseGeoCode(new ReverseGeoCodeOption()
+                            .location(homeAddress));
+                }
+            }, new APIErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError err, Result result) {
+                    if (result != null) {
+                        switch (result.getResultCode()) {
+                            case PublicResultCode.HOME_LOCATION_UNSETTED:
+                                ((TextView)viewRoot.findViewById(R.id.home_location)).setText(R.string.home_loaction_not_setting);
+                                break;
+                            case PublicResultCode.RELATION_NOT_EXIST:
+                                Toast.makeText(GoingoutMonitorFragment.this.getContext(), result.getMessage(), Toast.LENGTH_SHORT).show();
+                                break;
+                            default:
+                                Toast.makeText(GoingoutMonitorFragment.this.getContext(), result.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }, GetHomeLocationResult.class, false, null).startRequest();
         }
     }
 
     public void setOnFullScreenListener(OnFullScreenListener fullScreenListener) {
         this.fullScreenListener = fullScreenListener;
     }
+    private class SensorDataReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(viewRoot == null)
+                return;
+            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
+                    !GlobalInfo.user.getPhoneNumber().equals(userId))
+                return;
+            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
+                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
+                return;
+            try {
+                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
+                if(rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_GPS)){
+                    String[] splitStr = rawSensorData.getValue().split(",", 2);
+                    if(splitStr.length != 2)
+                        return;
+                    updateLocation(new GPS(rawSensorData.getTimestamp(), Double.valueOf(splitStr[0]),
+                            Double.valueOf(splitStr[1])));
+                }
+            }catch (NumberFormatException | JsonSyntaxException e){
+                e.printStackTrace();
+            }
+        }
+    }
+    @Override
+    public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {}
 
-}
+    @Override
+    public void onGetReverseGeoCodeResult(ReverseGeoCodeResult reverseGeoCodeResult) {
+        if (reverseGeoCodeResult == null || reverseGeoCodeResult.error != SearchResult.ERRORNO.NO_ERROR) {
+            Log.e(GlobalInfo.LOG_TAG, "Geo reverse error:" + reverseGeoCodeResult.error);
+            ((TextView)viewRoot.findViewById(R.id.older_location)).setText(R.string.unknown_location);
+        }else{
+                ((TextView) viewRoot.findViewById(R.id.older_location)).setText(reverseGeoCodeResult.getAddress());
+            }
+        }
+    }
