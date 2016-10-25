@@ -123,6 +123,11 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
         baiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng point) {
+                homeMarkerOptions.position(point);
+                if (homeMarker != null)
+                    homeMarker.remove();
+                homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
+                baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(point));
                 mSearch.reverseGeoCode(new ReverseGeoCodeOption()
                         .location(point));
                 mCurrentLongitude = point.longitude;
@@ -295,12 +300,6 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
             Toast.makeText(this, R.string.unknown_location, Toast.LENGTH_LONG)
                     .show();
         } else {
-            homeMarkerOptions.position(reverseGeoCodeResult.getLocation());
-            if (homeMarker != null)
-                homeMarker.remove();
-            homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
-            baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(reverseGeoCodeResult
-                    .getLocation()));
             ReverseGeoCodeResult.AddressComponent address = reverseGeoCodeResult.getAddressDetail();
             txtCity.setText(address.city);
             txtAddr.setText(address.district + address.street + address.streetNumber);
