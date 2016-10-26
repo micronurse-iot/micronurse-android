@@ -15,6 +15,7 @@ import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.service.EmergencyCallService;
+import org.micronurse.service.LocationService;
 import org.micronurse.service.MQTTService;
 import org.micronurse.ui.activity.AppCompatPreferenceActivity;
 import org.micronurse.ui.activity.LoginActivity;
@@ -53,6 +54,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, GlobalInfo.user.getPhoneNumber());
 
+        Intent locationService = new Intent(this, LocationService.class);
+        stopService(locationService);
         Intent mqttServiceIntent = new Intent(this, MQTTService.class);
         stopService(mqttServiceIntent);
         Intent emergencyCallService = new Intent(this, EmergencyCallService.class);

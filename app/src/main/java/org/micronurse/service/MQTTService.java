@@ -91,12 +91,14 @@ public class MQTTService extends Service implements MqttCallback {
                             mqttClient.publish(topic, ((MQTTPublishAction) mqttActionClone).message.getBytes(), ((MQTTPublishAction) mqttActionClone).qos,
                                     ((MQTTPublishAction) mqttActionClone).retain);
                             Log.i(GlobalInfo.LOG_TAG, "Publish on topic <" + topic + "> successfully.");
-                            Intent intent = new Intent(((MQTTPublishAction) mqttActionClone).action);
-                            intent.addCategory(getPackageName());
-                            parseTopic(topic, intent);
-                            if(((MQTTPublishAction) mqttActionClone).messageId != null)
-                                intent.putExtra(Application.BUNDLE_KEY_MESSAGE_ID, ((MQTTPublishAction) mqttActionClone).messageId);
-                            sendBroadcast(intent);
+                            if(((MQTTPublishAction) mqttActionClone).action != null) {
+                                Intent intent = new Intent(((MQTTPublishAction) mqttActionClone).action);
+                                intent.addCategory(getPackageName());
+                                parseTopic(topic, intent);
+                                if (((MQTTPublishAction) mqttActionClone).messageId != null)
+                                    intent.putExtra(Application.BUNDLE_KEY_MESSAGE_ID, ((MQTTPublishAction) mqttActionClone).messageId);
+                                sendBroadcast(intent);
+                            }
                         }
                     } catch (MqttException e) {
                         e.printStackTrace();
@@ -253,12 +255,12 @@ public class MQTTService extends Service implements MqttCallback {
         private String messageId;
         private String action;
 
-        public MQTTPublishAction(String topic, String topicUserId, String receiverId, int qos, String message, @Nullable String messageId, String action) {
+        public MQTTPublishAction(String topic, String topicUserId, String receiverId, int qos, String message, @Nullable String messageId, @Nullable String action) {
             this(topic, topicUserId, qos, message, messageId, action);
             this.receiverId = receiverId;
         }
 
-        public MQTTPublishAction(String topic, String topicUserId, int qos, String message, @Nullable String messageId, String action) {
+        public MQTTPublishAction(String topic, String topicUserId, int qos, String message, @Nullable String messageId, @Nullable String action) {
             this.topic = topic;
             this.topicUserId = topicUserId;
             this.qos = qos;

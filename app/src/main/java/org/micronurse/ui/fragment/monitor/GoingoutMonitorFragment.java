@@ -48,13 +48,16 @@ import org.micronurse.model.Sensor;
 import org.micronurse.model.User;
 import org.micronurse.ui.activity.older.SettingHomeLocationActivity;
 import org.micronurse.ui.listener.OnFullScreenListener;
+import org.micronurse.ui.listener.OnSensorDataReceivedListener;
 import org.micronurse.util.DateTimeUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 import org.micronurse.util.ImageUtil;
 
 public class GoingoutMonitorFragment extends Fragment  implements
-        OnGetGeoCoderResultListener {
+        OnGetGeoCoderResultListener, OnSensorDataReceivedListener {
+    private static final int REQUEST_CODE_SETTING_HOME_LOCATION = 2333;
+
     private View viewRoot;
     private SwipeRefreshLayout refresh;
     private FloatingActionButton btnFullScreen;
@@ -73,21 +76,14 @@ public class GoingoutMonitorFragment extends Fragment  implements
     private MarkerOptions homeMarkerOptions;
     private LatLng homeAddress;
 
-    private SensorDataReceiver receiver;
-
     public GoingoutMonitorFragment(){
         // Required empty public constructor
-        receiver = new SensorDataReceiver();
         geoCoder = GeoCoder.newInstance();
         geoCoder.setOnGetGeoCodeResultListener(this);
     }
 
     public static GoingoutMonitorFragment getInstance(Context context){
-        GoingoutMonitorFragment fragment = new GoingoutMonitorFragment();
-        IntentFilter intentFilter = new IntentFilter(Application.ACTION_SENSOR_DATA_REPORT);
-        intentFilter.addCategory(context.getPackageName());
-        context.registerReceiver(fragment.receiver, intentFilter);
-        return fragment;
+        return new GoingoutMonitorFragment();
     }
 
     private void updateURL(){
@@ -109,7 +105,6 @@ public class GoingoutMonitorFragment extends Fragment  implements
         if(viewRoot != null)
             return viewRoot;
         viewRoot = inflater.inflate(R.layout.fragment_goingout_monitor, container, false);
-        updateHomeLocation();
         refresh = (SwipeRefreshLayout) viewRoot.findViewById(R.id.swipeLayout);
         refresh.setColorSchemeResources(R.color.colorAccent);
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -124,7 +119,7 @@ public class GoingoutMonitorFragment extends Fragment  implements
             public void onClick(View v) {
                 Intent intent = new Intent();
                 intent.setClass(GoingoutMonitorFragment.this.getContext(), SettingHomeLocationActivity.class);
-                GoingoutMonitorFragment.this.startActivity(intent);
+                GoingoutMonitorFragment.this.startActivityForResult(intent, REQUEST_CODE_SETTING_HOME_LOCATION);
 
             }
         });
@@ -180,7 +175,16 @@ public class GoingoutMonitorFragment extends Fragment  implements
             refresh.setRefreshing(true);
             updateLocation();
         }
+        updateHomeLocation();
         return viewRoot;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_CODE_SETTING_HOME_LOCATION && resultCode == SettingHomeLocationActivity.RESULT_CODE_SET_HOME_LOCATION){
+            updateHomeLocation();
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -197,7 +201,6 @@ public class GoingoutMonitorFragment extends Fragment  implements
 
     @Override
     public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
         mMapView.onDestroy();
         geoCoder.destroy();
         super.onDestroy();
@@ -277,8 +280,7 @@ public class GoingoutMonitorFragment extends Fragment  implements
                     }
                 }
             }, GetHomeLocationResult.class, false, null).startRequest();
-        }
-        else if(GlobalInfo.Guardian.monitorOlder != null){
+        } else if(GlobalInfo.Guardian.monitorOlder != null){
             new MicronurseAPI<GetHomeLocationResult>(getActivity(), MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GET_HOME_ADDRESS_FROME_GUARDIAN, GlobalInfo.Guardian.monitorOlder.getPhoneNumber()),
                     Request.Method.GET, null, GlobalInfo.token, new Response.Listener<GetHomeLocationResult>() {
                 @Override
@@ -314,32 +316,20 @@ public class GoingoutMonitorFragment extends Fragment  implements
     public void setOnFullScreenListener(OnFullScreenListener fullScreenListener) {
         this.fullScreenListener = fullScreenListener;
     }
-    private class SensorDataReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(viewRoot == null)
+
+    @Override
+    public void onSensorDataReceived(RawSensorData rawSensorData) {
+        if(viewRoot == null)
+            return;
+        if(rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_GPS)){
+            String[] splitStr = rawSensorData.getValue().split(",", 2);
+            if(splitStr.length != 2)
                 return;
-            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
-                    !GlobalInfo.user.getPhoneNumber().equals(userId))
-                return;
-            else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
-                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
-                return;
-            try {
-                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
-                if(rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_GPS)){
-                    String[] splitStr = rawSensorData.getValue().split(",", 2);
-                    if(splitStr.length != 2)
-                        return;
-                    updateLocation(new GPS(rawSensorData.getTimestamp(), Double.valueOf(splitStr[0]),
-                            Double.valueOf(splitStr[1])));
-                }
-            }catch (NumberFormatException | JsonSyntaxException e){
-                e.printStackTrace();
-            }
+            updateLocation(new GPS(rawSensorData.getTimestamp(), Double.valueOf(splitStr[0]),
+                    Double.valueOf(splitStr[1])));
         }
     }
+
     @Override
     public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {}
 
@@ -349,7 +339,7 @@ public class GoingoutMonitorFragment extends Fragment  implements
             Log.e(GlobalInfo.LOG_TAG, "Geo reverse error:" + reverseGeoCodeResult.error);
             ((TextView)viewRoot.findViewById(R.id.older_location)).setText(R.string.unknown_location);
         }else{
-                ((TextView) viewRoot.findViewById(R.id.older_location)).setText(reverseGeoCodeResult.getAddress());
-            }
+            ((TextView) viewRoot.findViewById(R.id.older_location)).setText(reverseGeoCodeResult.getAddress());
         }
     }
+}

@@ -52,6 +52,8 @@ import org.micronurse.util.ImageUtil;
 
 public class SettingHomeLocationActivity extends AppCompatActivity  implements
         OnGetGeoCoderResultListener {
+    public static final int RESULT_CODE_SET_HOME_LOCATION = 666;
+
     private EditText txtCity;
     private EditText txtAddr;
     private Button btnSearchLocation;
@@ -216,9 +218,8 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
             ), GlobalInfo.token, new Response.Listener<Result>() {
                 @Override
                 public void onResponse(Result response) {
-                    Intent intent = new Intent();
-                    intent.setClass(SettingHomeLocationActivity.this, MainActivity.class);
-                    SettingHomeLocationActivity.this.startActivity(intent);
+                    setResult(RESULT_CODE_SET_HOME_LOCATION);
+                    finish();
                 }
             }, new APIErrorListener() {
                 @Override

@@ -28,6 +28,7 @@ import org.micronurse.R;
 import org.micronurse.database.model.Guardianship;
 import org.micronurse.model.User;
 import org.micronurse.service.EmergencyCallService;
+import org.micronurse.service.LocationService;
 import org.micronurse.service.MQTTService;
 import org.micronurse.ui.activity.older.SettingsActivity;
 import org.micronurse.ui.fragment.guardian.ContactsFragment;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity
     private ContactsFragment contactsFragment;
     private Intent mqttServiceIntent;
     private ServiceConnection mqttServiceConnection;
+    private Intent locationServiceIntent;
     private Intent emergencyCallServiceIntent;
     private EmergencyCallService emergencyCallService;
     private ServiceConnection emergencyCallServiceConnection;
@@ -152,6 +154,8 @@ public class MainActivity extends AppCompatActivity
                 public void onServiceDisconnected(ComponentName name) {}
             };
             bindService(emergencyCallServiceIntent, emergencyCallServiceConnection, Context.BIND_AUTO_CREATE);
+            locationServiceIntent = new Intent(this, LocationService.class);
+            startService(locationServiceIntent);
         }
     }
 
@@ -281,6 +285,8 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 //TODO:do something before exit
+                                if(locationServiceIntent != null)
+                                    stopService(locationServiceIntent);
                                 if(emergencyCallServiceIntent != null)
                                     stopService(emergencyCallServiceIntent);
                                 stopService(mqttServiceIntent);

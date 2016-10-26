@@ -6,9 +6,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.RECEIVE_USER_PRESENT" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:name=".Application"
@@ -23,10 +28,13 @@
             android:value="MicroNurse.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="3" />
+            android:value="6" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.Guardianship,                            org.micronurse.database.model.ChatMessageRecord" />
+            android:value="org.micronurse.database.model.LoginUserRecord,
+                           org.micronurse.database.model.Guardianship,
+                           org.micronurse.database.model.ChatMessageRecord,
+                           org.micronurse.database.model.SessionMessageRecord"/>
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
@@ -73,16 +81,23 @@
             android:name=".ui.activity.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
 
-        <service android:name=".service.EmergencyCallService" />
-
         <activity
             android:name=".ui.activity.MonitorDetailActivity"
             android:label="@string/monitor_detail" />
 
+        <service android:name=".service.EmergencyCallService"
+            android:enabled="true"
+            android:exported="false"/>
+
         <service
             android:name=".service.MQTTService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"/>
+
+        <service
+            android:name=".service.LocationService"
+            android:enabled="true"
+            android:exported="false"/>
 
         <receiver
             android:name=".receiver.MonitorWarningReceiver"
@@ -90,12 +105,16 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="org.micronurse.action.SENSOR_WARNING" />
-
                 <category android:name="org.micronurse" />
             </intent-filter>
         </receiver>
 
         <activity android:name=".ui.activity.ChatActivity" />
+
+        <service android:name="com.baidu.location.f"
+            android:enabled="true"
+            android:process=":remote"/>
+
     </application>
 
 </manifest>

@@ -129,4 +129,7 @@
     <string name="action_save">保存</string>
     <string name="action_release">发布</string>
     <string name="show_news">发布朋友圈</string>
+
+    <string name="no_location_provider">无法获取位置，请检查您是否打开了位置服务</string>
+    <string name="no_location_permission">本应用需要位置权限来获取您的实时位置，请您退出本应用并授予权限后再重启本应用</string>
 </resources>

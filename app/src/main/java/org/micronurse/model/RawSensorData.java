@@ -12,6 +12,10 @@ public class RawSensorData implements Serializable {
     private String name;
     private String value;
 
+    public RawSensorData(String sensorType, Long timestamp, String value) {
+        this(sensorType, timestamp, null, value);
+    }
+
     public RawSensorData(String sensorType, Long timestamp, String name, String value) {
         this.sensorType = sensorType;
         this.timestamp = timestamp;
