@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import org.micronurse.R;
+import org.micronurse.ui.activity.older.EmergencyCallActivity;
 import org.micronurse.util.GlobalInfo;
 
 /**
@@ -26,6 +27,7 @@ public class EmergencyCallService extends Service {
     private FloatingActionButton callButton;
     private WindowManager.LayoutParams wmParams;
     private WindowManager windowManager;
+    private Intent intent;
     private int btnStartX;
     private int btnStartY;
     private int startX;
@@ -93,7 +95,9 @@ public class EmergencyCallService extends Service {
         callButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO:Emergency call
+                //TODO
+                intent = new Intent(EmergencyCallService.this, EmergencyCallActivity.class);
+                startActivity(intent);
                 Log.i(GlobalInfo.LOG_TAG, "Emergency call button clicked.");
             }
         });
