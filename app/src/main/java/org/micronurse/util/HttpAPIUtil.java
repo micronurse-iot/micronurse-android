@@ -24,9 +24,8 @@ public class HttpAPIUtil {
                     }
                 }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
-                if(result != null)
-                    Toast.makeText(context, result.getMessage(), Toast.LENGTH_SHORT).show();
+            public boolean onErrorResponse(VolleyError err, Result result) {
+                return false;
             }
         }, Result.class).startRequest();
     }

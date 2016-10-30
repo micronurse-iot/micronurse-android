@@ -182,8 +182,8 @@ public class MonitorDetailActivity extends AppCompatActivity {
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
-
+            public boolean onErrorResponse(VolleyError err, Result result) {
+                return false;
             }
         }, ThermometerDataListResult.class, false, null).startRequest();
     }
@@ -221,8 +221,8 @@ public class MonitorDetailActivity extends AppCompatActivity {
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
-
+            public boolean onErrorResponse(VolleyError err, Result result) {
+                return false;
             }
         }, HumidometerDataListResult.class, false, null).startRequest();
     }
@@ -260,8 +260,8 @@ public class MonitorDetailActivity extends AppCompatActivity {
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
-
+            public boolean onErrorResponse(VolleyError err, Result result) {
+                return false;
             }
         }, SmokeTransducerDataListResult.class, false, null).startRequest();
     }
@@ -300,8 +300,8 @@ public class MonitorDetailActivity extends AppCompatActivity {
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
-
+            public boolean onErrorResponse(VolleyError err, Result result) {
+                return false;
             }
         }, FeverThermometerDataListResult.class, false, null).startRequest();
     }
@@ -339,8 +339,8 @@ public class MonitorDetailActivity extends AppCompatActivity {
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
-
+            public boolean onErrorResponse(VolleyError err, Result result) {
+                return false;
             }
         }, PulseTransducerDataListResult.class, false, null).startRequest();
     }
@@ -384,8 +384,8 @@ public class MonitorDetailActivity extends AppCompatActivity {
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
-
+            public boolean onErrorResponse(VolleyError err, Result result) {
+                return false;
             }
         }, TurgoscopeDataListResult.class, false, null).startRequest();
     }

@@ -26,6 +26,7 @@ import org.micronurse.R;
 import org.micronurse.adapter.MonitorAdapter;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
+import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.http.model.result.FeverThermometerDataListResult;
 import org.micronurse.http.model.result.PulseTransducerDataListResult;
 import org.micronurse.http.model.result.Result;
@@ -125,8 +126,13 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
+            public boolean onErrorResponse(VolleyError err, Result result) {
                 swipeLayout.setRefreshing(false);
+                if(result != null){
+                    if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
+                        return true;
+                }
+                return false;
             }
         }, FeverThermometerDataListResult.class, false, null).startRequest();
 
@@ -138,8 +144,13 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
+            public boolean onErrorResponse(VolleyError err, Result result) {
                 swipeLayout.setRefreshing(false);
+                if(result != null){
+                    if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
+                        return true;
+                }
+                return false;
             }
         }, PulseTransducerDataListResult.class, false, null).startRequest();
 
@@ -151,8 +162,13 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
+            public boolean onErrorResponse(VolleyError err, Result result) {
                 swipeLayout.setRefreshing(false);
+                if(result != null){
+                    if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
+                        return true;
+                }
+                return false;
             }
         }, TurgoscopeDataListResult.class, false, null).startRequest();
     }

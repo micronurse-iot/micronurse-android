@@ -25,6 +25,7 @@ import org.micronurse.R;
 import org.micronurse.adapter.MonitorAdapter;
 import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
+import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.http.model.result.HumidometerDataListResult;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.http.model.result.SmokeTransducerDataListResult;
@@ -151,8 +152,13 @@ public class FamilyMonitorFragment extends Fragment implements OnSensorDataRecei
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
+            public boolean onErrorResponse(VolleyError err, Result result) {
                 refresh.setRefreshing(false);
+                if(result != null){
+                    if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
+                        return true;
+                }
+                return false;
             }
         }, ThermometerDataListResult.class, false, null).startRequest();
     }
@@ -185,8 +191,13 @@ public class FamilyMonitorFragment extends Fragment implements OnSensorDataRecei
                     }
                 }, new APIErrorListener() {
                     @Override
-                    public void onErrorResponse(VolleyError err, Result result) {
+                    public boolean onErrorResponse(VolleyError err, Result result) {
                         refresh.setRefreshing(false);
+                        if(result != null){
+                            if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
+                                return true;
+                        }
+                        return false;
                     }
                 }, HumidometerDataListResult.class, false, null).startRequest();
     }
@@ -219,8 +230,13 @@ public class FamilyMonitorFragment extends Fragment implements OnSensorDataRecei
                     }
                 }, new APIErrorListener() {
                     @Override
-                    public void onErrorResponse(VolleyError err, Result result) {
+                    public boolean onErrorResponse(VolleyError err, Result result) {
                         refresh.setRefreshing(false);
+                        if(result != null){
+                            if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
+                                return true;
+                        }
+                        return false;
                     }
                 }, SmokeTransducerDataListResult.class, false, null).startRequest();
     }

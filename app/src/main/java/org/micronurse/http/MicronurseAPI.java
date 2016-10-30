@@ -32,6 +32,7 @@ public class MicronurseAPI<T extends Result> {
     private static RequestQueue requestQueue = null;
     private JSONRequest<T> request;
     private ProgressDialog mStatusDialog;
+    private Context mContext;
 
     public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
                          final APIErrorListener errorListener, Class<T> resultClass){
@@ -39,10 +40,11 @@ public class MicronurseAPI<T extends Result> {
                 context.getResources().getString(R.string.action_waiting));
     }
 
-    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
+    public MicronurseAPI(Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
                          final APIErrorListener errorListener, Class<T> resultClass, boolean showStatus, String statusText){
+        this.mContext = context;
         if(requestQueue == null)
-            requestQueue = Volley.newRequestQueue(context);
+            requestQueue = Volley.newRequestQueue(mContext);
         request = new JSONRequest<>(apiURL, method, token, new Response.Listener<T>() {
             @Override
             public void onResponse(T response) {
@@ -57,61 +59,49 @@ public class MicronurseAPI<T extends Result> {
                 if (mStatusDialog != null)
                     mStatusDialog.dismiss();
                 if (error.getCause() instanceof JsonSyntaxException) {
-                    if(context instanceof Activity){
-                        Snackbar.make(((Activity) context).findViewById(android.R.id.content), R.string.response_data_corrupt, Snackbar.LENGTH_SHORT).show();
-                    }else {
-                        Toast.makeText(context, R.string.response_data_corrupt, Toast.LENGTH_SHORT).show();
-                    }
+                    showError(MicronurseAPI.this.mContext.getString(R.string.response_data_corrupt));
                 } else if (error.networkResponse == null) {
-                    if(context instanceof Activity){
-                        Snackbar.make(((Activity) context).findViewById(android.R.id.content), R.string.network_error, Snackbar.LENGTH_SHORT).show();
-                    }else {
-                        Toast.makeText(context, R.string.network_error, Toast.LENGTH_SHORT).show();
-                    }
-                    errorListener.onErrorResponse(error, null);
+                    if(!errorListener.onErrorResponse(error, null))
+                        showError(MicronurseAPI.this.mContext.getString(R.string.network_error));
                 } else {
                     Result result;
                     try {
                         result = GsonUtil.getGson().fromJson(new String(error.networkResponse.data), Result.class);
                     } catch (JsonSyntaxException jse) {
                         jse.printStackTrace();
-                        errorListener.onErrorResponse(error, new Result(-1, context.getString(R.string.unknown_error)));
-                        return;
+                        result = new Result(-1, MicronurseAPI.this.mContext.getString(R.string.unknown_error));
                     }
                     Log.e("Micro nurser API", "onErrorResponse: result code:" + result.getResultCode() + " message:" + result.getMessage());
-                    if (error.networkResponse.statusCode == 401 && result.getResultCode() == 401) {
-                        Toast.makeText(context, R.string.error_login_state_invalid, Toast.LENGTH_SHORT).show();
-                        errorListener.onErrorResponse(error, result);
-                        Intent intent = new Intent(context, LoginActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    if(!errorListener.onErrorResponse(error, result)){
+                        if (error.networkResponse.statusCode == 401 && result.getResultCode() == 401) {
+                            Toast.makeText(mContext, R.string.error_login_state_invalid, Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(mContext, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-                        if (GlobalInfo.user != null) {
-                            intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, GlobalInfo.user.getPhoneNumber());
-                            LoginUserRecord lur = DatabaseUtil.findLoginUserRecord(GlobalInfo.user.getPhoneNumber());
-                            if(lur != null) {
-                                lur.setToken(null);
-                                lur.save();
+                            if (GlobalInfo.user != null) {
+                                intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, GlobalInfo.user.getPhoneNumber());
+                                LoginUserRecord lur = DatabaseUtil.findLoginUserRecord(GlobalInfo.user.getPhoneNumber());
+                                if(lur != null) {
+                                    lur.setToken(null);
+                                    lur.save();
+                                }
+                                Intent mqttServiceIntent = new Intent(mContext, MQTTService.class);
+                                mContext.stopService(mqttServiceIntent);
                             }
-                            Intent mqttServiceIntent = new Intent(context, MQTTService.class);
-                            context.stopService(mqttServiceIntent);
-                        }
-                        GlobalInfo.clearLoginUserInfo();
-                        context.startActivity(intent);
-                        return;
-                    } else if (error.networkResponse.statusCode == 500) {
-                        if(context instanceof Activity) {
-                            Snackbar.make(((Activity) context).findViewById(android.R.id.content), R.string.server_internal_error, Snackbar.LENGTH_SHORT).show();
-                        }else {
-                            Toast.makeText(context, R.string.server_internal_error, Toast.LENGTH_SHORT).show();
+                            GlobalInfo.clearLoginUserInfo();
+                            mContext.startActivity(intent);
+                        } else if (error.networkResponse.statusCode == 500) {
+                            showError(mContext.getString(R.string.server_internal_error));
+                        } else {
+                            showError(result.getMessage());
                         }
                     }
-                    errorListener.onErrorResponse(error, result);
                 }
             }
         }, requestData, resultClass);
 
         if(showStatus) {
-            mStatusDialog = new ProgressDialog(context);
+            mStatusDialog = new ProgressDialog(mContext);
             mStatusDialog.setMessage(statusText);
             mStatusDialog.setCancelable(false);
         }
@@ -140,6 +130,13 @@ public class MicronurseAPI<T extends Result> {
         return url;
     }
 
+    private void showError(String error){
+        if(mContext instanceof Activity)
+            Snackbar.make(((Activity) mContext).findViewById(android.R.id.content), error, Snackbar.LENGTH_SHORT).show();
+        else
+            Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+    }
+
     public static class AccountAPI{
         public static String CHECK_LOGIN = "account/check_login";
         public static String LOGIN = "account/login";
@@ -149,10 +146,15 @@ public class MicronurseAPI<T extends Result> {
         public static String LOGOUT = "account/logout";
         public static String RESET_PASSWORD = "account/reset_password";
         public static String GUARDIANSHIP = "account/guardianship";
-        public static String SET_HOME_LOCATION ="account/set_home_address";
-        public static String GET_HOME_ADDRESS_FROME_OLDER = "account/get_home_address_from_older";
-        public static String GET_HOME_ADDRESS_FROME_GUARDIAN = "account/get_home_address_from_guardian";
+    }
 
+    public static class OlderAccountAPI{
+        public static String SET_HOME_LOCATION ="account/set_home_address";
+        public static String HOME_ADDRESS = "account/home_address/older";
+    }
+
+    public static class GuardianAccountAPI{
+        public static String HOME_ADDRESS = "account/home_address/guardian";
     }
 
     public static class OlderSensorAPI{

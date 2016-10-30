@@ -1,7 +1,5 @@
 package org.micronurse.ui.activity.older;
 
-import android.content.Intent;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -13,7 +11,6 @@ import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,18 +38,17 @@ import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.http.model.request.SaveHomeLocationRequest;
-import org.micronurse.http.model.result.GetHomeLocationResult;
+import org.micronurse.http.model.result.HomeLocationResult;
 import org.micronurse.http.model.result.Result;
 import org.micronurse.model.User;
-import org.micronurse.ui.activity.MainActivity;
-import org.micronurse.ui.fragment.monitor.GoingoutMonitorFragment;
-import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.ImageUtil;
 
 public class SettingHomeLocationActivity extends AppCompatActivity  implements
         OnGetGeoCoderResultListener {
     public static final int RESULT_CODE_SET_HOME_LOCATION = 666;
+    public static final String BUNDLE_HOME_LONGITUDE = "HomeLongitude";
+    public static final String BUNDLE_HOME_LATITUDE = "HomeLatitude";
 
     private EditText txtCity;
     private EditText txtAddr;
@@ -102,25 +98,19 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
         btnSearchLocation.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                txtCity.setImeOptions(EditorInfo.IME_ACTION_DONE);
-                txtAddr.setImeOptions(EditorInfo.IME_ACTION_DONE);
-               searchLocation();
+                searchLocation();
             }
         });
         btnSave = (Button) findViewById(R.id.btn_save_home_location);
         btnSave.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                txtCity.setImeOptions(EditorInfo.IME_ACTION_DONE);
-                txtAddr.setImeOptions(EditorInfo.IME_ACTION_DONE);
                 saveHomeLocation();
             }
         });
 
         mMapView = (MapView)findViewById(R.id.bmapView);
-        mMapView.showZoomControls(false);
         baiduMap = mMapView.getMap();
-        baiduMap.getUiSettings().setAllGesturesEnabled(false);
         baiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(17));
         baiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
             @Override
@@ -129,7 +119,6 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
                 if (homeMarker != null)
                     homeMarker.remove();
                 homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
-                baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(point));
                 mSearch.reverseGeoCode(new ReverseGeoCodeOption()
                         .location(point));
                 mCurrentLongitude = point.longitude;
@@ -148,12 +137,17 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
 
         mSearch = GeoCoder.newInstance();
         mSearch.setOnGetGeoCodeResultListener(this);
-        getHomeLocation();
-        baiduMap.getUiSettings().setAllGesturesEnabled(true);
-        mMapView.showZoomControls(true);
-        mMapView.getChildAt(2)
-                .setPadding(0, 0, getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin),
-                        getResources().getDimensionPixelSize(R.dimen.map_zoom_control_padding_bottom));
+        //Show origin home location
+        mCurrentLongitude = getIntent().getDoubleExtra(BUNDLE_HOME_LONGITUDE, -1);
+        mCurrentLatitude = getIntent().getDoubleExtra(BUNDLE_HOME_LATITUDE, -1);
+        if(mCurrentLongitude >= 0 && mCurrentLatitude >= 0){
+            LatLng point = new LatLng(mCurrentLatitude, mCurrentLongitude);
+            homeMarkerOptions.position(point);
+            homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
+            baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(point));
+            mSearch.reverseGeoCode(new ReverseGeoCodeOption()
+                    .location(new LatLng(mCurrentLatitude, mCurrentLongitude)));
+        }
     }
 
 
@@ -179,41 +173,9 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
         return true;
     }
 
-    private void getHomeLocation() {
-        if (GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
-            new MicronurseAPI<GetHomeLocationResult>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GET_HOME_ADDRESS_FROME_OLDER, GlobalInfo.token), Request.Method.GET,
-                    null, GlobalInfo.token, new Response.Listener<GetHomeLocationResult>() {
-                @Override
-                public void onResponse(GetHomeLocationResult response) {
-                    mCurrentLongitude = response.getLongitude();
-                    mCurrentLatitude = response.getLatitude();
-                    LatLng homeAddress = new LatLng(mCurrentLatitude, mCurrentLongitude);
-                    homeMarkerOptions.position(homeAddress);
-                    if (homeMarker != null)
-                        homeMarker.remove();
-                    homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
-                    mSearch.reverseGeoCode(new ReverseGeoCodeOption()
-                            .location(homeAddress));
-                }
-            }, new APIErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError err, Result result) {
-                    if (result != null) {
-                        switch (result.getResultCode()) {
-                            case PublicResultCode.HOME_LOCATION_UNSETTED:
-                                ((TextView) findViewById(R.id.txt_home_location)).setHint(R.string.error_homeaddress_empty);
-                                break;
-                            default:
-                                Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-            }, GetHomeLocationResult.class, false, null).startRequest();
-        }
-    }
     private void saveHomeLocation() {
         if (searchLocation()) {
-            new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.SET_HOME_LOCATION, GlobalInfo.token), Request.Method.POST, new SaveHomeLocationRequest(
+            new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.OlderAccountAPI.SET_HOME_LOCATION), Request.Method.POST, new SaveHomeLocationRequest(
                     mCurrentLongitude, mCurrentLatitude
             ), GlobalInfo.token, new Response.Listener<Result>() {
                 @Override
@@ -223,21 +185,17 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
                 }
             }, new APIErrorListener() {
                 @Override
-                public void onErrorResponse(VolleyError err, Result result) {
+                public boolean onErrorResponse(VolleyError err, Result result) {
                     if (result != null) {
                         switch (result.getResultCode()) {
-                            case PublicResultCode.HOME_ADDRESS_INVALID:
+                            case PublicResultCode.HOME_ADDRESS_NOT_EXIST:
                                 txtCity.setError(result.getMessage());
                                 txtAddr.setHint(R.string.error_address_notfind);
                                 txtCity.requestFocus();
-                                break;
-                            case PublicResultCode.USER_IS_FORBIDDEN:
-                                Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-                                break;
-                            default:
-                                Toast.makeText(SettingHomeLocationActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                                return true;
                         }
                     }
+                    return false;
                 }
             }, Result.class, true, getString(R.string.action_save_home_location)).startRequest();
         }
@@ -274,7 +232,7 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
         super.onDestroy();
     }
 
-    @Override//正向编码，通过地址获得经纬度
+    @Override
     public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {
         if (geoCodeResult == null || geoCodeResult.error != SearchResult.ERRORNO.NO_ERROR) {
             Log.e(GlobalInfo.LOG_TAG, "Geo error:" + geoCodeResult.error);
@@ -304,7 +262,6 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
             ReverseGeoCodeResult.AddressComponent address = reverseGeoCodeResult.getAddressDetail();
             txtCity.setText(address.city);
             txtAddr.setText(address.district + address.street + address.streetNumber);
-
         }
     }
 

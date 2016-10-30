@@ -50,7 +50,7 @@ public class WelcomeActivity extends AppCompatActivity {
                         @Override
                         public void onResponse(Result response) {
                             GlobalInfo.token = loginUserRecord.getToken();
-                            new MicronurseAPI<UserResult>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.USER_BASIC_INFO_BY_PHONE, loginUserRecord.getPhoneNumber()), Request.Method.GET, null, null,
+                            new MicronurseAPI<UserResult>(getApplicationContext(), MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.USER_BASIC_INFO_BY_PHONE, loginUserRecord.getPhoneNumber()), Request.Method.GET, null, null,
                                     new Response.Listener<UserResult>() {
                                         @Override
                                         public void onResponse(UserResult response) {
@@ -67,28 +67,34 @@ public class WelcomeActivity extends AppCompatActivity {
                                                 }
                                             }, new APIErrorListener() {
                                                 @Override
-                                                public void onErrorResponse(VolleyError err, Result result) {
-                                                    if(result.getResultCode() == PublicResultCode.RESULT_NOT_FOUND){
-                                                        finish();
-                                                        startActivity(loginIntent);
-                                                    }else {
-                                                        startLoginActivity();
+                                                public boolean onErrorResponse(VolleyError err, Result result) {
+                                                    if(result != null) {
+                                                        if (result.getResultCode() == PublicResultCode.RESULT_NOT_FOUND) {
+                                                            finish();
+                                                            startActivity(loginIntent);
+                                                            return true;
+                                                        } else {
+                                                            startLoginActivity();
+                                                        }
                                                     }
+                                                    return false;
                                                 }
                                             }, UserListResult.class, false, null).startRequest();
                                         }
                                     }, new APIErrorListener() {
                                         @Override
-                                        public void onErrorResponse(VolleyError err, Result result) {
+                                        public boolean onErrorResponse(VolleyError err, Result result) {
                                             startLoginActivity();
+                                            return false;
                                         }
                                     }, UserResult.class, false, null).startRequest();
                         }
                     }, new APIErrorListener() {
                         @Override
-                        public void onErrorResponse(VolleyError err, Result result) {
+                        public boolean onErrorResponse(VolleyError err, Result result) {
                             if (result == null || result.getResultCode() != 401)
                                 startLoginActivity();
+                            return false;
                         }
                     }, Result.class, false, null).startRequest();
                 }else{

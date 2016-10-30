@@ -1,8 +1,6 @@
 package org.micronurse.ui.fragment;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -208,14 +206,17 @@ public class MonitorWarningFragment extends Fragment implements OnBindMQTTServic
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
+            public boolean onErrorResponse(VolleyError err, Result result) {
                 refresh.setRefreshing(false);
                 refresh.setDirection(SwipyRefreshLayoutDirection.BOTH);
-                if(result != null && result.getResultCode() == PublicResultCode.MOBILE_SENSOR_WARNING_NOT_FOUND){
+                if(result != null && result.getResultCode() == PublicResultCode.SENSOR_WARNING_NOT_FOUND){
                     if(!firstDisplay)
                         Snackbar.make(viewRoot, R.string.no_more_data, Snackbar.LENGTH_SHORT).show();
+                    firstDisplay = false;
+                    return true;
                 }
                 firstDisplay = false;
+                return false;
             }
         }, SensorWarningListResult.class, false, null);
         request.setJsonParser(jsonParser);

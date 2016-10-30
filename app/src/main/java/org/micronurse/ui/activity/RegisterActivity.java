@@ -194,31 +194,30 @@ public class RegisterActivity extends AppCompatActivity{
             }
         }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
+            public boolean onErrorResponse(VolleyError err, Result result) {
                 if (result == null)
-                    return;
+                    return false;
                 switch (result.getResultCode()) {
                     case PublicResultCode.PHONE_NUM_INVALID:
                     case PublicResultCode.PHONE_NUM_REGISTERED:
                         actvPhoneNumberView.setError(result.getMessage());
                         actvPhoneNumberView.requestFocus();
-                        break;
+                        return true;
                     case PublicResultCode.PASSWORD_LENGTH_ILLEGAL:
                     case PublicResultCode.PASSWORD_FORMAT_ILLEGAL:
                         etPasswordView.setError(result.getMessage());
                         etPasswordView.requestFocus();
-                        break;
+                        return true;
                     case PublicResultCode.NICKNAME_REGISTERED:
                         mNicknameView.setError(result.getMessage());
                         mNicknameView.requestFocus();
-                        break;
+                        return true;
                     case PublicResultCode.PHONE_CAPTCHA_INCORRECT:
                         mCaptchaView.setError(result.getMessage());
                         mCaptchaView.requestFocus();
-                        break;
-                    default:
-                        Toast.makeText(RegisterActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                        return true;
                 }
+                return false;
             }
         },Result.class, true, getString(R.string.action_registering)).startRequest();
     }

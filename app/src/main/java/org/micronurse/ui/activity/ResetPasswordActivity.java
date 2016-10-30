@@ -134,26 +134,25 @@ public class ResetPasswordActivity extends AppCompatActivity {
             }
         }, new APIErrorListener(){
             @Override
-            public void onErrorResponse(VolleyError err, Result result) {
+            public boolean onErrorResponse(VolleyError err, Result result) {
                 if(result != null) {
                     switch (result.getResultCode()){
                         case PublicResultCode.LOGIN_USER_NOT_EXIST:
                             mPhoneNumberView.setError(result.getMessage());
                             mPhoneNumberView.requestFocus();
-                            break;
+                            return true;
                         case PublicResultCode.PASSWORD_LENGTH_ILLEGAL:
                         case PublicResultCode.PASSWORD_FORMAT_ILLEGAL:
                             mPasswordView.setError(result.getMessage());
                             mPasswordView.requestFocus();
-                            break;
+                            return true;
                         case PublicResultCode.PHONE_CAPTCHA_INCORRECT:
                             mCaptchaView.setError(result.getMessage());
                             mCaptchaView.requestFocus();
-                            break;
-                        default:
-                            Toast.makeText(ResetPasswordActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                            return true;
                     }
                 }
+                return false;
             }
         }, Result.class, true, getString(R.string.action_resetting)).startRequest();
     }
