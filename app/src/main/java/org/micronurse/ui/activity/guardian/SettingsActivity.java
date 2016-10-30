@@ -38,8 +38,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             }
                         }, new APIErrorListener() {
                             @Override
-                            public void onErrorResponse(VolleyError err, Result result) {
+                            public boolean onErrorResponse(VolleyError err, Result result) {
                                 logout();
+                                return true;
                             }
                         }, Result.class).startRequest();
                         return true;

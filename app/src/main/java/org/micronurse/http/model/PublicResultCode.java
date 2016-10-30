@@ -21,15 +21,13 @@ public class PublicResultCode {
     public static final int PHONE_CAPTCHA_SEND_TOO_FREQUENTLY = 200012;
     public static final int PHONE_CAPTCHA_SEND_FAILED = 200013;
 
-    public static final int MOBILE_SENSOR_TYPE_UNSUPPORTED = 200101;
-    public static final int MOBILE_SENSOR_DATA_NOT_FOUND = 200102;
-    public static final int MOBILE_SENSOR_WARNING_NOT_FOUND = 200103;
+    public static final int SENSOR_TYPE_UNSUPPORTED = 200101;
+    public static final int SENSOR_DATA_NOT_FOUND = 200102;
+    public static final int SENSOR_WARNING_NOT_FOUND = 200103;
 
-    public static final int MOBILE_GUARDIANSHIP_NOT_EXIST = 200201;
-
-    public static final int HOME_ADDRESS_INVALID = 200204;
-    public static final int USER_IS_FORBIDDEN = 200202;
-    public static final int HOME_LOCATION_UNSETTED=200203;
-    public static final int RELATION_NOT_EXIST=200003;
+    public static final int GUARDIANSHIP_NOT_EXIST = 200201;
+    public static final int HOME_ADDRESS_SETTING_PERMISSIONS_LIMITED = 200202;
+    public static final int HOME_ADDRESS_NOT_EXIST = 200203;
+    public static final int HOME_ADDRESS_ILLEGAL = 200204;
 
 }

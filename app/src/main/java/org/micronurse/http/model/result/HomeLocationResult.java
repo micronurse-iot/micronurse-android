@@ -3,10 +3,10 @@ package org.micronurse.http.model.result;
 
 import org.micronurse.http.model.request.SaveHomeLocationRequest;
 
-public class GetHomeLocationResult extends Result{
+public class HomeLocationResult extends Result{
     private Double latitude;
     private Double longitude;
-    public GetHomeLocationResult(int resultCode, String message, Double latitude, Double longitude){
+    public HomeLocationResult(int resultCode, String message, Double latitude, Double longitude){
         super(resultCode, message);
         this.latitude = latitude;
         this.longitude =longitude;

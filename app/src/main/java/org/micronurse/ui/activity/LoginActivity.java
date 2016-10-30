@@ -209,40 +209,43 @@ public class LoginActivity extends AppCompatActivity {
                                             }
                                         }, new APIErrorListener() {
                                             @Override
-                                            public void onErrorResponse(VolleyError err, Result result) {
+                                            public boolean onErrorResponse(VolleyError err, Result result) {
                                                 if(result == null)
-                                                    return;
+                                                    return false;
                                                 if(result.getResultCode() == PublicResultCode.RESULT_NOT_FOUND){
                                                     finish();
                                                     startActivity(loginIntent);
                                                 }else {
                                                     Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
                                                 }
+                                                return true;
                                             }
                                         }, UserListResult.class).startRequest();
                                     }
                                 }, new APIErrorListener() {
                             @Override
-                            public void onErrorResponse(VolleyError err, Result result) {
+                            public boolean onErrorResponse(VolleyError err, Result result) {
                                 Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
+                                return true;
                             }
                         }, UserResult.class).startRequest();
                     }
                 }, new APIErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError error, Result result) {
+            public boolean onErrorResponse(VolleyError error, Result result) {
                 if (result == null)
-                    return;
+                    return false;
                 switch (result.getResultCode()) {
                     case PublicResultCode.LOGIN_USER_NOT_EXIST:
                         mPhoneNumberView.setError(result.getMessage());
                         mPhoneNumberView.requestFocus();
-                        break;
+                        return true;
                     case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
                         mPasswordView.setError(result.getMessage());
                         mPasswordView.requestFocus();
-                        break;
+                        return true;
                 }
+                return false;
             }
         }, LoginResult.class, true, getString(R.string.action_logining));
         request.startRequest();
