@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <group android:checkableBehavior="single">
+    <group android:id="@+id/nav_group_feature"
+        android:checkableBehavior="single">
         <item android:id="@+id/nav_monitor"
             android:icon="@drawable/ic_monitor"
             android:title="@string/action_monitor" />
@@ -15,16 +16,15 @@
 
     </group>
 
-    <item android:title="@string/other">
-        <menu>
-            <item android:id="@+id/nav_settings"
-                android:icon="@drawable/ic_settings"
-                android:title="@string/action_settings"/>
+    <group android:id="@+id/nav_group_other"
+        android:checkableBehavior="none">
+        <item android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_settings"
+            android:title="@string/action_settings"/>
 
-            <item android:id="@+id/nav_exit"
-                android:icon="@drawable/ic_exit"
-                android:title="@string/action_exit"/>
-        </menu>
-    </item>
+        <item android:id="@+id/nav_exit"
+            android:icon="@drawable/ic_exit"
+            android:title="@string/action_exit"/>
+    </group>
 
 </menu>

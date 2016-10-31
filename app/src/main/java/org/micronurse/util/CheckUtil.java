@@ -154,9 +154,9 @@ public class CheckUtil {
     public static int checkSafetyLevel(Humidometer humidometer){
         //TODO: Return the corresponding safe level value according to the humidity.
         float humidity = humidometer.getHumidity();
-        if(humidity >= 0.3 && humidity <= 0.8)
+        if(humidity >= 20 && humidity <= 80)
             return SAFETY_LEVEL_SAFE;
-        else if(humidity >= 0.9 || humidity <= 0.1)
+        else if(humidity >= 90 || humidity <= 10)
             return SAFETY_LEVEL_DANGER;
         else
             return SAFETY_LEVEL_HIDDEN_IN_DANGER;
@@ -170,7 +170,6 @@ public class CheckUtil {
 
     public static int checkSafetyLevel(SmokeTransducer smokeTransducer){
         //TODO: Return the corresponding safe level value according to the smoke.
-        //此处默认测量的返回值为烟雾浓度，单位以ppm计算
         int smoke = smokeTransducer.getSmoke();
         if(smoke <= 50)
             return SAFETY_LEVEL_SAFE;

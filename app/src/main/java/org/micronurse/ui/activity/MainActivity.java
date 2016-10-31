@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawerLayout;
     private NavigationView mNavigationView;
+    private SwitchCompat mSwitchEmergencyCall;
     private View mNavHeaderView;
 
     private FragmentManager mFragmentManager;
@@ -99,9 +100,19 @@ public class MainActivity extends AppCompatActivity
                     .commit();
         }
 
-        mNavigationView = (NavigationView) findViewById(R.id.nav_older_main);
+        mNavigationView = (NavigationView) findViewById(R.id.nav_main);
         mNavigationView.setNavigationItemSelectedListener(this);
         mNavigationView.getMenu().getItem(0).setChecked(true);
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
+            mSwitchEmergencyCall = (SwitchCompat) mNavigationView.getMenu().findItem(R.id.nav_switch_emergency_call)
+                                   .getActionView().findViewById(R.id.switch_emergency_call_btn);
+            mSwitchEmergencyCall.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    emergencyCallService.setShowCallButton(isChecked);
+                }
+            });
+        }
         mNavHeaderView = mNavigationView.getHeaderView(0);
         onNavigationItemSelected(mNavigationView.getMenu().getItem(0));
 
@@ -221,26 +232,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
-            getMenuInflater().inflate(R.menu.activity_older_main_menu, menu);
-            MenuItem item = menu.findItem(R.id.menu_switch_call_btn);
-            SwitchCompat switchBtn = (SwitchCompat) item.getActionView().findViewById(R.id.switch_emergency_call_btn);
-            switchBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    emergencyCallService.setShowCallButton(isChecked);
-                }
-            });
-        }
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
         int id = item.getItemId();
         FragmentTransaction t;
         switch (id){
@@ -272,6 +266,9 @@ public class MainActivity extends AppCompatActivity
                 t.show(medicationReminderFragment);
                 t.commit();
                 break;
+            case R.id.nav_switch_emergency_call:
+                mSwitchEmergencyCall.setChecked(!mSwitchEmergencyCall.isChecked());
+                return true;
             case R.id.nav_contacts:
                 setTitle(R.string.action_contacts_older);
                 t = mFragmentManager.beginTransaction();
@@ -304,6 +301,7 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
                 break;
         }
+        drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 

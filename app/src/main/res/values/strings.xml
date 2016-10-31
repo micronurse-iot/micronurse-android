@@ -60,7 +60,6 @@
     <string name="action_guard_thief_monitor">防盗</string>
     <string name="action_health_monitor">身体健康</string>
     <string name="action_going_out_monitor">出行</string>
-    <string name="action_call_for_help">一键呼救</string>
 
     <string name="no_data">暂时没有数据</string>
     <string name="update_time">更新时间：</string>
@@ -113,7 +112,10 @@
     <string name="add_guardian">添加监护人</string>
     <string name="add_friend">添加好友</string>
 
-    <string name="emergency_call_btn">急救按钮</string>
+    <string name="action_emergency_call">紧急呼救</string>
+    <string name="no_guardian_to_call">没有可以呼叫的监护人</string>
+    <string name="stopped_emergency_call">已停止紧急呼救</string>
+    <string name="call_after_n_seconds">%d秒后自动拨号</string>
 
     <string name="temperature_unit">温度/°C</string>
     <string name="humidity_unit">湿度/%</string>
@@ -121,6 +123,7 @@
     <string name="smoke">浓度</string>
     <string name="high_low_blood_pleasure">高压/低压</string>
 
+    <string name="action_setting_home_location">家庭位置设置</string>
     <string name="error_cityname_empty">请输入城市名</string>
     <string name="error_homeaddress_empty">请输入详细地址</string>
     <string name="error_address_notfind">抱歉，未能找到结果</string>
@@ -129,7 +132,4 @@
     <string name="action_save">保存</string>
     <string name="action_release">发布</string>
     <string name="show_news">发布朋友圈</string>
-
-    <string name="no_location_provider">无法获取位置，请检查您是否打开了位置服务</string>
-    <string name="no_location_permission">本应用需要位置权限来获取您的实时位置，请您退出本应用并授予权限后再重启本应用</string>
 </resources>

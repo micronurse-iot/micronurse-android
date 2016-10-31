@@ -7,19 +7,8 @@ import java.util.List;
 /**
  * Created by zhou-shengyun on 8/21/16.
  */
-public class SmokeTransducerDataListResult extends Result {
-    public List<SmokeTransducer> dataList;
-
+public class SmokeTransducerDataListResult extends SensorDataListResult<SmokeTransducer> {
     public SmokeTransducerDataListResult(int resultCode, String message, List<SmokeTransducer> dataList) {
-        super(resultCode, message);
-        this.dataList = dataList;
-    }
-
-    public List<SmokeTransducer> getDataList() {
-        return dataList;
-    }
-
-    public void setDataList(List<SmokeTransducer> dataList) {
-        this.dataList = dataList;
+        super(resultCode, message, dataList);
     }
 }

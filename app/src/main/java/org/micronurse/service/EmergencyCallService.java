@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import org.micronurse.R;
 import org.micronurse.ui.activity.older.EmergencyCallActivity;
@@ -95,10 +96,13 @@ public class EmergencyCallService extends Service {
         callButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO
+                if(GlobalInfo.guardianshipList == null || GlobalInfo.guardianshipList.isEmpty()){
+                    Toast.makeText(EmergencyCallService.this, R.string.no_guardian_to_call, Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 intent = new Intent(EmergencyCallService.this, EmergencyCallActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
-                Log.i(GlobalInfo.LOG_TAG, "Emergency call button clicked.");
             }
         });
     }

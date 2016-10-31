@@ -37,5 +37,6 @@
     <dimen name="chatbox_space">60dp</dimen>
 
     <dimen name="button_size">120sp</dimen>
+    <dimen name="switch_width">55dp</dimen>
 
 </resources>
