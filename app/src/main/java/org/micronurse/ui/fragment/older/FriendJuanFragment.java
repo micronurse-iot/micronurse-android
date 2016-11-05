@@ -77,6 +77,10 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
             service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(GlobalInfo.TOPIC_CHATTING,
                     u.getPhoneNumber(), GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
         }
+        for(User u : GlobalInfo.Older.friendList) {
+            service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(GlobalInfo.TOPIC_CHATTING,
+                    u.getPhoneNumber(), GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
+        }
     }
 
     @Override

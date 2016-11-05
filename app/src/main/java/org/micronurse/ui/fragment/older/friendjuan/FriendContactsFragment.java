@@ -74,8 +74,20 @@ public class FriendContactsFragment extends Fragment {
                             }));
             guardianListRoot.addChild(node);
         }
-        olderFriendListRoot = new TreeNode(new ContactListRootHolder.IconTextItem(R.drawable.ic_friend_32dp, getString(R.string.friends) + " (" + 0 + ')'))
+        olderFriendListRoot = new TreeNode(new ContactListRootHolder.IconTextItem(R.drawable.ic_friend_32dp, getString(R.string.friends) + " (" + GlobalInfo.Older.friendList.size() + ')'))
                 .setViewHolder(new ContactListRootHolder(getActivity(), atv));
+        for(final User u : GlobalInfo.Older.friendList){
+            TreeNode node = new TreeNode(new ContactListContactHolder.IconTextItem(u.getPortrait(), u.getNickname()))
+                    .setViewHolder(new ContactListContactHolder(getActivity(), new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent intent = new Intent(getActivity(), ChatActivity.class);
+                            intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, u.getPhoneNumber());
+                            startActivity(intent);
+                        }
+                    }));
+            olderFriendListRoot.addChild(node);
+        }
         treeRoot.addChildren(guardianListRoot, olderFriendListRoot);
         atv.setDefaultAnimation(true);
         listContainer.addView(atv.getView());

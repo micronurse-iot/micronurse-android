@@ -74,12 +74,7 @@ public class ChatActivity extends AppCompatActivity {
         chatListView.setLayoutManager(layoutManager);
         chatListView.setNestedScrollingEnabled(false);
         String receiverId = getIntent().getStringExtra(BUNDLE_KEY_RECEIVER_ID);
-        for (User u : GlobalInfo.guardianshipList){
-            if(u.getPhoneNumber().equals(receiverId)) {
-                chatReceiver = u;
-                GlobalInfo.currentChatReceiver = receiverId;
-            }
-        }
+        chatReceiver = GlobalInfo.findUserById(receiverId);
         setTitle(chatReceiver.getNickname());
         adapter = new ChatMessageAdapter(this, messageList);
         chatListView.setAdapter(adapter);

@@ -13,8 +13,7 @@ import org.micronurse.http.APIErrorListener;
 import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.PublicResultCode;
 import org.micronurse.http.model.result.Result;
-import org.micronurse.http.model.result.UserListResult;
-import org.micronurse.http.model.result.UserResult;
+import org.micronurse.model.User;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.HttpAPIUtil;
@@ -50,44 +49,31 @@ public class WelcomeActivity extends AppCompatActivity {
                         @Override
                         public void onResponse(Result response) {
                             GlobalInfo.token = loginUserRecord.getToken();
-                            new MicronurseAPI<UserResult>(getApplicationContext(), MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.USER_BASIC_INFO_BY_PHONE, loginUserRecord.getPhoneNumber()), Request.Method.GET, null, null,
-                                    new Response.Listener<UserResult>() {
-                                        @Override
-                                        public void onResponse(UserResult response) {
-                                            GlobalInfo.user = response.getUser();
-                                            GlobalInfo.user.setPhoneNumber(loginUserRecord.getPhoneNumber());
-                                            loginIntent = new Intent(WelcomeActivity.this, MainActivity.class);
-                                            new MicronurseAPI<UserListResult>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GUARDIANSHIP), Request.Method.GET,
-                                                    null, GlobalInfo.token, new Response.Listener<UserListResult>() {
-                                                @Override
-                                                public void onResponse(UserListResult response) {
-                                                    GlobalInfo.guardianshipList = response.getUserList();
-                                                    finish();
-                                                    startActivity(loginIntent);
-                                                }
-                                            }, new APIErrorListener() {
-                                                @Override
-                                                public boolean onErrorResponse(VolleyError err, Result result) {
-                                                    if(result != null) {
-                                                        if (result.getResultCode() == PublicResultCode.RESULT_NOT_FOUND) {
-                                                            finish();
-                                                            startActivity(loginIntent);
-                                                            return true;
-                                                        } else {
-                                                            startLoginActivity();
-                                                        }
-                                                    }
-                                                    return false;
-                                                }
-                                            }, UserListResult.class, false, null).startRequest();
+
+                            HttpAPIUtil.finishLogin(WelcomeActivity.this, loginUserRecord.getPhoneNumber(), new Response.Listener<Result>() {
+                                @Override
+                                public void onResponse(Result response) {
+                                    loginIntent = new Intent(WelcomeActivity.this, MainActivity.class);
+                                    finish();
+                                    startActivity(loginIntent);
+                                }
+                            }, new APIErrorListener() {
+                                @Override
+                                public boolean onErrorResponse(VolleyError err, Result result) {
+                                    if(result != null) {
+                                        if(GlobalInfo.user != null){
+                                            if((GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER && result.getResultCode() == PublicResultCode.MOBILE_FRIEND_JUAN_NO_FRIENDSHIP) ||
+                                                    (GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN && result.getResultCode() == PublicResultCode.GUARDIANSHIP_NOT_EXIST)) {
+                                                finish();
+                                                startActivity(loginIntent);
+                                                return true;
+                                            }
                                         }
-                                    }, new APIErrorListener() {
-                                        @Override
-                                        public boolean onErrorResponse(VolleyError err, Result result) {
-                                            startLoginActivity();
-                                            return false;
-                                        }
-                                    }, UserResult.class, false, null).startRequest();
+                                        startLoginActivity();
+                                    }
+                                    return false;
+                                }
+                            }, false);
                         }
                     }, new APIErrorListener() {
                         @Override

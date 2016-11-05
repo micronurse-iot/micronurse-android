@@ -24,12 +24,30 @@ public class GlobalInfo {
         public static User monitorOlder;
     }
 
+    public static class Older{
+        public static List<User> friendList = new ArrayList<>();
+    }
+
     public static void clearLoginUserInfo(){
         user = null;
         token = null;
         guardianshipList.clear();
         sendMessageQueue.clear();
         currentChatReceiver = null;
+        Guardian.monitorOlder = null;
+        Older.friendList.clear();
+    }
+
+    public static User findUserById(String userId){
+        for(User u : guardianshipList){
+            if(u.getPhoneNumber().equals(userId))
+                return u;
+        }
+        for(User u : Older.friendList){
+            if(u.getPhoneNumber().equals(userId))
+                return u;
+        }
+        return null;
     }
 
     public static String TOPIC_SENSOR_DATA_REPORT = "sensor_data_report";

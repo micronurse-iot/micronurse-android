@@ -36,8 +36,7 @@ public class MicronurseAPI<T extends Result> {
 
     public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
                          final APIErrorListener errorListener, Class<T> resultClass){
-        this(context, apiURL, method, requestData, token, listener, errorListener, resultClass, true,
-                context.getResources().getString(R.string.action_waiting));
+        this(context, apiURL, method, requestData, token, listener, errorListener, resultClass, true, null);
     }
 
     public MicronurseAPI(Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
@@ -102,6 +101,8 @@ public class MicronurseAPI<T extends Result> {
 
         if(showStatus) {
             mStatusDialog = new ProgressDialog(mContext);
+            if(statusText == null)
+                statusText = context.getString(R.string.action_waiting);
             mStatusDialog.setMessage(statusText);
             mStatusDialog.setCancelable(false);
         }
@@ -151,6 +152,10 @@ public class MicronurseAPI<T extends Result> {
     public static class OlderAccountAPI{
         public static String SET_HOME_LOCATION ="account/set_home_address";
         public static String HOME_ADDRESS = "account/home_address/older";
+    }
+
+    public static class OlderFriendJuanAPI{
+        public static String FRIENDSHIP = "friend_juan/friendship";
     }
 
     public static class GuardianAccountAPI{

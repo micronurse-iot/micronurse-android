@@ -66,20 +66,15 @@ public class MessageFragment extends Fragment implements MessageListener {
         }
         viewRoot.findViewById(R.id.txt_no_message).setVisibility(View.GONE);
         for(SessionMessageRecord smr : records){
-            for(User u : GlobalInfo.guardianshipList){
-                if(u.getPhoneNumber().equals(smr.getToUserId())){
-                    List<ChatMessageRecord> chatRecords = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
-                            smr.getToUserId(), new Date(), 1);
-                    if(chatRecords != null && !chatRecords.isEmpty()) {
-                        if (chatRecords.get(0).getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT)) {
-                            sessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
-                                    chatRecords.get(0).getMessageTime(), chatRecords.get(0).getContent(), smr));
-                            break;
-                        }
+            User u = GlobalInfo.findUserById(smr.getToUserId());
+            if(u != null){
+                List<ChatMessageRecord> chatRecords = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
+                        smr.getToUserId(), new Date(), 1);
+                if(chatRecords != null && !chatRecords.isEmpty()) {
+                    if (chatRecords.get(0).getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT)) {
+                        sessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
+                                chatRecords.get(0).getMessageTime(), chatRecords.get(0).getContent(), smr));
                     }
-                    sessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
-                            null, null, smr));
-                    break;
                 }
             }
         }
@@ -182,15 +177,14 @@ public class MessageFragment extends Fragment implements MessageListener {
     }
 
     private void addNewSessionMessage(SessionMessageRecord smr, Date messageTime, String textMessage, boolean sending){
-        for(User u : GlobalInfo.guardianshipList){
-            if(u.getPhoneNumber().equals(smr.getToUserId())){
-                smr.save();
-                sessionList.addFirst(new SessionMessageAdapter.MessageItem(
-                        u.getPortrait(), u.getNickname(), messageTime, textMessage, smr, sending));
-                Collections.sort(sessionList);
-                adapter.notifyDataSetChanged();
-                break;
-            }
+        viewRoot.findViewById(R.id.txt_no_message).setVisibility(View.GONE);
+        User u = GlobalInfo.findUserById(smr.getToUserId());
+        if(u != null){
+            smr.save();
+            sessionList.addFirst(new SessionMessageAdapter.MessageItem(
+                    u.getPortrait(), u.getNickname(), messageTime, textMessage, smr, sending));
+            Collections.sort(sessionList);
+            adapter.notifyDataSetChanged();
         }
     }
 }

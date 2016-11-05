@@ -87,21 +87,19 @@ public class ContactsFragment extends Fragment implements OnBindMQTTServiceListe
         viewRoot.findViewById(R.id.txt_no_contact).setVisibility(View.GONE);
         List<SessionMessageRecord> records = DatabaseUtil.findSessionMessageRecords(GlobalInfo.user.getPhoneNumber());
         for(SessionMessageRecord smr : records){
-            for(User u : GlobalInfo.guardianshipList){
-                if(u.getPhoneNumber().equals(smr.getToUserId())){
-                    List<ChatMessageRecord> chatRecords = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
-                            smr.getToUserId(), new Date(), 1);
-                    if(chatRecords != null && !chatRecords.isEmpty()) {
-                        if (chatRecords.get(0).getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT)) {
-                            contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
-                                    chatRecords.get(0).getMessageTime(), chatRecords.get(0).getContent(), smr));
-                            break;
-                        }
+            User u = GlobalInfo.findUserById(smr.getToUserId());
+            if(u != null){
+                List<ChatMessageRecord> chatRecords = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
+                        smr.getToUserId(), new Date(), 1);
+                if(chatRecords != null && !chatRecords.isEmpty()) {
+                    if (chatRecords.get(0).getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT)) {
+                        contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
+                                chatRecords.get(0).getMessageTime(), chatRecords.get(0).getContent(), smr));
+                        continue;
                     }
-                    contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
-                            null, null, smr));
-                    break;
                 }
+                contactsSessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
+                        null, null, smr));
             }
         }
         for(User u : GlobalInfo.guardianshipList) {

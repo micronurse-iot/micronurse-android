@@ -28,9 +28,8 @@ import org.micronurse.http.MicronurseAPI;
 import org.micronurse.http.model.request.LoginRequest;
 import org.micronurse.http.model.result.LoginResult;
 import org.micronurse.http.model.result.Result;
-import org.micronurse.http.model.result.UserListResult;
-import org.micronurse.http.model.result.UserResult;
 import org.micronurse.http.model.PublicResultCode;
+import org.micronurse.model.User;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.HttpAPIUtil;
@@ -188,65 +187,52 @@ public class LoginActivity extends AppCompatActivity {
         // Kick off a background task to perform the user login attempt.
         LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
         final MicronurseAPI<LoginResult> request = new MicronurseAPI<>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.LOGIN), Request.Method.PUT, loginRequest, null,
-                new Response.Listener<LoginResult>() {
-                    @Override
-                    public void onResponse(LoginResult response) {
-                        GlobalInfo.token = response.getToken();
-                        new MicronurseAPI<UserResult>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.USER_BASIC_INFO_BY_PHONE, phoneNumber), Request.Method.GET, null, null,
-                                new Response.Listener<UserResult>() {
-                                    @Override
-                                    public void onResponse(UserResult response) {
-                                        GlobalInfo.user = response.getUser();
-                                        GlobalInfo.user.setPhoneNumber(phoneNumber);
-                                        loginIntent = new Intent(LoginActivity.this, MainActivity.class);
-                                        new MicronurseAPI<UserListResult>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.GUARDIANSHIP), Request.Method.GET,
-                                                null, GlobalInfo.token, new Response.Listener<UserListResult>() {
-                                            @Override
-                                            public void onResponse(UserListResult response) {
-                                                GlobalInfo.guardianshipList = response.getUserList();
-                                                finish();
-                                                startActivity(loginIntent);
-                                            }
-                                        }, new APIErrorListener() {
-                                            @Override
-                                            public boolean onErrorResponse(VolleyError err, Result result) {
-                                                if(result == null)
-                                                    return false;
-                                                if(result.getResultCode() == PublicResultCode.RESULT_NOT_FOUND){
-                                                    finish();
-                                                    startActivity(loginIntent);
-                                                }else {
-                                                    Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
-                                                }
-                                                return true;
-                                            }
-                                        }, UserListResult.class).startRequest();
-                                    }
-                                }, new APIErrorListener() {
-                            @Override
-                            public boolean onErrorResponse(VolleyError err, Result result) {
-                                Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
-                                return true;
+            new Response.Listener<LoginResult>() {
+                @Override
+                public void onResponse(LoginResult response) {
+                    GlobalInfo.token = response.getToken();
+                    HttpAPIUtil.finishLogin(LoginActivity.this, phoneNumber, new Response.Listener<Result>() {
+                        @Override
+                        public void onResponse(Result response) {
+                            loginIntent = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(loginIntent);
+                            finish();
+                        }
+                    }, new APIErrorListener() {
+                        @Override
+                        public boolean onErrorResponse(VolleyError err, Result result) {
+                            if(result == null)
+                                return false;
+                            if(GlobalInfo.user != null){
+                                if((GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER && result.getResultCode() == PublicResultCode.MOBILE_FRIEND_JUAN_NO_FRIENDSHIP) ||
+                                        (GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN && result.getResultCode() == PublicResultCode.GUARDIANSHIP_NOT_EXIST)) {
+                                    finish();
+                                    startActivity(loginIntent);
+                                    return true;
+                                }
                             }
-                        }, UserResult.class).startRequest();
-                    }
-                }, new APIErrorListener() {
-            @Override
-            public boolean onErrorResponse(VolleyError error, Result result) {
-                if (result == null)
-                    return false;
-                switch (result.getResultCode()) {
-                    case PublicResultCode.LOGIN_USER_NOT_EXIST:
-                        mPhoneNumberView.setError(result.getMessage());
-                        mPhoneNumberView.requestFocus();
-                        return true;
-                    case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
-                        mPasswordView.setError(result.getMessage());
-                        mPasswordView.requestFocus();
-                        return true;
+                            Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
+                            return true;
+                        }
+                    }, true);
                 }
-                return false;
-            }
+            }, new APIErrorListener() {
+                @Override
+                public boolean onErrorResponse(VolleyError error, Result result) {
+                    if (result == null)
+                        return false;
+                    switch (result.getResultCode()) {
+                        case PublicResultCode.LOGIN_USER_NOT_EXIST:
+                            mPhoneNumberView.setError(result.getMessage());
+                            mPhoneNumberView.requestFocus();
+                            return true;
+                        case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
+                            mPasswordView.setError(result.getMessage());
+                            mPasswordView.requestFocus();
+                            return true;
+                    }
+                    return false;
+                }
         }, LoginResult.class, true, getString(R.string.action_logining));
         request.startRequest();
     }

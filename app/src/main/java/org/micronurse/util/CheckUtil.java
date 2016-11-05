@@ -241,111 +241,33 @@ public class CheckUtil {
     }
 
     public static int checkFamilySafetyLevel(@Nullable List<Thermometer> thermometer, @Nullable List<Humidometer> humidometer, @Nullable List<SmokeTransducer> smokeTransducer){
-        //TODO: Check the family safety level.
-        int tempThermometerResult1 = SAFETY_LEVEL_SAFE;
-        int tempThermometerResult2 = SAFETY_LEVEL_SAFE;
-        int tempResult1 = SAFETY_LEVEL_SAFE;
+        int result = SAFETY_LEVEL_UNKNOWN;
 
-        if(thermometer == null || thermometer.isEmpty())
-        {
-            tempResult1 = SAFETY_LEVEL_UNKNOWN;
-        }
-        else{
-            for(int i = 0; i < thermometer.size(); i++){
-                tempThermometerResult1 = checkSafetyLevel(thermometer.get(i));
-                if(tempThermometerResult1 == SAFETY_LEVEL_DANGER)
-                    break;
-                if(tempThermometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER){
-                    for(int j = i+1; j < thermometer.size(); j++){
-                        tempThermometerResult2 = checkSafetyLevel(thermometer.get(j));
-                        if(tempThermometerResult2 == SAFETY_LEVEL_DANGER)
-                            break;
-                    }
-                    break;
-                }
+        if(thermometer != null){
+            for(Thermometer t : thermometer){
+                result = checkSafetyLevel(t);
+                if(result == SAFETY_LEVEL_HIDDEN_IN_DANGER || result == SAFETY_LEVEL_DANGER)
+                    return result;
             }
-
-            if(tempThermometerResult1 == SAFETY_LEVEL_DANGER || (tempThermometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempThermometerResult2 == SAFETY_LEVEL_DANGER))
-                tempResult1 = SAFETY_LEVEL_DANGER;
-            if(tempThermometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempThermometerResult2 != SAFETY_LEVEL_DANGER)
-                tempResult1 = SAFETY_LEVEL_HIDDEN_IN_DANGER;
-            if(tempThermometerResult1 == SAFETY_LEVEL_SAFE)
-                tempResult1 = SAFETY_LEVEL_SAFE;
         }
 
-
-
-        int tempHumidometerResult1 = SAFETY_LEVEL_SAFE;
-        int tempHumidometerResult2 = SAFETY_LEVEL_SAFE;
-        int tempResult2 = SAFETY_LEVEL_SAFE;
-
-        if(humidometer == null || humidometer.isEmpty()){
-            tempResult2 = SAFETY_LEVEL_UNKNOWN;
-        }
-        else{
-            for(int i = 0; i < humidometer.size(); i++){
-                tempHumidometerResult1 = checkSafetyLevel(humidometer.get(i));
-                if(tempHumidometerResult1 == SAFETY_LEVEL_DANGER)
-                    break;
-                if(tempHumidometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER){
-                    for(int j = i+1; j < humidometer.size(); j++){
-                        tempHumidometerResult2 = checkSafetyLevel(humidometer.get(j));
-                        if(tempHumidometerResult2 == SAFETY_LEVEL_DANGER)
-                            break;
-                    }
-                    break;
-                }
+        if(humidometer != null){
+            for(Humidometer h : humidometer){
+                result = checkSafetyLevel(h);
+                if(result == SAFETY_LEVEL_HIDDEN_IN_DANGER || result == SAFETY_LEVEL_DANGER)
+                    return result;
             }
-
-            if(tempHumidometerResult1 == SAFETY_LEVEL_DANGER || (tempHumidometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempHumidometerResult2 == SAFETY_LEVEL_DANGER))
-                tempResult2 = SAFETY_LEVEL_DANGER;
-            if(tempHumidometerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempHumidometerResult2 != SAFETY_LEVEL_DANGER)
-                tempResult2 = SAFETY_LEVEL_HIDDEN_IN_DANGER;
-            if(tempHumidometerResult1 == SAFETY_LEVEL_SAFE)
-                tempResult2 = SAFETY_LEVEL_SAFE;
         }
 
-
-        int tempSmokeTransducerResult1 = SAFETY_LEVEL_SAFE;
-        int tempSmokeTransducerResult2 = SAFETY_LEVEL_SAFE;
-        int tempResult3 = SAFETY_LEVEL_SAFE;
-
-        if(smokeTransducer == null || smokeTransducer.isEmpty()){
-            tempResult3 = SAFETY_LEVEL_UNKNOWN;
-        }
-        else{
-            for(int i = 0; i < smokeTransducer.size(); i++){
-                tempSmokeTransducerResult1 = checkSafetyLevel(smokeTransducer.get(i));
-                if(tempSmokeTransducerResult1 == SAFETY_LEVEL_DANGER)
-                    break;
-                if(tempSmokeTransducerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER){
-                    for(int j = i+1; j < smokeTransducer.size(); j++){
-                        tempSmokeTransducerResult2 = checkSafetyLevel(smokeTransducer.get(j));
-                        if(tempSmokeTransducerResult2 == SAFETY_LEVEL_DANGER)
-                            break;
-                    }
-                    break;
-                }
+        if(smokeTransducer != null){
+            for(SmokeTransducer st : smokeTransducer){
+                result = checkSafetyLevel(st);
+                if(result == SAFETY_LEVEL_HIDDEN_IN_DANGER || result == SAFETY_LEVEL_DANGER)
+                    return result;
             }
-
-            if(tempSmokeTransducerResult1 == SAFETY_LEVEL_DANGER || (tempSmokeTransducerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempSmokeTransducerResult2 == SAFETY_LEVEL_DANGER))
-                tempResult3 = SAFETY_LEVEL_DANGER;
-            if(tempSmokeTransducerResult1 == SAFETY_LEVEL_HIDDEN_IN_DANGER && tempSmokeTransducerResult2 != SAFETY_LEVEL_DANGER)
-                tempResult3 = SAFETY_LEVEL_HIDDEN_IN_DANGER;
-            if(tempSmokeTransducerResult1 == SAFETY_LEVEL_SAFE)
-                tempResult3 = SAFETY_LEVEL_SAFE;
         }
 
-
-
-        if(tempResult1 == SAFETY_LEVEL_DANGER || tempResult2 == SAFETY_LEVEL_DANGER || tempResult3 == SAFETY_LEVEL_DANGER)
-            return SAFETY_LEVEL_DANGER;
-        else if(tempResult1 == SAFETY_LEVEL_SAFE && tempResult2 == SAFETY_LEVEL_SAFE && tempResult3 == SAFETY_LEVEL_SAFE)
-            return SAFETY_LEVEL_SAFE;
-        else if(tempResult1 == SAFETY_LEVEL_UNKNOWN || tempResult2 == SAFETY_LEVEL_UNKNOWN || tempResult3 == SAFETY_LEVEL_UNKNOWN)
-            return SAFETY_LEVEL_UNKNOWN;
-        else
-            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
+        return result;
     }
 
     public static int checkFamilySafetyLevel(TextView tv, View bgView, @Nullable List<Thermometer> thermometer, @Nullable List<Humidometer> humidometer, @Nullable List<SmokeTransducer> smokeTransducer){
@@ -369,26 +291,26 @@ public class CheckUtil {
     }
 
     public static int checkHealthSafetyLevel(@Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer, @Nullable Turgoscope turgoscope){
-        //TODO: Check the health safety level
-        int feverThermometerResult = SAFETY_LEVEL_SAFE;
-        int pulseTransducerResult = SAFETY_LEVEL_SAFE;
-        int turgoscopeResult = SAFETY_LEVEL_SAFE;
-
-        if(feverThermometer == null || pulseTransducer == null || turgoscope == null){
-            return SAFETY_LEVEL_UNKNOWN;
+        int result = SAFETY_LEVEL_UNKNOWN;
+        if(feverThermometer != null){
+            result = checkSafetyLevel(feverThermometer);
+            if(result == SAFETY_LEVEL_HIDDEN_IN_DANGER || result == SAFETY_LEVEL_DANGER)
+                return result;
         }
-        else{
-            feverThermometerResult = checkSafetyLevel(feverThermometer);
-            pulseTransducerResult = checkSafetyLevel(pulseTransducer);
-            turgoscopeResult = checkSafetyLevel(turgoscope);
 
-            if(feverThermometerResult == SAFETY_LEVEL_DANGER || pulseTransducerResult == SAFETY_LEVEL_DANGER || turgoscopeResult == SAFETY_LEVEL_DANGER)
-                return SAFETY_LEVEL_DANGER;
-            else if(feverThermometerResult == SAFETY_LEVEL_SAFE && pulseTransducerResult == SAFETY_LEVEL_SAFE && turgoscopeResult == SAFETY_LEVEL_SAFE)
-                return SAFETY_LEVEL_SAFE;
-            else
-                return SAFETY_LEVEL_HIDDEN_IN_DANGER;
+        if(pulseTransducer != null){
+            result = checkSafetyLevel(pulseTransducer);
+            if(result == SAFETY_LEVEL_HIDDEN_IN_DANGER || result == SAFETY_LEVEL_DANGER)
+                return result;
         }
+
+        if(turgoscope != null){
+            result = checkSafetyLevel(turgoscope);
+            if(result == SAFETY_LEVEL_HIDDEN_IN_DANGER || result == SAFETY_LEVEL_DANGER)
+                return result;
+        }
+
+        return result;
 
     }
 
