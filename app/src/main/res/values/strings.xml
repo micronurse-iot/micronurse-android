@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Micro Nurse</string>
+    <string name="app_name">微保姆</string>
 
     <!-- Strings related to login-->
     <string name="prompt_phone_number">手机号</string>
@@ -60,6 +60,7 @@
     <string name="action_guard_thief_monitor">防盗</string>
     <string name="action_health_monitor">身体健康</string>
     <string name="action_going_out_monitor">出行</string>
+    <string name="action_call_for_help">一键呼救</string>
 
     <string name="no_data">暂时没有数据</string>
     <string name="update_time">更新时间：</string>
@@ -102,7 +103,7 @@
 
     <string name="friend_message">消息</string>
     <string name="friend_contacts">联系人</string>
-    <string name="friend_share">分享</string>
+    <string name="friend_moment">动态</string>
 
     <string name="no_contacts">暂无联系人</string>
     <string name="no_message">暂时没有消息</string>
@@ -130,6 +131,21 @@
     <string name="action_save_home_location">正在保存……</string>
     <string name="action_search">搜索</string>
     <string name="action_save">保存</string>
-    <string name="action_release">发布</string>
-    <string name="show_news">发布朋友圈</string>
+
+    <string name="action_confirm">确定</string>
+    <string name="action_cancel_dialog">取消</string>
+    <string name="medicine_name">药名</string>
+    <string name="medicine_usage">用法及用量</string>
+    <string name="action_clock_cancel">闹钟已取消</string>
+    <string name="action_set_clock">设置闹钟时间为</string>
+
+    <string name="action_post_new_moment">发布新动态</string>
+    <string name="no_moment">暂无动态</string>
+    <string name="prompt_say_something">说点什么吧^_^</string>
+    <string name="action_posting_moment">正在上传……</string>
+    <string name="post_moment_successfully">发布动态成功</string>
+
+    <string name="no_location_provider">无法获取位置，请检查您是否打开了位置服务</string>
+    <string name="no_location_permission">本应用需要位置权限来获取您的实时位置，请您退出本应用并授予权限后再重启本应用</string>
+    <string name="xlabel">\n\n时间</string>
 </resources>

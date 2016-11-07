@@ -63,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
-
+        loginIntent = new Intent(LoginActivity.this, MainActivity.class);
         mPortraitImageView = (ImageView) findViewById(R.id.login_portrait);
 
         final List<LoginUserRecord> loginUserRecords = new Select().from(LoginUserRecord.class)
@@ -194,7 +194,6 @@ public class LoginActivity extends AppCompatActivity {
                     HttpAPIUtil.finishLogin(LoginActivity.this, phoneNumber, new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {
-                            loginIntent = new Intent(LoginActivity.this, MainActivity.class);
                             startActivity(loginIntent);
                             finish();
                         }
@@ -204,7 +203,7 @@ public class LoginActivity extends AppCompatActivity {
                             if(result == null)
                                 return false;
                             if(GlobalInfo.user != null){
-                                if((GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER && result.getResultCode() == PublicResultCode.MOBILE_FRIEND_JUAN_NO_FRIENDSHIP) ||
+                                if((GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER && result.getResultCode() == PublicResultCode.FRIEND_JUAN_NO_FRIENDSHIP) ||
                                         (GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN && result.getResultCode() == PublicResultCode.GUARDIANSHIP_NOT_EXIST)) {
                                     finish();
                                     startActivity(loginIntent);

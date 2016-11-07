@@ -62,7 +62,7 @@ public class WelcomeActivity extends AppCompatActivity {
                                 public boolean onErrorResponse(VolleyError err, Result result) {
                                     if(result != null) {
                                         if(GlobalInfo.user != null){
-                                            if((GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER && result.getResultCode() == PublicResultCode.MOBILE_FRIEND_JUAN_NO_FRIENDSHIP) ||
+                                            if((GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER && result.getResultCode() == PublicResultCode.FRIEND_JUAN_NO_FRIENDSHIP) ||
                                                     (GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN && result.getResultCode() == PublicResultCode.GUARDIANSHIP_NOT_EXIST)) {
                                                 finish();
                                                 startActivity(loginIntent);

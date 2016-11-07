@@ -1,8 +1,14 @@
 package org.micronurse.util;
 
+import android.content.Context;
+import android.content.Intent;
+
 import org.micronurse.database.model.ChatMessageRecord;
 import org.micronurse.database.model.SessionMessageRecord;
 import org.micronurse.model.User;
+import org.micronurse.service.EmergencyCallService;
+import org.micronurse.service.LocationService;
+import org.micronurse.service.MQTTService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +44,23 @@ public class GlobalInfo {
         Older.friendList.clear();
     }
 
+    public static void exitLoginStatus(Context context){
+        Intent intent = new Intent();
+        if(user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
+            intent.setClass(context, LocationService.class);
+            context.stopService(intent);
+            intent.setClass(context, EmergencyCallService.class);
+            context.stopService(intent);
+        }
+
+        intent.setClass(context, MQTTService.class);
+        context.stopService(intent);
+        clearLoginUserInfo();
+    }
+
     public static User findUserById(String userId){
+        if(user.getPhoneNumber().equals(userId))
+            return user;
         for(User u : guardianshipList){
             if(u.getPhoneNumber().equals(userId))
                 return u;

@@ -168,7 +168,6 @@ public class MonitorDetailActivity extends AppCompatActivity {
             return;
         txtDataTime.setText(DateTimeUtil.convertTimestamp(MonitorDetailActivity.this, dataList.get(0).getTimestamp()));
 
-        //TODO: Update chart.
         if (pointNum > 0) {
             mAxisXValues.clear();
             mPointValues.clear();
@@ -185,7 +184,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((Thermometer) dataList.get(pointNum - i - 1)).getTemperature()));
                 }
-                initLineChart(name, getString(R.string.temperature_unit),R.color.orange_500, -100, 100);
+                initLineChart("  ",R.color.orange_500);
                 break;
             case Sensor.SENSOR_TYPE_HUMIDOMETER:
                 txtData.setText(String.valueOf(((Humidometer)dataList.get(0)).getHumidity()) + '%');
@@ -193,7 +192,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((Humidometer) dataList.get(pointNum - i - 1)).getHumidity()));
                 }
-                initLineChart(name, getString(R.string.humidity_unit),R.color.orange_500, 0, 100);
+                initLineChart(getString(R.string.humidity_unit),R.color.orange_500);
                 break;
             case Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER:
                 txtData.setText(String.valueOf(((SmokeTransducer)dataList.get(0)).getSmoke()) + "ppm");
@@ -201,7 +200,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((SmokeTransducer) dataList.get(pointNum - i - 1)).getSmoke()));
                 }
-                initLineChart(((SmokeTransducer) dataList.get(0)).getName(), getString(R.string.smoke), R.color.orange_500, 0, 10000);
+                initLineChart( getString(R.string.smoke), R.color.orange_500);
                 break;
             case Sensor.SENSOR_TYPE_FEVER_THERMOMETER:
                 txtData.setText(String.valueOf(((FeverThermometer)dataList.get(0)).getTemperature()) + "°C");
@@ -209,7 +208,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((FeverThermometer) dataList.get(pointNum - i - 1)).getTemperature()));
                 }
-                initLineChart(getString(R.string.fever), getString(R.string.temperature_unit), R.color.orange_500, 20, 50);
+                initLineChart("  ", R.color.orange_500);
                 break;
             case Sensor.SENSOR_TYPE_PULSE_TRANSDUCER:
                 txtData.setText(String.valueOf(((PulseTransducer)dataList.get(0)).getPulse()) + "bpm");
@@ -217,7 +216,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((PulseTransducer) dataList.get(pointNum - i - 1)).getPulse()));
                 }
-                initLineChart(getString(R.string.pulse),getString(R.string.pulse_unit) , R.color.orange_500, 0, 100);
+                initLineChart(getString(R.string.pulse_unit) , R.color.orange_500);
                 break;
             case Sensor.SENSOR_TYPE_TURGOSCOPE:
                 txtData.setText(String.valueOf(((Turgoscope)dataList.get(0)).getLowBloodPressure()) + '/' +
@@ -226,12 +225,12 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((Turgoscope) dataList.get(pointNum - i - 1)).getHighBloodPressure()));
                 }
-                initLineChart(getString(R.string.blood_pressure),getString(R.string.high_low_blood_pleasure), R.color.orange_500, 0, 200);
+                initLineChart(getString(R.string.high_low_blood_pleasure), R.color.orange_500);
                 //mPointValues.clear();
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((Turgoscope) dataList.get(pointNum - i - 1)).getLowBloodPressure()));
                 }
-                initLineChart(getString(R.string.blood_pressure), getString(R.string.high_low_blood_pleasure), R.color.blue_500, 0, 200);
+                initLineChart(getString(R.string.high_low_blood_pleasure), R.color.blue_500);
                 break;
         }
 
@@ -249,7 +248,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
     }
 
 
-    private void initLineChart(String tableName, String yName, int color, int minYValue, int maxYValue) {
+    private void initLineChart(String yName, int color) {
         Line line = new Line(mPointValues).setColor(color);
         List<Line> lines = new ArrayList<Line>();
         line.setShape(ValueShape.CIRCLE);
@@ -267,7 +266,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
         Axis axisX = new Axis(); //X轴
         axisX.setHasTiltedLabels(false);  //X坐标轴字体是斜的显示还是直的，true是斜的显示
         axisX.setTextColor(Color.BLUE);  //设置字体颜色
-        axisX.setName("\n\n\n\n\n"+ tableName);  //表格名称
+        axisX.setName("\n\n时间");  //表格名称
         axisX.setTextSize(15);//设置字体大小
         axisX.setMaxLabelChars(15); //最多几个X轴坐标，意思就是你的缩放让X轴上数据的个数7<=x<=mAxisXValues.length
         axisX.setValues(mAxisXValues);  //填充X轴的坐标名称
@@ -279,16 +278,8 @@ public class MonitorDetailActivity extends AppCompatActivity {
         axisY.setTextSize(15);//设置字体大小
         axisY.setTextColor(Color.BLUE);
         data.setAxisYLeft(axisY);  //Y轴设置在左边
-        List<AxisValue> values = new ArrayList<>();
-        int unit = (int)(maxYValue-minYValue)/10;
-        for(int i = minYValue; i < maxYValue; i+= unit){
-            AxisValue value = new AxisValue(i);
-            String label = "";
-            value.setLabel(label);
-            values.add(value);
-        }
-        axisY.setValues(values);
 
+        axisY.setHasLines(true);
 
         lineChart.setInteractive(true);
         lineChart.setZoomType(ZoomType.HORIZONTAL);

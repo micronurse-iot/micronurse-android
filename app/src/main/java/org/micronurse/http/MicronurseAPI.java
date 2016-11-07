@@ -39,7 +39,7 @@ public class MicronurseAPI<T extends Result> {
         this(context, apiURL, method, requestData, token, listener, errorListener, resultClass, true, null);
     }
 
-    public MicronurseAPI(Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
+    public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
                          final APIErrorListener errorListener, Class<T> resultClass, boolean showStatus, String statusText){
         this.mContext = context;
         if(requestQueue == null)
@@ -84,10 +84,8 @@ public class MicronurseAPI<T extends Result> {
                                     lur.setToken(null);
                                     lur.save();
                                 }
-                                Intent mqttServiceIntent = new Intent(mContext, MQTTService.class);
-                                mContext.stopService(mqttServiceIntent);
+                               GlobalInfo.exitLoginStatus(context);
                             }
-                            GlobalInfo.clearLoginUserInfo();
                             mContext.startActivity(intent);
                         } else if (error.networkResponse.statusCode == 500) {
                             showError(mContext.getString(R.string.server_internal_error));
@@ -149,6 +147,7 @@ public class MicronurseAPI<T extends Result> {
         public static String GUARDIANSHIP = "account/guardianship";
     }
 
+
     public static class OlderAccountAPI{
         public static String SET_HOME_LOCATION ="account/set_home_address";
         public static String HOME_ADDRESS = "account/home_address/older";
@@ -156,6 +155,8 @@ public class MicronurseAPI<T extends Result> {
 
     public static class OlderFriendJuanAPI{
         public static String FRIENDSHIP = "friend_juan/friendship";
+        public static String FRIEND_MOMENT ="friend_juan/moment";
+        public static String POST_FRIEND_MOMENT = "friend_juan/post_moment";
     }
 
     public static class GuardianAccountAPI{

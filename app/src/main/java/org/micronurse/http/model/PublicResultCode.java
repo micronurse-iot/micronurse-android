@@ -7,7 +7,7 @@ package org.micronurse.http.model;
 public class PublicResultCode {
     public static final int LOGIN_USER_NOT_EXIST = 200001;
     public static final int LOGIN_INCORRECT_PASSWORD = 200002;
-    public static final int USER_INFO_NOT_FOUND = 200003;
+    public static final int RESULT_NOT_FOUND = 200003;
 
     public static final int PHONE_NUM_INVALID = 200004;
     public static final int PHONE_NUM_REGISTERED = 200005;
@@ -30,5 +30,7 @@ public class PublicResultCode {
     public static final int HOME_ADDRESS_NOT_EXIST = 200203;
     public static final int HOME_ADDRESS_ILLEGAL = 200204;
 
-    public static final int MOBILE_FRIEND_JUAN_NO_FRIENDSHIP = 200302;
+    public static final int FRIEND_JUAN_NO_MOMENT=200301;
+    public static final int FRIEND_JUAN_NO_FRIENDSHIP = 200302;
+    public static final int FRIEND_JUAN_EMPTY_MOMENT = 200303;
 }

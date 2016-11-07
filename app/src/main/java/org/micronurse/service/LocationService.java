@@ -76,6 +76,8 @@ public class LocationService extends Service implements BDLocationListener {
     }
 
     private void sendLocation(double longitude, double latitude) {
+        longitude = 109.625072199243;
+        latitude = 23.0599510614102;
         RawSensorData sensorData = new RawSensorData(Sensor.SENSOR_TYPE_GPS, System.currentTimeMillis(),
                 String.valueOf(longitude) + ',' + String.valueOf(latitude));
         String message = GsonUtil.getGson().toJson(sensorData);

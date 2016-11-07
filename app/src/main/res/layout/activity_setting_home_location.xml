@@ -57,7 +57,7 @@
                         android:layout_centerVertical="true"
                         android:layout_marginRight="@dimen/item_padding"
                         android:tint="@color/indigo_500"
-                        app:srcCompat="@drawable/ic_home_32dp" />
+                        app:srcCompat="@drawable/ic_home_indigo_32dp" />
                     <EditText
                         android:id="@+id/txt_city"
                         android:layout_width="wrap_content"

@@ -18,17 +18,14 @@ import com.google.gson.JsonSyntaxException;
 
 import org.micronurse.Application;
 import org.micronurse.R;
-import org.micronurse.adapter.SessionMessageAdapter;
 import org.micronurse.database.model.ChatMessageRecord;
-import org.micronurse.database.model.SessionMessageRecord;
 import org.micronurse.model.User;
 import org.micronurse.service.MQTTService;
 import org.micronurse.ui.fragment.older.friendjuan.FriendContactsFragment;
 import org.micronurse.ui.fragment.older.friendjuan.MessageFragment;
-import org.micronurse.ui.fragment.older.friendjuan.ShareFragment;
+import org.micronurse.ui.fragment.older.friendjuan.MomentFragment;
 import org.micronurse.ui.listener.MessageListener;
 import org.micronurse.ui.listener.OnBindMQTTServiceListener;
-import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 
@@ -57,7 +54,7 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
         fragment.friendJuanPages = new Fragment[]{
                 MessageFragment.getInstance(context),
                 FriendContactsFragment.getInstance(context),
-                ShareFragment.getInstance(context)
+                MomentFragment.getInstance(context)
         };
         IntentFilter filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_RECEIVED);
         filter.addCategory(context.getPackageName());
@@ -92,11 +89,11 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
         pageTitles = new String[]{
                 getString(R.string.friend_message),
                 getString(R.string.friend_contacts),
-                getString(R.string.friend_share)
+                getString(R.string.friend_moment)
         };
         if(friendJuanPages == null){
             friendJuanPages = new Fragment[]{
-                new MessageFragment(), new FriendContactsFragment(), new ShareFragment()
+                new MessageFragment(), new FriendContactsFragment(), new MomentFragment()
             };
         }
         viewRoot = inflater.inflate(R.layout.fragment_older_friend_juan, container, false);

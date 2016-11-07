@@ -21,3 +21,7 @@
 -keep class com.baidu.** {*;}
 -keep class vi.com.** {*;}
 -dontwarn com.baidu.**
+
+#LRecyclerview_library
+-dontwarn com.github.jdsjlzx.**
+-keep class com.github.jdsjlzx.**{*;}

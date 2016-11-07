@@ -51,6 +51,7 @@ dependencies {
             'me.himanshusoni.chatmessageview:chat-message-view:1.0.3',
             'com.rengwuxian.materialedittext:library:2.1.4',
             'com.github.nekocode:Badge:1.6.2',
+            'com.github.jdsjlzx:LRecyclerView:1.2.5',
             'org.eclipse.paho:org.eclipse.paho.client.mqttv3:+',
     )
     compile 'com.android.support:support-v4:23.3.0'

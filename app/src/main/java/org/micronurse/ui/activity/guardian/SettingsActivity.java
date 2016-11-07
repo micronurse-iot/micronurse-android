@@ -53,15 +53,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         intent.putExtra(LoginActivity.BUNDLE_PREFER_PHONE_NUMBER_KEY, GlobalInfo.user.getPhoneNumber());
 
-        Intent mqttServiceIntent = new Intent(this, MQTTService.class);
-        stopService(mqttServiceIntent);
-
         LoginUserRecord lur = DatabaseUtil.findLoginUserRecord(GlobalInfo.user.getPhoneNumber());
         if(lur != null) {
             lur.setToken(null);
             lur.save();
         }
-        GlobalInfo.clearLoginUserInfo();
+        GlobalInfo.exitLoginStatus(this);
         startActivity(intent);
     }
 

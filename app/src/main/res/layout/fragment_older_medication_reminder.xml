@@ -4,69 +4,11 @@
     android:layout_height="match_parent"
     tools:context=".ui.fragment.older.MedicationReminderFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:id="@+id/txt_no_data"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:drawableLeft="@drawable/ic_info_outline_48dp"
-        android:layout_centerInParent="true"
-        android:gravity="center"
-        android:textSize="@dimen/large_text_size"
-        android:text="@string/no_data"/>
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipeLayout"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/medicine_data_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <LinearLayout
-                android:id="@+id/medicine_data_area"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <android.support.design.widget.AppBarLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:id="@+id/medicine_tips_area"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/safe_level_size"
-                        android:orientation="horizontal"
-                        android:visibility="visible"
-                        android:background="@color/green_500"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/action_medication_reminder"
-                            android:gravity="center_vertical"
-                            android:textColor="@android:color/white"
-                            android:textSize="@dimen/xlarge_text_size"
-                            android:textStyle="bold"
-                            android:layout_marginRight="@dimen/activity_horizontal_margin"/>
-
-                    </LinearLayout>
-                </android.support.design.widget.AppBarLayout>
-
-                <android.support.v7.widget.RecyclerView
-                    android:id="@+id/medicine_data_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"/>
-
-            </LinearLayout>
-
-        </ScrollView>
-    </android.support.v4.widget.SwipeRefreshLayout>
-
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"/>
+        
 </RelativeLayout>

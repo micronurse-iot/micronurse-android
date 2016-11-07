@@ -281,12 +281,7 @@ public class MainActivity extends AppCompatActivity
                         .setPositiveButton(R.string.action_ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                //TODO:do something before exit
-                                if(locationServiceIntent != null)
-                                    stopService(locationServiceIntent);
-                                if(emergencyCallServiceIntent != null)
-                                    stopService(emergencyCallServiceIntent);
-                                stopService(mqttServiceIntent);
+                                GlobalInfo.exitLoginStatus(MainActivity.this);
                                 finish();
                             }
                         }).setNegativeButton(R.string.action_cancel, null).create();

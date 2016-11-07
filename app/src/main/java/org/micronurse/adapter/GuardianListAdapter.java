@@ -16,12 +16,12 @@ import android.widget.TextView;
 import org.micronurse.R;
 import java.util.List;
 
-public class GuardianListsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class GuardianListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<User> dataList;
     private Context context;
     private OnItemClickListener listener;
 
-    public GuardianListsAdapter(Context context, List<User> dataList) {
+    public GuardianListAdapter(Context context, List<User> dataList) {
         this.context = context;
         this.dataList = dataList;
     }
