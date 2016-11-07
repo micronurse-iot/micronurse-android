@@ -32,6 +32,7 @@ public class WelcomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
+        loginIntent = new Intent(WelcomeActivity.this, MainActivity.class);
 
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -53,7 +54,6 @@ public class WelcomeActivity extends AppCompatActivity {
                             HttpAPIUtil.finishLogin(WelcomeActivity.this, loginUserRecord.getPhoneNumber(), new Response.Listener<Result>() {
                                 @Override
                                 public void onResponse(Result response) {
-                                    loginIntent = new Intent(WelcomeActivity.this, MainActivity.class);
                                     finish();
                                     startActivity(loginIntent);
                                 }
