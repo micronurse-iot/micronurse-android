@@ -142,6 +142,7 @@
 
     <string name="action_post_new_moment">发布新动态</string>
     <string name="no_moment">暂无动态</string>
+    <string name="reload_on_network_error">加载出错，点击重新加载</string>
     <string name="prompt_say_something">说点什么吧^_^</string>
     <string name="action_posting_moment">正在上传……</string>
     <string name="post_moment_successfully">发布动态成功</string>

@@ -107,14 +107,13 @@ public class MomentFragment extends Fragment {
             public void onScrollStateChanged(int i) {}
         });
 
-        getMomentList(false);
+        momentListView.forceToRefresh();
         return viewRoot;
     }
 
     private void getMomentList(final boolean downloadMore){
         if(downloadMore) {
             RecyclerViewStateUtils.setFooterViewState(momentListView, LoadingFooter.State.Loading);
-            momentListView.forceToRefresh();
         } else {
             endTime.setTimeInMillis(System.currentTimeMillis());
         }
@@ -133,11 +132,11 @@ public class MomentFragment extends Fragment {
                 }else{
                     momentList.addAll(response.getMomentList());
                     mLRecyclerViewAdapter.notifyItemInserted(momentList.size() - 1);
-                    if(response.getMomentList().size() < MAX_MOMENT_NUM)
-                        RecyclerViewStateUtils.setFooterViewState(momentListView, LoadingFooter.State.TheEnd);
-                    else
-                        RecyclerViewStateUtils.setFooterViewState(momentListView, LoadingFooter.State.Normal);
                 }
+                if(response.getMomentList().size() < MAX_MOMENT_NUM)
+                    RecyclerViewStateUtils.setFooterViewState(momentListView, LoadingFooter.State.TheEnd);
+                else
+                    RecyclerViewStateUtils.setFooterViewState(momentListView, LoadingFooter.State.Normal);
                 endTime.setTimeInMillis(momentList.get(momentList.size() - 1).getTimestamp() - 1);
             }
         }, new APIErrorListener() {
@@ -146,17 +145,15 @@ public class MomentFragment extends Fragment {
                 if(!downloadMore)
                     momentListView.refreshComplete();
                 if(result != null && result.getResultCode() == PublicResultCode.FRIEND_JUAN_NO_MOMENT){
-                    if(downloadMore)
-                        RecyclerViewStateUtils.setFooterViewState(momentListView, LoadingFooter.State.TheEnd);
+                    RecyclerViewStateUtils.setFooterViewState(momentListView, LoadingFooter.State.TheEnd);
                     return true;
                 }else{
-                    if(downloadMore)
-                        RecyclerViewStateUtils.setFooterViewState(getActivity(), momentListView, momentList.size(), LoadingFooter.State.NetWorkError, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                getMomentList(true);
-                            }
-                        });
+                    RecyclerViewStateUtils.setFooterViewState(getActivity(), momentListView, momentList.size(), LoadingFooter.State.NetWorkError, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            getMomentList(true);
+                        }
+                    });
                 }
                 return false;
             }
