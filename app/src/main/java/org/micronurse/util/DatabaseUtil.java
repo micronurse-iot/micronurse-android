@@ -5,6 +5,7 @@ import com.activeandroid.query.Select;
 import org.micronurse.database.model.ChatMessageRecord;
 import org.micronurse.database.model.Guardianship;
 import org.micronurse.database.model.LoginUserRecord;
+import org.micronurse.database.model.MedicationReminder;
 import org.micronurse.database.model.SessionMessageRecord;
 import org.micronurse.model.User;
 
@@ -65,6 +66,19 @@ public class DatabaseUtil {
         return new Select().from(SessionMessageRecord.class)
                 .where("FromUserId=?", fromUserId)
                 .where("ToUserId=?", toUserId)
+                .executeSingle();
+    }
+
+    public static List<MedicationReminder> findMedicationRemindersByUserId(String userId){
+        return new Select().from(MedicationReminder.class)
+                .where("UserId=?", userId)
+                .orderBy("AddTime DESC")
+                .execute();
+    }
+
+    public static MedicationReminder findMedicationReminderById(long id){
+        return new Select().from(MedicationReminder.class)
+                .where("Id=?", id)
                 .executeSingle();
     }
 }

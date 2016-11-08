@@ -1,24 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-
-    <View android:id="@+id/medication_timeline_divider"
-        android:layout_width="2dp"
-        android:layout_height="@dimen/timeline_height"
-        android:background="@color/indigo_500"
-        android:layout_marginLeft="15dp"
-        android:visibility="gone"/>
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <android.support.v7.widget.CardView
         android:id="@+id/medicine_data_item_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/item_padding"
-        android:clickable="true"
+        android:layout_marginLeft="@dimen/item_padding"
+        android:layout_marginBottom="@dimen/item_padding"
+        android:layout_marginRight="@dimen/item_padding"
         android:layout_toRightOf="@+id/timeline_divider"
-        android:layout_centerVertical="true"
-        android:foreground="?attr/selectableItemBackground">
+        android:clickable="false">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -26,58 +20,146 @@
             android:padding="@dimen/item_padding"
             android:orientation="vertical">
 
-            <TextView
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/item_padding">
+
+                <TextView
+                    android:id="@+id/reminder_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="@dimen/xxlarge_text_size"
+                    android:textColor="@color/pink_500"
+                    android:textStyle="bold"
+                    android:layout_centerVertical="true"
+                    android:text="8:00"/>
+
+                <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/reminder_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    app:switchMinWidth="@dimen/switch_width"/>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/item_padding">
+
+                <ToggleButton
+                    android:tag="btn_weekday_1"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:background="@drawable/btn_weekday_bg"
+                    android:layout_marginRight="@dimen/item_padding"
+                    android:checked="false"
+                    android:textColor="@color/btn_weekday_textcolor"
+                    android:textOn="1"
+                    android:textOff="1"/>
+
+                <ToggleButton
+                    android:tag="btn_weekday_2"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:background="@drawable/btn_weekday_bg"
+                    android:layout_marginRight="@dimen/item_padding"
+                    android:checked="false"
+                    android:textColor="@color/btn_weekday_textcolor"
+                    android:textOn="1"
+                    android:textOff="1"/>
+
+                <ToggleButton
+                    android:tag="btn_weekday_3"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:background="@drawable/btn_weekday_bg"
+                    android:layout_marginRight="@dimen/item_padding"
+                    android:checked="false"
+                    android:textColor="@color/btn_weekday_textcolor"
+                    android:textOn="1"
+                    android:textOff="1"/>
+
+                <ToggleButton
+                    android:tag="btn_weekday_4"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:background="@drawable/btn_weekday_bg"
+                    android:layout_marginRight="@dimen/item_padding"
+                    android:checked="false"
+                    android:textColor="@color/btn_weekday_textcolor"
+                    android:textOn="1"
+                    android:textOff="1"/>
+
+                <ToggleButton
+                    android:tag="btn_weekday_5"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:background="@drawable/btn_weekday_bg"
+                    android:layout_marginRight="@dimen/item_padding"
+                    android:checked="false"
+                    android:textColor="@color/btn_weekday_textcolor"
+                    android:textOn="1"
+                    android:textOff="1"/>
+
+                <ToggleButton
+                    android:tag="btn_weekday_6"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:background="@drawable/btn_weekday_bg"
+                    android:layout_marginRight="@dimen/item_padding"
+                    android:checked="false"
+                    android:textColor="@color/btn_weekday_textcolor"
+                    android:textOn="1"
+                    android:textOff="1"/>
+
+                <ToggleButton
+                    android:tag="btn_weekday_7"
+                    android:layout_width="@dimen/normal_icon_size"
+                    android:layout_height="@dimen/normal_icon_size"
+                    android:background="@drawable/btn_weekday_bg"
+                    android:layout_marginRight="@dimen/item_padding"
+                    android:checked="false"
+                    android:textColor="@color/btn_weekday_textcolor"
+                    android:textOn="1"
+                    android:textOff="1"/>
+
+
+            </LinearLayout>
+
+            <com.rengwuxian.materialedittext.MaterialEditText
                 android:id="@+id/medicine_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:layout_alignParentLeft="true"
-                android:layout_centerVertical="true"
-                android:hint = "药名"
-                android:paddingTop="@dimen/activity_vertical_margin"
-                android:textColor="@android:color/black"
-                android:textSize="@dimen/large_text_size" />
+                android:hint="@string/medicine_name"
+                android:editable="false"
+                app:met_textColorHint="@color/grey_500"
+                app:met_underlineColor="@color/grey_500"
+                app:met_primaryColor="@color/colorAccent" />
 
-            <TextView
+            <com.rengwuxian.materialedittext.MaterialEditText
                 android:id="@+id/medicine_usage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
+                android:hint="@string/medicine_usage"
+                android:editable="false"
+                android:layout_marginBottom="@dimen/item_padding"
+                app:met_textColorHint="@color/grey_500"
+                app:met_underlineColor="@color/grey_500"
+                app:met_primaryColor="@color/colorAccent" />
+
+            <ImageButton
+                android:id="@+id/btn_delete_reminder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:clickable="true"
-                android:hint = "用法及用量"
-                android:layout_marginTop="@dimen/activity_vertical_margin"
-                android:paddingTop="@dimen/activity_vertical_margin"
-                android:textColor="@android:color/black"
-                android:textSize="@dimen/large_text_size" />
-
-
-           <!-- <TextView android:id="@+id/medication_reminder_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/large_text_size"
-                android:paddingTop="@dimen/activity_vertical_margin"
-                android:text="时间："/>-->
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/activity_vertical_margin">
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="设置定时"
-                    android:id="@+id/set_clock"
-                    android:layout_weight="0.5"/>
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="取消定时"
-                    android:id="@+id/cancel_clock"
-                    android:layout_weight="0.5"/>
-            </LinearLayout>
+                android:layout_alignParentRight="true"
+                android:tint="@color/orange_500"
+                app:srcCompat="@drawable/ic_delete"
+                style="@style/AppTheme.ImageButton" />
 
         </LinearLayout>
     </android.support.v7.widget.CardView>

@@ -137,7 +137,7 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
     private class MessageArrivedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(!GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
+            if(GlobalInfo.user == null || !GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
                 return;
             String senderId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
             if(senderId == null || senderId.isEmpty())
@@ -163,7 +163,7 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
         @Override
         public void onReceive(Context context, Intent intent) {
             String topicUserId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(!GlobalInfo.user.getPhoneNumber().equals(topicUserId))
+            if(GlobalInfo.user == null || !GlobalInfo.user.getPhoneNumber().equals(topicUserId))
                 return;
             String receiverId = intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID);
             if(receiverId == null || receiverId.isEmpty())
