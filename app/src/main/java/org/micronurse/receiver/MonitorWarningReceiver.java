@@ -19,6 +19,8 @@ public class MonitorWarningReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if(GlobalInfo.user == null)
+            return;
         Bundle bundle = intent.getExtras();
         String title = context.getString(R.string.action_monitor_warning);
         String message = bundle.getString(Application.BUNDLE_KEY_MESSAGE);

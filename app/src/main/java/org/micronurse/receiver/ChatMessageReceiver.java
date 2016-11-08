@@ -15,6 +15,8 @@ import org.micronurse.util.GsonUtil;
 public class ChatMessageReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
+        if(GlobalInfo.user == null)
+            return;
         if(intent.getAction().equals(Application.ACTION_CHAT_MESSAGE_SENT)) {
             if(GlobalInfo.sendMessageQueue.isEmpty())
                 return;

@@ -30,10 +30,14 @@
             android:value="MicroNurse.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="6" />
+            android:value="9" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.Guardianship,                            org.micronurse.database.model.ChatMessageRecord,                            org.micronurse.database.model.SessionMessageRecord" />
+            android:value="org.micronurse.database.model.LoginUserRecord,
+                           org.micronurse.database.model.Guardianship,
+                           org.micronurse.database.model.ChatMessageRecord,
+                           org.micronurse.database.model.SessionMessageRecord,
+                           org.micronurse.database.model.MedicationReminder"/>
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
@@ -120,7 +124,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".receiver.AlarmReceiver"
+            android:name=".receiver.MedicationReminderReceiver"
             android:process=":remote" />
 
         <activity android:name=".ui.activity.ChatActivity" />

@@ -132,10 +132,11 @@
     <string name="action_search">搜索</string>
     <string name="action_save">保存</string>
 
-    <string name="action_confirm">确定</string>
-    <string name="action_cancel_dialog">取消</string>
+    <string name="no_medication_reminder">无吃药提醒事项</string>
+    <string name="query_delete_reminder">确定要删除此提醒事项吗？</string>
     <string name="medicine_name">药名</string>
     <string name="medicine_usage">用法及用量</string>
+    <string name="tip_medication_remind">请您注意按时吃药</string>
     <string name="action_clock_cancel">闹钟已取消</string>
     <string name="action_set_clock">设置闹钟时间为</string>
 
@@ -148,4 +149,14 @@
     <string name="no_location_provider">无法获取位置，请检查您是否打开了位置服务</string>
     <string name="no_location_permission">本应用需要位置权限来获取您的实时位置，请您退出本应用并授予权限后再重启本应用</string>
     <string name="xlabel">\n\n时间</string>
+
+    <string-array name="weekday_short">
+        <item>日</item>
+        <item>一</item>
+        <item>二</item>
+        <item>三</item>
+        <item>四</item>
+        <item>五</item>
+        <item>六</item>
+    </string-array>
 </resources>

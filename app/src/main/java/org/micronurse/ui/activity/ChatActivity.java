@@ -204,7 +204,7 @@ public class ChatActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String topicUserId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
             String receiverId = intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID);
-            if(!GlobalInfo.user.getPhoneNumber().equals(topicUserId) || !chatReceiver.getPhoneNumber().equals(receiverId))
+            if(GlobalInfo.user == null || !GlobalInfo.user.getPhoneNumber().equals(topicUserId) || !chatReceiver.getPhoneNumber().equals(receiverId))
                 return;
             String messageId = intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE_ID);
             if(messageId == null || messageId.isEmpty())
@@ -225,7 +225,7 @@ public class ChatActivity extends AppCompatActivity {
     private class ChatMessageArrivedReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(!GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
+            if(GlobalInfo.user == null || !GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
                 return;
             String senderId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
             if(!chatReceiver.getPhoneNumber().equals(senderId))

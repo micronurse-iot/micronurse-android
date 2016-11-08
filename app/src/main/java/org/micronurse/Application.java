@@ -11,6 +11,7 @@ public class Application extends com.activeandroid.app.Application {
     public static String ACTION_CHAT_MESSAGE_SENT;
     public static String ACTION_CHAT_MESSAGE_RECEIVED;
     public static String ACTION_CHAT_MESSAGE_SEND_START;
+    public static String ACTION_MEDICATION_REMINDER;
 
     public static final String BUNDLE_KEY_USER_ID = "UserId";
     public static final String BUNDLE_KEY_RECEIVER_ID = "ReceiverId";
@@ -28,6 +29,7 @@ public class Application extends com.activeandroid.app.Application {
         ACTION_SENSOR_WARNING = getPackageName() + ".action.SENSOR_WARNING";
         ACTION_CHAT_MESSAGE_SENT = getPackageName() + ".action.CHAT_MESSAGE_SENT";
         ACTION_CHAT_MESSAGE_RECEIVED = getPackageName() + ".action.CHAT_MESSAGE_RECEIVED";
-        ACTION_CHAT_MESSAGE_SEND_START = getPackageName() + ".action_CHAT_MESSAGE_SEND_START";
+        ACTION_CHAT_MESSAGE_SEND_START = getPackageName() + ".action.CHAT_MESSAGE_SEND_START";
+        ACTION_MEDICATION_REMINDER = getPackageName() + ".action.MEDICATION_REMINDER";
     }
 }

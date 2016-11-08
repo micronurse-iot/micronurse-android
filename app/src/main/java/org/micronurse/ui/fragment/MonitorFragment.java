@@ -151,6 +151,8 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
     private class SensorDataReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
+            if(GlobalInfo.user == null)
+                return;
             String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
             if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
                     !GlobalInfo.user.getPhoneNumber().equals(userId))
