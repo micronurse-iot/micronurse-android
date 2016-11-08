@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import lecho.lib.hellocharts.formatter.SimpleLineChartValueFormatter;
 import lecho.lib.hellocharts.gesture.ContainerScrollType;
 import lecho.lib.hellocharts.gesture.ZoomType;
 import lecho.lib.hellocharts.model.Axis;
@@ -184,7 +185,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((Thermometer) dataList.get(pointNum - i - 1)).getTemperature()));
                 }
-                initLineChart("  ",R.color.orange_500);
+                initLineChart("  ",R.color.orange_500, -100, 100);
                 break;
             case Sensor.SENSOR_TYPE_HUMIDOMETER:
                 txtData.setText(String.valueOf(((Humidometer)dataList.get(0)).getHumidity()) + '%');
@@ -192,7 +193,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((Humidometer) dataList.get(pointNum - i - 1)).getHumidity()));
                 }
-                initLineChart(getString(R.string.humidity_unit),R.color.orange_500);
+                initLineChart(getString(R.string.humidity_unit),R.color.orange_500, 0, 100);
                 break;
             case Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER:
                 txtData.setText(String.valueOf(((SmokeTransducer)dataList.get(0)).getSmoke()) + "ppm");
@@ -200,7 +201,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((SmokeTransducer) dataList.get(pointNum - i - 1)).getSmoke()));
                 }
-                initLineChart( getString(R.string.smoke), R.color.orange_500);
+                initLineChart( getString(R.string.smoke), R.color.orange_500, 0, 100);
                 break;
             case Sensor.SENSOR_TYPE_FEVER_THERMOMETER:
                 txtData.setText(String.valueOf(((FeverThermometer)dataList.get(0)).getTemperature()) + "°C");
@@ -208,7 +209,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((FeverThermometer) dataList.get(pointNum - i - 1)).getTemperature()));
                 }
-                initLineChart("  ", R.color.orange_500);
+                initLineChart("  ", R.color.orange_500, 20, 50);
                 break;
             case Sensor.SENSOR_TYPE_PULSE_TRANSDUCER:
                 txtData.setText(String.valueOf(((PulseTransducer)dataList.get(0)).getPulse()) + "bpm");
@@ -216,7 +217,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((PulseTransducer) dataList.get(pointNum - i - 1)).getPulse()));
                 }
-                initLineChart(getString(R.string.pulse_unit) , R.color.orange_500);
+                initLineChart(getString(R.string.pulse_unit) , R.color.orange_500, 0, 200);
                 break;
             case Sensor.SENSOR_TYPE_TURGOSCOPE:
                 txtData.setText(String.valueOf(((Turgoscope)dataList.get(0)).getLowBloodPressure()) + '/' +
@@ -225,12 +226,12 @@ public class MonitorDetailActivity extends AppCompatActivity {
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((Turgoscope) dataList.get(pointNum - i - 1)).getHighBloodPressure()));
                 }
-                initLineChart(getString(R.string.high_low_blood_pleasure), R.color.orange_500);
+                initLineChart(getString(R.string.high_low_blood_pleasure), R.color.orange_500, 0, 200);
                 //mPointValues.clear();
                 for (int i = 0; i < pointNum; i++) {
                     mPointValues.add(new PointValue(i, ((Turgoscope) dataList.get(pointNum - i - 1)).getLowBloodPressure()));
                 }
-                initLineChart(getString(R.string.high_low_blood_pleasure), R.color.blue_500);
+                initLineChart(getString(R.string.high_low_blood_pleasure), R.color.blue_500, 0, 200);
                 break;
         }
 
@@ -248,7 +249,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
     }
 
 
-    private void initLineChart(String yName, int color) {
+    private void initLineChart(String yName, int color, int yBottom, int yTop) {
         Line line = new Line(mPointValues).setColor(color);
         List<Line> lines = new ArrayList<Line>();
         line.setShape(ValueShape.CIRCLE);
@@ -258,6 +259,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
         line.setHasLabelsOnlyForSelected(true);//点击数据坐标提示数据（设置了这个line.setHasLabels(true);就无效）
         line.setHasLines(true);
         line.setHasPoints(true);//是否显示圆点 如果为false 则没有原点只有点显示（每个数据点都是个大的圆点）
+        line.setFormatter(new SimpleLineChartValueFormatter(1));
         lines.add(line);
         LineChartData data = new LineChartData();
         data.setLines(lines);
@@ -287,9 +289,13 @@ public class MonitorDetailActivity extends AppCompatActivity {
         lineChart.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         lineChart.setLineChartData(data);
         lineChart.setVisibility(View.VISIBLE);
-        Viewport v = new Viewport(lineChart.getMaximumViewport());
+        final Viewport v = new Viewport(lineChart.getMaximumViewport());
         v.left = 0;
         v.right= 7;
+        v.bottom = yBottom;
+        v.top = yTop;
+        lineChart.setCurrentViewport(v);
+        lineChart.setMaximumViewport(v);
         lineChart.setCurrentViewport(v);
     }
 }
