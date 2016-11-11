@@ -33,6 +33,7 @@ public class LocationService extends Service implements BDLocationListener {
         locationClient.registerLocationListener(this);
 
         LocationClientOption option = new LocationClientOption();
+        option.setCoorType("bd09ll");
         option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
         option.setScanSpan(LOCATE_INTERVAL);
         option.setOpenGps(true);

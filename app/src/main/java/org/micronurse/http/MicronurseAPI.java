@@ -28,7 +28,7 @@ import org.micronurse.util.GsonUtil;
  * Created by shengyun-zhou on 5/23/16.
  */
 public class MicronurseAPI<T extends Result> {
-    private static final String BASE_URL = "http://101.200.144.204:13000/micronurse/v1/mobile";
+    private static final String BASE_URL = "http://micronurse-webserver:13000/micronurse/v1/mobile";
     private static RequestQueue requestQueue = null;
     private JSONRequest<T> request;
     private ProgressDialog mStatusDialog;

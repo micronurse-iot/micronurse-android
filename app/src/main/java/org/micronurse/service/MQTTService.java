@@ -22,7 +22,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 public class MQTTService extends Service implements MqttCallback {
-    public static final String BROKER_URL = "tcp://101.200.144.204:13883";
+    public static final String BROKER_URL = "tcp://micronurse-mqttbroker:13883";
     public static final String CLIENT_ID_PREFIX = "micronurse_mobile_user:";
     public static final String USERNAME_PREFIX = "micronurse_mobile_user:";
 
