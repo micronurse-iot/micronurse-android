@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="Dev Settings">
+    <EditTextPreference android:key="dev_webserver_host"
+        android:title="Web Server Host"
+        android:defaultValue="micronurse-webserver"/>
+
+    <EditTextPreference android:key="dev_mqttbroker_host"
+        android:title="MQTT Broker Host"
+        android:defaultValue="micronurse-mqttbroker"/>
+</PreferenceScreen>

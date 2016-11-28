@@ -2,6 +2,7 @@ package org.micronurse.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -16,13 +17,14 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.micronurse.Application;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.SharedPreferenceUtil;
 
 import java.io.Serializable;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 public class MQTTService extends Service implements MqttCallback {
-    public static final String BROKER_URL = "tcp://micronurse-mqttbroker:13883";
+    public static String BROKER_URL = "tcp://micronurse-mqttbroker:13883";
     public static final String CLIENT_ID_PREFIX = "micronurse_mobile_user:";
     public static final String USERNAME_PREFIX = "micronurse_mobile_user:";
 
@@ -35,6 +37,10 @@ public class MQTTService extends Service implements MqttCallback {
 
     public MQTTService() throws MqttException {
         String clientId = CLIENT_ID_PREFIX + GlobalInfo.user.getPhoneNumber();
+
+        SharedPreferences devPreference = SharedPreferenceUtil.getDevPreference();
+        BROKER_URL = "tcp://" + devPreference.getString(SharedPreferenceUtil.DEV_KEY_MQTTBROKER_HOST, "micronurse-mqttbroker") + ":13883";
+
         mqttClient = new MqttClient(BROKER_URL, clientId, new MemoryPersistence());
         mqttClient.setCallback(this);
         connOpts = new MqttConnectOptions();

@@ -23,6 +23,7 @@ import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

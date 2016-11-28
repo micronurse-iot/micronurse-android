@@ -1,6 +1,11 @@
 package org.micronurse;
 
+import android.content.SharedPreferences;
+
 import com.baidu.mapapi.SDKInitializer;
+
+import org.micronurse.http.MicronurseAPI;
+import org.micronurse.util.SharedPreferenceUtil;
 
 /**
  * Created by zhou-shengyun on 8/31/16.
@@ -25,6 +30,9 @@ public class Application extends com.activeandroid.app.Application {
         super.onCreate();
         //Init Baidu Map SDK
         SDKInitializer.initialize(this);
+        //Init Dev Preference
+        SharedPreferenceUtil.openDevPreference(this);
+
         ACTION_SENSOR_DATA_REPORT = getPackageName() + ".action.SENSOR_DATA_REPORT";
         ACTION_SENSOR_WARNING = getPackageName() + ".action.SENSOR_WARNING";
         ACTION_CHAT_MESSAGE_SENT = getPackageName() + ".action.CHAT_MESSAGE_SENT";

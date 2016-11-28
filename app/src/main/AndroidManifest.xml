@@ -33,11 +33,7 @@
             android:value="9" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,
-                           org.micronurse.database.model.Guardianship,
-                           org.micronurse.database.model.ChatMessageRecord,
-                           org.micronurse.database.model.SessionMessageRecord,
-                           org.micronurse.database.model.MedicationReminder"/>
+            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.Guardianship,                            org.micronurse.database.model.ChatMessageRecord,                            org.micronurse.database.model.SessionMessageRecord,                            org.micronurse.database.model.MedicationReminder" />
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
@@ -64,12 +60,20 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.micronurse.ui.activity.LoginActivity" />
         </activity>
+
+        <activity android:name=".ui.activity.dev.DevSettingsActivity"
+            android:label="Micro Nurse Dev Settings">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".ui.activity.WelcomeActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -109,7 +113,6 @@
             <intent-filter>
                 <action android:name="org.micronurse.action.CHAT_MESSAGE_RECEIVED" />
                 <action android:name="org.micronurse.action.CHAT_MESSAGE_SENT" />
-
                 <category android:name="org.micronurse" />
             </intent-filter>
         </receiver>
@@ -119,7 +122,6 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="org.micronurse.action.SENSOR_WARNING" />
-
                 <category android:name="org.micronurse" />
             </intent-filter>
         </receiver>
@@ -131,14 +133,14 @@
         <activity
             android:name=".ui.activity.older.EmergencyCallActivity"
             android:label="@string/action_emergency_call" />
-        <activity android:name=".ui.activity.older.PostFriendMomentActivity"
-            android:label="@string/action_post_new_moment"/>
+        <activity
+            android:name=".ui.activity.older.PostFriendMomentActivity"
+            android:label="@string/action_post_new_moment" />
 
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"
             android:process=":remote" />
-
     </application>
 
 </manifest>

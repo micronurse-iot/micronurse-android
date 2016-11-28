@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.widget.Toast;
@@ -23,12 +24,13 @@ import org.micronurse.ui.activity.LoginActivity;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
+import org.micronurse.util.SharedPreferenceUtil;
 
 /**
  * Created by shengyun-zhou on 5/23/16.
  */
 public class MicronurseAPI<T extends Result> {
-    private static final String BASE_URL = "http://micronurse-webserver:13000/micronurse/v1/mobile";
+    private static String BASE_URL = null;
     private static RequestQueue requestQueue = null;
     private JSONRequest<T> request;
     private ProgressDialog mStatusDialog;
@@ -42,6 +44,7 @@ public class MicronurseAPI<T extends Result> {
     public MicronurseAPI(final Context context, String apiURL, int method, Object requestData, String token, final Response.Listener<T> listener,
                          final APIErrorListener errorListener, Class<T> resultClass, boolean showStatus, String statusText){
         this.mContext = context;
+
         if(requestQueue == null)
             requestQueue = Volley.newRequestQueue(mContext);
         request = new JSONRequest<>(apiURL, method, token, new Response.Listener<T>() {
@@ -121,6 +124,11 @@ public class MicronurseAPI<T extends Result> {
     }
 
     public static String getApiUrl(String... urlParam){
+        if(BASE_URL == null) {
+            SharedPreferences devPreference = SharedPreferenceUtil.getDevPreference();
+            MicronurseAPI.BASE_URL = "http://" + devPreference.getString(SharedPreferenceUtil.DEV_KEY_WEBSERVER_HOST, "micronurse-webserver") + ":13000/micronurse/v1/mobile";
+        }
+
         String url = BASE_URL;
         for(String s : urlParam){
             if(s != null && !s.isEmpty())
