@@ -23,7 +23,6 @@ import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.adapter.ChatMessageAdapter;
 import org.micronurse.database.model.ChatMessageRecord;
-import org.micronurse.database.model.SessionMessageRecord;
 import org.micronurse.model.User;
 import org.micronurse.service.MQTTService;
 import org.micronurse.util.DatabaseUtil;
@@ -73,7 +72,7 @@ public class ChatActivity extends AppCompatActivity {
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         chatListView.setLayoutManager(layoutManager);
         chatListView.setNestedScrollingEnabled(false);
-        String receiverId = getIntent().getStringExtra(BUNDLE_KEY_RECEIVER_ID);
+        int receiverId = getIntent().getIntExtra(BUNDLE_KEY_RECEIVER_ID, -1);
         chatReceiver = GlobalInfo.findUserById(receiverId);
         setTitle(chatReceiver.getNickname());
         adapter = new ChatMessageAdapter(this, messageList);
@@ -109,7 +108,7 @@ public class ChatActivity extends AppCompatActivity {
 
         updateChatHistory();
         for(ChatMessageRecord cmr : GlobalInfo.sendMessageQueue){
-            if(cmr.getChatterAId().equals(GlobalInfo.user.getPhoneNumber()) && cmr.getChatterBId().equals(receiverId)){
+            if(cmr.getChatterAId() == GlobalInfo.user.getUserId() && cmr.getChatterBId() == receiverId){
                 messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, cmr, true));
             }
         }
@@ -130,12 +129,12 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void updateChatHistory(){
-        List<ChatMessageRecord> records = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
-                chatReceiver.getPhoneNumber(), endTime.getTime(), 20);
+        List<ChatMessageRecord> records = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getUserId(),
+                chatReceiver.getUserId(), endTime.getTime(), 20);
         if(records != null){
             for(ChatMessageRecord cmr : records){
                 endTime.setTimeInMillis(cmr.getMessageTime().getTime() - 1);
-                if(GlobalInfo.user.getPhoneNumber().equals(cmr.getSenderId())){
+                if(GlobalInfo.user.getUserId() == cmr.getSenderId()){
                     messageList.addFirst(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT,
                             GlobalInfo.user, cmr));
                 }else{
@@ -154,8 +153,8 @@ public class ChatActivity extends AppCompatActivity {
         String message = editChatMsg.getText().toString();
         if(message.isEmpty())
             return;
-        ChatMessageRecord newMessage = new ChatMessageRecord(GlobalInfo.user.getPhoneNumber(), chatReceiver.getPhoneNumber(),
-                GlobalInfo.user.getPhoneNumber(), ChatMessageRecord.MESSAGE_TYPE_TEXT, message);
+        ChatMessageRecord newMessage = new ChatMessageRecord(GlobalInfo.user.getUserId(), chatReceiver.getUserId(),
+                GlobalInfo.user.getUserId(), ChatMessageRecord.MESSAGE_TYPE_TEXT, message);
         sendMessage(newMessage);
         editChatMsg.setText("");
     }
@@ -170,12 +169,12 @@ public class ChatActivity extends AppCompatActivity {
         intent.addCategory(getPackageName());
         intent.putExtra(Application.BUNDLE_KEY_MESSAGE, newMessage.getLiteralContent());
         intent.putExtra(Application.BUNDLE_KEY_MESSAGE_ID, newMessage.getMessageId());
-        intent.putExtra(Application.BUNDLE_KEY_RECEIVER_ID, chatReceiver.getPhoneNumber());
+        intent.putExtra(Application.BUNDLE_KEY_RECEIVER_ID, chatReceiver.getUserId());
         intent.putExtra(Application.BUNDLE_KEY_MESSAGE_TIMESTAMP, newMessage.getMessageTime().getTime());
         sendBroadcast(intent);
 
         mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(
-                GlobalInfo.TOPIC_CHATTING, GlobalInfo.user.getPhoneNumber(), chatReceiver.getPhoneNumber(),
+                GlobalInfo.TOPIC_CHATTING, GlobalInfo.user.getUserId(), chatReceiver.getUserId(),
                 1, GsonUtil.getDefaultGsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(newMessage),
                 newMessage.getMessageId(), Application.ACTION_CHAT_MESSAGE_SENT
         ));
@@ -202,9 +201,9 @@ public class ChatActivity extends AppCompatActivity {
     private class ChatMessageSentReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            String topicUserId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            String receiverId = intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID);
-            if(GlobalInfo.user == null || !GlobalInfo.user.getPhoneNumber().equals(topicUserId) || !chatReceiver.getPhoneNumber().equals(receiverId))
+            int topicUserId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
+            int receiverId = intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1);
+            if(GlobalInfo.user == null || GlobalInfo.user.getUserId() != topicUserId || chatReceiver.getUserId() != receiverId)
                 return;
             String messageId = intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE_ID);
             if(messageId == null || messageId.isEmpty())
@@ -225,15 +224,15 @@ public class ChatActivity extends AppCompatActivity {
     private class ChatMessageArrivedReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(GlobalInfo.user == null || !GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
+            if(GlobalInfo.user == null || GlobalInfo.user.getUserId() != intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1))
                 return;
-            String senderId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(!chatReceiver.getPhoneNumber().equals(senderId))
+            int senderId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
+            if(chatReceiver.getUserId() != senderId)
                 return;
             try {
                 ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
                         ChatMessageRecord.class);
-                cmr.setChatterAId(GlobalInfo.user.getPhoneNumber());
+                cmr.setChatterAId(GlobalInfo.user.getUserId());
                 cmr.setChatterBId(senderId);
                 cmr.setSenderId(senderId);
                 messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_LEFT, chatReceiver, cmr));

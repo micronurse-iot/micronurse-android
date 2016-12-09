@@ -82,13 +82,13 @@ public class FamilyMonitorFragment extends Fragment implements OnSensorDataRecei
         }
         else if(GlobalInfo.Guardian.monitorOlder != null) {
             updateTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
                     Sensor.SENSOR_TYPE_THERMOMETER, String.valueOf(1));
             updateHumidityURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
                     Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1));
             updateSmokeURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
                     Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1));
         }else{
             refresh.setEnabled(false);

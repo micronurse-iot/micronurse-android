@@ -76,13 +76,13 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
                     String.valueOf(1));
         }else if(GlobalInfo.Guardian.monitorOlder != null){
             updateBodyTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
                     Sensor.SENSOR_TYPE_FEVER_THERMOMETER, String.valueOf(1));
             updatePulseURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
                     Sensor.SENSOR_TYPE_PULSE_TRANSDUCER, String.valueOf(1));
             updateBloodPressureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
                     Sensor.SENSOR_TYPE_TURGOSCOPE, String.valueOf(1));
         }else{
             swipeLayout.setEnabled(false);

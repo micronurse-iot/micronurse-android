@@ -24,15 +24,15 @@ public class ChatMessageReceiver extends BroadcastReceiver {
             cmr.save();
             Log.i(GlobalInfo.LOG_TAG, "Cache a message to user " + cmr.getChatterBId() + " successfully.");
         } else if (intent.getAction().equals(Application.ACTION_CHAT_MESSAGE_RECEIVED)) {
-            if(!GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
+            if(GlobalInfo.user.getUserId() != intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1))
                 return;
-            String senderId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(senderId == null || senderId.isEmpty())
+            int senderId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
+            if(senderId < 0)
                 return;
             try {
                 ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
                         ChatMessageRecord.class);
-                cmr = new ChatMessageRecord(GlobalInfo.user.getPhoneNumber(), senderId, senderId, cmr.getMessageTime(), cmr.getMessageType(), cmr.getContent());
+                cmr = new ChatMessageRecord(GlobalInfo.user.getUserId(), senderId, senderId, cmr.getMessageTime(), cmr.getMessageType(), cmr.getContent());
                 cmr.save();
                 Log.i(GlobalInfo.LOG_TAG, "Cache a message from user " + senderId + " successfully.");
             }catch (JsonSyntaxException jse){

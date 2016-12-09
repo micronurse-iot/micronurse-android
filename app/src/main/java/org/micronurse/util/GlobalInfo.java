@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 
 import org.micronurse.database.model.ChatMessageRecord;
-import org.micronurse.database.model.SessionMessageRecord;
 import org.micronurse.model.User;
 import org.micronurse.service.EmergencyCallService;
 import org.micronurse.service.LocationService;
@@ -24,7 +23,7 @@ public class GlobalInfo {
     public static String token = null;
     public static List<User> guardianshipList = new ArrayList<>();
     public static ConcurrentLinkedQueue<ChatMessageRecord> sendMessageQueue = new ConcurrentLinkedQueue<>();
-    public static String currentChatReceiver = null;
+    public static Integer currentChatReceiverId = null;
 
     public static class Guardian{
         public static User monitorOlder;
@@ -34,12 +33,12 @@ public class GlobalInfo {
         public static List<User> friendList = new ArrayList<>();
     }
 
-    public static void clearLoginUserInfo(){
+    private static void clearLoginUserInfo(){
         user = null;
         token = null;
         guardianshipList.clear();
         sendMessageQueue.clear();
-        currentChatReceiver = null;
+        currentChatReceiverId = null;
         Guardian.monitorOlder = null;
         Older.friendList.clear();
     }
@@ -58,15 +57,15 @@ public class GlobalInfo {
         clearLoginUserInfo();
     }
 
-    public static User findUserById(String userId){
-        if(user.getPhoneNumber().equals(userId))
+    public static User findUserById(int userId){
+        if(user.getUserId() == userId)
             return user;
         for(User u : guardianshipList){
-            if(u.getPhoneNumber().equals(userId))
+            if(u.getUserId() == userId)
                 return u;
         }
         for(User u : Older.friendList){
-            if(u.getPhoneNumber().equals(userId))
+            if(u.getUserId() == userId)
                 return u;
         }
         return null;

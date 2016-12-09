@@ -84,13 +84,13 @@ public class LocationService extends Service implements BDLocationListener {
         String message = GsonUtil.getGson().toJson(sensorData);
         Intent intent = new Intent(Application.ACTION_SENSOR_DATA_REPORT);
         intent.addCategory(getPackageName());
-        intent.putExtra(Application.BUNDLE_KEY_USER_ID, GlobalInfo.user.getPhoneNumber());
+        intent.putExtra(Application.BUNDLE_KEY_USER_ID, GlobalInfo.user.getUserId());
         intent.putExtra(Application.BUNDLE_KEY_TOPIC, GlobalInfo.TOPIC_SENSOR_DATA_REPORT);
         intent.putExtra(Application.BUNDLE_KEY_MESSAGE, message);
         sendBroadcast(intent);
         if(mqttService == null)
             return;
-        mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getPhoneNumber(),
+        mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getUserId(),
                 0, message, null, null));
     }
 

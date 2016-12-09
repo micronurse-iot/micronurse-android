@@ -11,10 +11,11 @@ public class User{
     public static final char GENDER_MALE = 'M';
     public static final char GENDER_FEMALE = 'F';
 
+    private Integer userId;
     private String phoneNumber;
     private String nickname;
-    private char gender;
-    private char accountType;
+    private Character gender;
+    private Character accountType;
     private Bitmap portrait;
 
     public User(String phoneNumber, String nickname, char gender, char accountType) {
@@ -22,6 +23,10 @@ public class User{
         this.nickname = nickname;
         this.gender = gender;
         this.accountType = accountType;
+    }
+
+    public Integer getUserId() {
+        return userId;
     }
 
     public String getPhoneNumber() {
@@ -32,7 +37,7 @@ public class User{
         this.phoneNumber = phoneNumber;
     }
 
-    public char getAccountType() {
+    public Character getAccountType() {
         return accountType;
     }
 
@@ -44,7 +49,7 @@ public class User{
         this.nickname = nickname;
     }
 
-    public char getGender() {
+    public Character getGender() {
         return gender;
     }
 

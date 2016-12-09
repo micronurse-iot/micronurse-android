@@ -104,13 +104,13 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
     public void onBind(MQTTService service) {
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
             service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
-                    GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_SENSOR_DATA_REPORT
+                    GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getUserId(), 1, Application.ACTION_SENSOR_DATA_REPORT
             ));
         }else{
             if(GlobalInfo.guardianshipList != null){
                 for(User u : GlobalInfo.guardianshipList){
                     service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
-                            GlobalInfo.TOPIC_SENSOR_DATA_REPORT, u.getPhoneNumber(), 1, Application.ACTION_SENSOR_DATA_REPORT
+                            GlobalInfo.TOPIC_SENSOR_DATA_REPORT, u.getUserId(), 1, Application.ACTION_SENSOR_DATA_REPORT
                     ));
                 }
             }
@@ -153,12 +153,12 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
         public void onReceive(Context context, Intent intent) {
             if(GlobalInfo.user == null)
                 return;
-            String userId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
+            int userId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
             if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
-                    !GlobalInfo.user.getPhoneNumber().equals(userId))
+                    GlobalInfo.user.getUserId() != userId)
                 return;
             else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN &&
-                    (GlobalInfo.Guardian.monitorOlder == null || !GlobalInfo.Guardian.monitorOlder.getPhoneNumber().equals(userId)))
+                    (GlobalInfo.Guardian.monitorOlder == null || GlobalInfo.Guardian.monitorOlder.getUserId() != userId))
                 return;
             try {
                 RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);

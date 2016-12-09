@@ -117,13 +117,13 @@ public class MonitorWarningFragment extends Fragment implements OnBindMQTTServic
     public void onBind(MQTTService service) {
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
             service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
-                    GlobalInfo.TOPIC_SENSOR_WARNING, GlobalInfo.user.getPhoneNumber(), 2, Application.ACTION_SENSOR_WARNING
+                    GlobalInfo.TOPIC_SENSOR_WARNING, GlobalInfo.user.getUserId(), 2, Application.ACTION_SENSOR_WARNING
             ));
         }else{
             if(GlobalInfo.guardianshipList != null){
                 for(User u : GlobalInfo.guardianshipList){
                     service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
-                            GlobalInfo.TOPIC_SENSOR_WARNING, u.getPhoneNumber(), 2, Application.ACTION_SENSOR_WARNING
+                            GlobalInfo.TOPIC_SENSOR_WARNING, u.getUserId(), 2, Application.ACTION_SENSOR_WARNING
                     ));
                 }
             }
@@ -178,7 +178,7 @@ public class MonitorWarningFragment extends Fragment implements OnBindMQTTServic
                 refresh.setRefreshing(false);
                 return;
             }
-            url = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.SENSOR_WARNING, GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+            url = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.SENSOR_WARNING, GlobalInfo.Guardian.monitorOlder.getUserId().toString(),
                     String.valueOf(downEndTime.getTimeInMillis()), String.valueOf(LIMIT_NUM));
         }
         refresh.setRefreshing(true);

@@ -86,7 +86,7 @@ public class GoingoutMonitorFragment extends Fragment  implements
                     String.valueOf(1));
         else if(GlobalInfo.Guardian.monitorOlder != null){
             updateLocationURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    GlobalInfo.Guardian.monitorOlder.getPhoneNumber(),
+                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
                     Sensor.SENSOR_TYPE_GPS, String.valueOf(1));
         }else{
             refresh.setEnabled(false);
@@ -269,7 +269,7 @@ public class GoingoutMonitorFragment extends Fragment  implements
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER)
             url = MicronurseAPI.getApiUrl(MicronurseAPI.OlderAccountAPI.HOME_ADDRESS);
         else if(GlobalInfo.Guardian.monitorOlder != null)
-            url = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianAccountAPI.HOME_ADDRESS, GlobalInfo.Guardian.monitorOlder.getPhoneNumber());
+            url = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianAccountAPI.HOME_ADDRESS, String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()));
         if(url == null)
             return;
         new MicronurseAPI<HomeLocationResult>(getActivity(), url, Request.Method.GET,

@@ -14,7 +14,7 @@ import java.util.Date;
 @Table(name = "MedicationReminder")
 public class MedicationReminder extends Model {
     @Column(name = "UserId", notNull = true)
-    private String userId;
+    private int userId;
 
     @Column(name = "MedicineName")
     private String medicineName;
@@ -38,7 +38,7 @@ public class MedicationReminder extends Model {
         super();
     }
 
-    public MedicationReminder(String userId, String medicineName, String medicineUsage, Date remindTime, String repeat, boolean switchOn) {
+    public MedicationReminder(int userId, String medicineName, String medicineUsage, Date remindTime, String repeat, boolean switchOn) {
         this.userId = userId;
         this.medicineName = medicineName;
         this.medicineUsage = medicineUsage;
@@ -48,18 +48,18 @@ public class MedicationReminder extends Model {
         this.addTime = new Date();
     }
 
-    public MedicationReminder(String userId, Date remindTime) {
+    public MedicationReminder(int userId, Date remindTime) {
         this.userId = userId;
         this.remindTime = remindTime;
         this.switchOn = false;
         this.addTime = new Date();
     }
 
-    public String getUserId() {
+    public int getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(int userId) {
         this.userId = userId;
     }
 
@@ -85,14 +85,6 @@ public class MedicationReminder extends Model {
 
     public void setRemindTime(Date remindTime) {
         this.remindTime = remindTime;
-    }
-
-    public String getRepeat() {
-        return repeat;
-    }
-
-    public void setRepeat(String repeat) {
-        this.repeat = repeat;
     }
 
     public boolean isSwitchOn() {

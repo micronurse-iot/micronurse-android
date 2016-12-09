@@ -11,43 +11,43 @@ import com.activeandroid.annotation.Table;
 @Table(name = "SessionMessageRecord")
 public class SessionMessageRecord extends Model {
     @Column(name = "FromUserId", notNull = true)
-    private String fromUserId;
+    private int fromUserId;
 
     @Column(name = "ToUserId", notNull = true, uniqueGroups = {"FromUserId", "ToUserId"},
             indexGroups = {"FromUserId", "ToUserId"})
-    private String toUserId;
+    private int toUserId;
 
     @Column(name = "UnreadMessageNum")
-    private Integer unreadMessageNum;
+    private int unreadMessageNum;
 
     public SessionMessageRecord(){
         super();
     }
 
-    public SessionMessageRecord(String fromUserId, String toUserId, Integer unreadMessageNum) {
+    public SessionMessageRecord(int fromUserId, int toUserId, int unreadMessageNum) {
         super();
         this.fromUserId = fromUserId;
         this.toUserId = toUserId;
         this.unreadMessageNum = unreadMessageNum;
     }
 
-    public SessionMessageRecord(String fromUserId, String toUserId) {
+    public SessionMessageRecord(int fromUserId, int toUserId) {
         this(fromUserId, toUserId, 0);
     }
 
-    public String getFromUserId() {
+    public int getFromUserId() {
         return fromUserId;
     }
 
-    public void setFromUserId(String fromUserId) {
+    public void setFromUserId(int fromUserId) {
         this.fromUserId = fromUserId;
     }
 
-    public String getToUserId() {
+    public int getToUserId() {
         return toUserId;
     }
 
-    public void setToUserId(String toUserId) {
+    public void setToUserId(int toUserId) {
         this.toUserId = toUserId;
     }
 

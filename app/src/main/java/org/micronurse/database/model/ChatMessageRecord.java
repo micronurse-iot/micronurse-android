@@ -18,13 +18,13 @@ public class ChatMessageRecord extends Model implements Serializable {
     private static final String MESSAGE_ID_PREFIX = "ChatMessage_";
 
     @Column(name = "ChatterAId", notNull = true)
-    private String chatterAId;
+    private int chatterAId;
 
     @Column(name = "ChatterBId", notNull = true)
-    private String chatterBId;
+    private int chatterBId;
 
     @Column(name = "SenderId", notNull = true)
-    private String senderId;
+    private int senderId;
 
     @Column(name = "MessageTime", notNull = true, uniqueGroups = {"ChatterAId", "ChatterBId", "MessageTime"},
             indexGroups = {"ChatterAId", "ChatterBId", "MessageTime"})
@@ -43,11 +43,11 @@ public class ChatMessageRecord extends Model implements Serializable {
         super();
     }
 
-    public ChatMessageRecord(String chatterAId, String chatterBId, String senderId, String messageType, String content) {
+    public ChatMessageRecord(int chatterAId, int chatterBId, int senderId, String messageType, String content) {
         this(chatterAId, chatterBId, senderId, new Date(), messageType, content);
     }
 
-    public ChatMessageRecord(String chatterAId, String chatterBId, String senderId, Date messageTime, String messageType, String content) {
+    public ChatMessageRecord(int chatterAId, int chatterBId, int senderId, Date messageTime, String messageType, String content) {
         this.chatterAId = chatterAId;
         this.chatterBId = chatterBId;
         this.senderId = senderId;
@@ -72,27 +72,27 @@ public class ChatMessageRecord extends Model implements Serializable {
         this.content = content;
     }
 
-    public String getChatterAId() {
+    public int getChatterAId() {
         return chatterAId;
     }
 
-    public void setChatterAId(String chatterAId) {
+    public void setChatterAId(int chatterAId) {
         this.chatterAId = chatterAId;
     }
 
-    public String getChatterBId() {
+    public int getChatterBId() {
         return chatterBId;
     }
 
-    public void setChatterBId(String chatterBId) {
+    public void setChatterBId(int chatterBId) {
         this.chatterBId = chatterBId;
     }
 
-    public String getSenderId() {
+    public int getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(String senderId) {
+    public void setSenderId(int senderId) {
         this.senderId = senderId;
     }
 

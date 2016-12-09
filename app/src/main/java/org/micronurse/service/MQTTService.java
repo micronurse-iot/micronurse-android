@@ -36,8 +36,9 @@ public class MQTTService extends Service implements MqttCallback {
     private LinkedBlockingDeque<Object> actionQueue = new LinkedBlockingDeque<>();
 
     public MQTTService() throws MqttException {
-        String clientId = CLIENT_ID_PREFIX + GlobalInfo.user.getPhoneNumber();
+        String clientId = CLIENT_ID_PREFIX + GlobalInfo.user.getUserId();
 
+        /*For dev*/
         SharedPreferences devPreference = SharedPreferenceUtil.getDevPreference();
         BROKER_URL = "tcp://" + devPreference.getString(SharedPreferenceUtil.DEV_KEY_MQTTBROKER_HOST, "micronurse-mqttbroker") + ":13883";
 
@@ -47,7 +48,7 @@ public class MQTTService extends Service implements MqttCallback {
         connOpts.setCleanSession(false);
         connOpts.setKeepAliveInterval(30);
         connOpts.setAutomaticReconnect(false);
-        connOpts.setUserName(USERNAME_PREFIX + GlobalInfo.user.getPhoneNumber());
+        connOpts.setUserName(USERNAME_PREFIX + GlobalInfo.user.getUserId());
         connOpts.setPassword(GlobalInfo.token.toCharArray());
     }
 
@@ -112,7 +113,7 @@ public class MQTTService extends Service implements MqttCallback {
                             actionQueue.putFirst(mqttAction);
                             Thread.sleep(2000);
                         } catch (InterruptedException ignored) {}
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException | NumberFormatException e) {
                         e.printStackTrace();
                     }
                 }
@@ -129,8 +130,10 @@ public class MQTTService extends Service implements MqttCallback {
             if(networkThread != null){
                 networkThread.join(2000);
             }
-            mqttClient.disconnect(1500);
-            Log.i(GlobalInfo.LOG_TAG, "Disconnected from MQTT server.");
+            if(mqttClient.isConnected()) {
+                mqttClient.disconnect(1500);
+                Log.i(GlobalInfo.LOG_TAG, "Disconnected from MQTT server.");
+            }
         } catch (MqttException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -168,32 +171,36 @@ public class MQTTService extends Service implements MqttCallback {
         String msg = new String(message.getPayload());
         Log.i(GlobalInfo.LOG_TAG, "Offline Message Arrived: " + msg);
         Intent intent = new Intent();
-        parseTopic(topic, intent);
-        intent.putExtra(Application.BUNDLE_KEY_MESSAGE, msg);
-        intent.addCategory(getPackageName());
-        if(intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_SENSOR_DATA_REPORT)){
-            intent.setAction(Application.ACTION_SENSOR_DATA_REPORT);
-        }else if(intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_SENSOR_WARNING)){
-            intent.setAction(Application.ACTION_SENSOR_WARNING);
-        }else if(intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_CHATTING)){
-            intent.setAction(Application.ACTION_CHAT_MESSAGE_RECEIVED);
+        try {
+            parseTopic(topic, intent);
+            intent.putExtra(Application.BUNDLE_KEY_MESSAGE, msg);
+            intent.addCategory(getPackageName());
+            if (intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_SENSOR_DATA_REPORT)) {
+                intent.setAction(Application.ACTION_SENSOR_DATA_REPORT);
+            } else if (intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_SENSOR_WARNING)) {
+                intent.setAction(Application.ACTION_SENSOR_WARNING);
+            } else if (intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_CHATTING)) {
+                intent.setAction(Application.ACTION_CHAT_MESSAGE_RECEIVED);
+            }
+            sendBroadcast(intent);
+        } catch (NumberFormatException nfe){
+            nfe.printStackTrace();
         }
-        sendBroadcast(intent);
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {}
 
-    private String getFullTopic(String topic, String topicUserId, String receiverId){
+    private String getFullTopic(String topic, Integer topicUserId, Integer receiverId){
         String result = topic;
-        if(receiverId != null && !receiverId.isEmpty())
-            result += '/' + receiverId;
-        if(topicUserId != null && !topicUserId.isEmpty())
-            result += '/' + topicUserId;
+        if(receiverId != null)
+            result += '/' + receiverId.toString();
+        if(topicUserId != null)
+            result += '/' + topicUserId.toString();
         return result;
     }
 
-    private void parseTopic(String topicWithUser, Intent intent){
+    private void parseTopic(String topicWithUser, Intent intent) throws NumberFormatException{
         if(topicWithUser == null || topicWithUser.isEmpty())
             return;
         String topic = topicWithUser;
@@ -201,10 +208,10 @@ public class MQTTService extends Service implements MqttCallback {
         if(topicSplit.length > 1){
             int end = topicSplit.length - 1;
             String topicUser = topicSplit[topicSplit.length - 1];
-            intent.putExtra(Application.BUNDLE_KEY_USER_ID, topicUser);
+            intent.putExtra(Application.BUNDLE_KEY_USER_ID, Integer.valueOf(topicUser));
             if(topicSplit.length > 2){
                 String receiver = topicSplit[topicSplit.length - 2];
-                intent.putExtra(Application.BUNDLE_KEY_RECEIVER_ID, receiver);
+                intent.putExtra(Application.BUNDLE_KEY_RECEIVER_ID, Integer.valueOf(receiver));
                 end = topicSplit.length - 2;
             }
             topic = "";
@@ -233,19 +240,19 @@ public class MQTTService extends Service implements MqttCallback {
 
     public static class MQTTSubscriptionAction implements Serializable{
         private String topic;
-        private String topicUserId;
-        private String receiverId;
+        private Integer topicUserId;
+        private Integer receiverId;
         private int qos;
         private String action;
 
-        public MQTTSubscriptionAction(String topic, String topicUserId, int qos, String broadcastAction) {
+        public MQTTSubscriptionAction(String topic, @Nullable Integer topicUserId, int qos, String broadcastAction) {
             this.topic = topic;
             this.topicUserId = topicUserId;
             this.qos = qos;
             this.action = broadcastAction;
         }
 
-        public MQTTSubscriptionAction(String topic, String topicUserId, String receiverId, int qos, String action) {
+        public MQTTSubscriptionAction(String topic, @Nullable Integer topicUserId, @Nullable Integer receiverId, int qos, String action) {
             this(topic, topicUserId, qos, action);
             this.receiverId = receiverId;
         }
@@ -253,20 +260,20 @@ public class MQTTService extends Service implements MqttCallback {
 
     public static class MQTTPublishAction implements Serializable{
         private String topic;
-        private String topicUserId;
-        private String receiverId;
+        private Integer topicUserId;
+        private Integer receiverId;
         private int qos;
         private boolean retain = false;
         private String message;
         private String messageId;
         private String action;
 
-        public MQTTPublishAction(String topic, String topicUserId, String receiverId, int qos, String message, @Nullable String messageId, @Nullable String action) {
+        public MQTTPublishAction(String topic, @Nullable Integer topicUserId, @Nullable Integer receiverId, int qos, String message, @Nullable String messageId, @Nullable String action) {
             this(topic, topicUserId, qos, message, messageId, action);
             this.receiverId = receiverId;
         }
 
-        public MQTTPublishAction(String topic, String topicUserId, int qos, String message, @Nullable String messageId, @Nullable String action) {
+        public MQTTPublishAction(String topic, @Nullable Integer topicUserId, int qos, String message, @Nullable String messageId, @Nullable String action) {
             this.topic = topic;
             this.topicUserId = topicUserId;
             this.qos = qos;

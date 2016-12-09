@@ -12,7 +12,7 @@ public class SharedPreferenceUtil {
     public static final String DEV_KEY_WEBSERVER_HOST = "dev_webserver_host";
     public static final String DEV_KEY_MQTTBROKER_HOST = "dev_mqttbroker_host";
 
-    public static final String PREFERENCE_USER_PREFIX = "user_settings_";
+    private static final String PREFERENCE_USER_PREFIX = "user_settings_";
 
     private static SharedPreferences devPreference;
     private static SharedPreferences userPreference;
@@ -25,7 +25,7 @@ public class SharedPreferenceUtil {
         return devPreference;
     }
 
-    public static void openUserPreference(Context context, String userId){
+    public static void openUserPreference(Context context, int userId){
         userPreference = context.getSharedPreferences(PREFERENCE_USER_PREFIX + userId, Context.MODE_PRIVATE);
     }
 

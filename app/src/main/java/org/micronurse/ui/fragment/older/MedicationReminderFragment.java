@@ -67,7 +67,7 @@ public class MedicationReminderFragment extends Fragment{
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                         reminderTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         reminderTime.set(Calendar.MINUTE, minute);
-                        MedicationReminder newReminder = new MedicationReminder(GlobalInfo.user.getPhoneNumber(), reminderTime.getTime());
+                        MedicationReminder newReminder = new MedicationReminder(GlobalInfo.user.getUserId(), reminderTime.getTime());
                         newReminder.save();
                         reminderList.addFirst(newReminder);
                         medicationReminderAdapter.notifyItemInserted(0);
@@ -78,7 +78,7 @@ public class MedicationReminderFragment extends Fragment{
             }
         });
 
-        reminderList.addAll(DatabaseUtil.findMedicationRemindersByUserId(GlobalInfo.user.getPhoneNumber()));
+        reminderList.addAll(DatabaseUtil.findMedicationRemindersByUserId(GlobalInfo.user.getUserId()));
         if(!reminderList.isEmpty())
             viewRoot.findViewById(R.id.txt_no_medication_reminder).setVisibility(View.GONE);
         medicationReminderAdapter = new MedicationReminderAdapter(getActivity(), reminderList);

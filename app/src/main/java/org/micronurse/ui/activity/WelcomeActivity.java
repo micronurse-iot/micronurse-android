@@ -45,7 +45,7 @@ public class WelcomeActivity extends AppCompatActivity {
                     loginUserRecord = records.get(0);
 
                 if(loginUserRecord != null && loginUserRecord.getToken() != null && !loginUserRecord.getToken().isEmpty()) {
-                    new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.CHECK_LOGIN, loginUserRecord.getPhoneNumber()), Request.Method.GET,
+                    new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.CHECK_LOGIN, String.valueOf(loginUserRecord.getUserId())), Request.Method.GET,
                             null, loginUserRecord.getToken(), new Response.Listener<Result>() {
                         @Override
                         public void onResponse(Result response) {

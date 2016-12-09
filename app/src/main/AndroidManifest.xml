@@ -30,10 +30,13 @@
             android:value="MicroNurse.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="9" />
+            android:value="10" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.Guardianship,                            org.micronurse.database.model.ChatMessageRecord,                            org.micronurse.database.model.SessionMessageRecord,                            org.micronurse.database.model.MedicationReminder" />
+            android:value="org.micronurse.database.model.LoginUserRecord,
+                           org.micronurse.database.model.ChatMessageRecord,
+                           org.micronurse.database.model.SessionMessageRecord,
+                           org.micronurse.database.model.MedicationReminder" />
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
@@ -61,14 +64,6 @@
                 android:value="org.micronurse.ui.activity.LoginActivity" />
         </activity>
 
-        <activity android:name=".ui.activity.dev.DevSettingsActivity"
-            android:label="Micro Nurse Dev Settings">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
         <activity
             android:name=".ui.activity.WelcomeActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar">
@@ -77,6 +72,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.activity.older.SettingsActivity"
             android:label="@string/action_settings" />
@@ -141,6 +137,15 @@
             android:name="com.baidu.location.f"
             android:enabled="true"
             android:process=":remote" />
+
+        <activity android:name=".ui.activity.dev.DevSettingsActivity"
+            android:label="Micro Nurse Dev Settings">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>

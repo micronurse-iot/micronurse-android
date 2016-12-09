@@ -14,7 +14,10 @@ import java.util.Date;
 
 @Table(name = "LoginUserRecord")
 public class LoginUserRecord extends Model {
-    @Column(name = "PhoneNumber", notNull = true, length = 20, index = true, unique = true)
+    @Column(name = "UserId", notNull = true, index = true, unique = true)
+    private int userId;
+
+    @Column(name = "PhoneNumber", notNull = true, length = 20)
     private String phoneNumber;
 
     @Column(name = "Token", length = 40)
@@ -30,16 +33,21 @@ public class LoginUserRecord extends Model {
         super();
     }
 
-    public LoginUserRecord(String phoneNumber, String token, Bitmap portrait, Date lastLoginTime) {
+    public LoginUserRecord(int userId, String phoneNumber, String token, Bitmap portrait, Date lastLoginTime) {
         super();
+        this.userId = userId;
         this.phoneNumber = phoneNumber;
         this.token = token;
         this.portrait = portrait;
         this.lastLoginTime = lastLoginTime;
     }
 
-    public LoginUserRecord(String phoneNumber, String token, Bitmap portrait) {
-        this(phoneNumber, token, portrait, new Date());
+    public LoginUserRecord(int userId, String phoneNumber, String token, Bitmap portrait) {
+        this(userId, phoneNumber, token, portrait, new Date());
+    }
+
+    public int getUserId() {
+        return userId;
     }
 
     public String getPhoneNumber() {

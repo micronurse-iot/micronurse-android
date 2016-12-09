@@ -10,6 +10,6 @@ import java.util.Date;
 
 public interface MessageListener {
     void onMessageArrived(ChatMessageRecord cmr);
-    void onMessageSent(String receiverId, String messageId);
-    void onMessageSendStart(String receiverId, String messageId, String message, Date messageTime);
+    void onMessageSent(int receiverId, String messageId);
+    void onMessageSendStart(int receiverId, String messageId, String message, Date messageTime);
 }

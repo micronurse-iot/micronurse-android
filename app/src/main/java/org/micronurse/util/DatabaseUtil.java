@@ -3,7 +3,6 @@ package org.micronurse.util;
 import com.activeandroid.query.Select;
 
 import org.micronurse.database.model.ChatMessageRecord;
-import org.micronurse.database.model.Guardianship;
 import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.database.model.MedicationReminder;
 import org.micronurse.database.model.SessionMessageRecord;
@@ -18,10 +17,10 @@ import java.util.List;
 public class DatabaseUtil {
     public static void updateLoginRecord(User user, String token){
         LoginUserRecord loginRecord = new Select().from(LoginUserRecord.class)
-                .where("PhoneNumber=?", user.getPhoneNumber())
+                .where("UserId=?", user.getUserId())
                 .executeSingle();
         if(loginRecord == null){
-            loginRecord = new LoginUserRecord(user.getPhoneNumber(), token, user.getPortrait());
+            loginRecord = new LoginUserRecord(user.getUserId(), user.getPhoneNumber(), token, user.getPortrait());
             loginRecord.save();
         }else{
             loginRecord.setLastLoginTime(new Date());
@@ -36,17 +35,12 @@ public class DatabaseUtil {
                 .orderBy("LastLoginTime DESC").limit(limit).execute();
     }
 
-    public static LoginUserRecord findLoginUserRecord(String userId){
-        return new Select().from(LoginUserRecord.class).where("PhoneNumber=?", userId)
+    public static LoginUserRecord findLoginUserRecord(int userId){
+        return new Select().from(LoginUserRecord.class).where("UserId=?", userId)
                 .executeSingle();
     }
 
-    public static Guardianship findDefaultMonitorOlder(String guardianId){
-        return new Select().from(Guardianship.class).where("GuardianID=?", guardianId)
-                .executeSingle();
-    }
-
-    public static List<ChatMessageRecord> findChatMessageRecords(String chatterAId, String chatterBId, Date endTime, int limit){
+    public static List<ChatMessageRecord> findChatMessageRecords(int chatterAId, int chatterBId, Date endTime, int limit){
         return new Select().from(ChatMessageRecord.class)
                 .where("ChatterAId=?", chatterAId)
                 .where("ChatterBId=?", chatterBId)
@@ -56,20 +50,20 @@ public class DatabaseUtil {
                 .execute();
     }
 
-    public static List<SessionMessageRecord> findSessionMessageRecords(String fromUserId){
+    public static List<SessionMessageRecord> findSessionMessageRecords(int fromUserId){
         return new Select().from(SessionMessageRecord.class)
                 .where("FromUserId=?", fromUserId)
                 .execute();
     }
 
-    public static SessionMessageRecord findSessionMessageRecord(String fromUserId, String toUserId){
+    public static SessionMessageRecord findSessionMessageRecord(int fromUserId, int toUserId){
         return new Select().from(SessionMessageRecord.class)
                 .where("FromUserId=?", fromUserId)
                 .where("ToUserId=?", toUserId)
                 .executeSingle();
     }
 
-    public static List<MedicationReminder> findMedicationRemindersByUserId(String userId){
+    public static List<MedicationReminder> findMedicationRemindersByUserId(int userId){
         return new Select().from(MedicationReminder.class)
                 .where("UserId=?", userId)
                 .orderBy("AddTime DESC")

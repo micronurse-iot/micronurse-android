@@ -72,11 +72,11 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
     public void onBind(MQTTService service) {
         for(User u : GlobalInfo.guardianshipList) {
             service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(GlobalInfo.TOPIC_CHATTING,
-                    u.getPhoneNumber(), GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
+                    u.getUserId(), GlobalInfo.user.getUserId(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
         }
         for(User u : GlobalInfo.Older.friendList) {
             service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(GlobalInfo.TOPIC_CHATTING,
-                    u.getPhoneNumber(), GlobalInfo.user.getPhoneNumber(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
+                    u.getUserId(), GlobalInfo.user.getUserId(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
         }
     }
 
@@ -113,7 +113,7 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
     }
 
     private class FriendJuanPagerAdapter extends FragmentPagerAdapter {
-        public FriendJuanPagerAdapter(FragmentManager fm) {
+        FriendJuanPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
@@ -137,15 +137,15 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
     private class MessageArrivedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(GlobalInfo.user == null || !GlobalInfo.user.getPhoneNumber().equals(intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID)))
+            if(GlobalInfo.user == null || GlobalInfo.user.getUserId() == intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1))
                 return;
-            String senderId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(senderId == null || senderId.isEmpty())
+            int senderId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
+            if(senderId < 0)
                 return;
             try {
                 ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
                         ChatMessageRecord.class);
-                cmr.setChatterAId(GlobalInfo.user.getPhoneNumber());
+                cmr.setChatterAId(GlobalInfo.user.getUserId());
                 cmr.setChatterBId(senderId);
                 cmr.setSenderId(senderId);
                 for(Fragment f : friendJuanPages){
@@ -162,11 +162,11 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
     private class MessageSentReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            String topicUserId = intent.getStringExtra(Application.BUNDLE_KEY_USER_ID);
-            if(GlobalInfo.user == null || !GlobalInfo.user.getPhoneNumber().equals(topicUserId))
+            int topicUserId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
+            if(GlobalInfo.user == null || GlobalInfo.user.getUserId() != topicUserId)
                 return;
-            String receiverId = intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID);
-            if(receiverId == null || receiverId.isEmpty())
+            int receiverId = intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1);
+            if(receiverId < 0)
                 return;
             for(Fragment f : friendJuanPages){
                 if(f instanceof MessageListener){
@@ -181,10 +181,10 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
         public void onReceive(Context context, Intent intent) {
             if(viewRoot == null)
                 return;
-            String receiverId = intent.getStringExtra(Application.BUNDLE_KEY_RECEIVER_ID);
+            int receiverId = intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1);
             Date msgTime = new Date(intent.getLongExtra(Application.BUNDLE_KEY_MESSAGE_TIMESTAMP, -1));
             String msg = intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE);
-            if(receiverId == null || receiverId.isEmpty())
+            if(receiverId < 0)
                 return;
             for(Fragment f : friendJuanPages){
                 if(f instanceof MessageListener){

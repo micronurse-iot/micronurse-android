@@ -68,7 +68,7 @@ public class FriendContactsFragment extends Fragment {
                                 @Override
                                 public void onClick(View v) {
                                     Intent intent = new Intent(getActivity(), ChatActivity.class);
-                                    intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, u.getPhoneNumber());
+                                    intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, u.getUserId());
                                     startActivity(intent);
                                 }
                             }));
@@ -82,7 +82,7 @@ public class FriendContactsFragment extends Fragment {
                         @Override
                         public void onClick(View v) {
                             Intent intent = new Intent(getActivity(), ChatActivity.class);
-                            intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, u.getPhoneNumber());
+                            intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, u.getUserId());
                             startActivity(intent);
                         }
                     }));

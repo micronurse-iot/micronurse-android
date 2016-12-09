@@ -129,7 +129,7 @@ public class MonitorDetailActivity extends AppCompatActivity {
                         url = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, sensorType,
                                 URLEncoder.encode(name, "utf-8"), String.valueOf(startTimestamp), String.valueOf(endTimestamp), String.valueOf(limitNum));
                     else
-                        url = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA, GlobalInfo.Guardian.monitorOlder.getPhoneNumber(), sensorType,
+                        url = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA, String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()), sensorType,
                                 URLEncoder.encode(name, "utf-8"), String.valueOf(startTimestamp), String.valueOf(endTimestamp), String.valueOf(limitNum));
                 } catch (UnsupportedEncodingException uee) {
                     uee.printStackTrace();

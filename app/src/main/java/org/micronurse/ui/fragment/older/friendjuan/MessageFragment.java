@@ -48,7 +48,7 @@ public class MessageFragment extends Fragment implements MessageListener {
         sessionListView = (RecyclerView) viewRoot.findViewById(R.id.session_msg_list);
         sessionListView.setNestedScrollingEnabled(false);
         sessionListView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        List<SessionMessageRecord> records = DatabaseUtil.findSessionMessageRecords(GlobalInfo.user.getPhoneNumber());
+        List<SessionMessageRecord> records = DatabaseUtil.findSessionMessageRecords(GlobalInfo.user.getUserId());
         adapter = new SessionMessageAdapter(getActivity(), sessionList, new SessionMessageAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position, SessionMessageAdapter.MessageItem item) {
@@ -68,7 +68,7 @@ public class MessageFragment extends Fragment implements MessageListener {
         for(SessionMessageRecord smr : records){
             User u = GlobalInfo.findUserById(smr.getToUserId());
             if(u != null){
-                List<ChatMessageRecord> chatRecords = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getPhoneNumber(),
+                List<ChatMessageRecord> chatRecords = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getUserId(),
                         smr.getToUserId(), new Date(), 1);
                 if(chatRecords != null && !chatRecords.isEmpty()) {
                     if (chatRecords.get(0).getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT)) {
@@ -87,13 +87,13 @@ public class MessageFragment extends Fragment implements MessageListener {
         viewRoot.findViewById(R.id.txt_no_message).setVisibility(View.GONE);
         SessionMessageAdapter.MessageItem messageItem = null;
         for(SessionMessageAdapter.MessageItem mi : sessionList){
-            if(mi.getSessionMessageRecord().getToUserId().equals(cmr.getChatterBId())){
+            if(mi.getSessionMessageRecord().getToUserId() == cmr.getChatterBId()){
                 messageItem = mi;
                 break;
             }
         }
         if(messageItem == null) {
-            addNewSessionMessage(new SessionMessageRecord(GlobalInfo.user.getPhoneNumber(), cmr.getChatterBId(), 1),
+            addNewSessionMessage(new SessionMessageRecord(GlobalInfo.user.getUserId(), cmr.getChatterBId(), 1),
                     cmr.getMessageTime(), cmr.getContent(), false);
             return;
         }
@@ -109,10 +109,10 @@ public class MessageFragment extends Fragment implements MessageListener {
 
     @Override
     public void onResume() {
-        if(GlobalInfo.currentChatReceiver != null && !GlobalInfo.currentChatReceiver.isEmpty()){
+        if(GlobalInfo.currentChatReceiverId != null){
             int pos = 0;
             for(SessionMessageAdapter.MessageItem mi : sessionList){
-                if(mi.getSessionMessageRecord().getToUserId().equals(GlobalInfo.currentChatReceiver)){
+                if(mi.getSessionMessageRecord().getToUserId() == GlobalInfo.currentChatReceiverId){
                     mi.getSessionMessageRecord().setUnreadMessageNum(0);
                     mi.getSessionMessageRecord().save();
                     adapter.notifyItemChanged(pos);
@@ -120,7 +120,7 @@ public class MessageFragment extends Fragment implements MessageListener {
                 }
                 pos++;
             }
-            GlobalInfo.currentChatReceiver = null;
+            GlobalInfo.currentChatReceiverId = null;
         }
         super.onResume();
     }
@@ -128,9 +128,9 @@ public class MessageFragment extends Fragment implements MessageListener {
     @Override
     public void onMessageArrived(ChatMessageRecord cmr) {
         if(viewRoot == null) {
-            SessionMessageRecord smr = DatabaseUtil.findSessionMessageRecord(GlobalInfo.user.getPhoneNumber(), cmr.getChatterBId());
+            SessionMessageRecord smr = DatabaseUtil.findSessionMessageRecord(GlobalInfo.user.getUserId(), cmr.getChatterBId());
             if(smr == null){
-                smr = new SessionMessageRecord(GlobalInfo.user.getPhoneNumber(), cmr.getChatterBId());
+                smr = new SessionMessageRecord(GlobalInfo.user.getUserId(), cmr.getChatterBId());
             }
             smr.setUnreadMessageNum(smr.getUnreadMessageNum() + 1);
             smr.save();
@@ -140,12 +140,12 @@ public class MessageFragment extends Fragment implements MessageListener {
     }
 
     @Override
-    public void onMessageSent(String receiverId, String messageId) {
+    public void onMessageSent(int receiverId, String messageId) {
         if(viewRoot == null)
             return;
         int pos = 0;
         for(SessionMessageAdapter.MessageItem mi : sessionList){
-            if(mi.getSessionMessageRecord().getToUserId().equals(receiverId)){
+            if(mi.getSessionMessageRecord().getToUserId() == receiverId){
                 mi.setSending(false);
                 adapter.notifyItemChanged(pos);
                 break;
@@ -155,12 +155,12 @@ public class MessageFragment extends Fragment implements MessageListener {
     }
 
     @Override
-    public void onMessageSendStart(String receiverId, String messageId, String message, Date messageTime) {
+    public void onMessageSendStart(int receiverId, String messageId, String message, Date messageTime) {
         if(viewRoot == null)
             return;
         int pos = 0;
         for(SessionMessageAdapter.MessageItem mi : sessionList){
-            if(mi.getSessionMessageRecord().getToUserId().equals(receiverId)){
+            if(mi.getSessionMessageRecord().getToUserId() == receiverId){
                 mi.setSessionTime(messageTime);
                 mi.setSessionMsg(message);
                 mi.setSending(true);
@@ -171,7 +171,7 @@ public class MessageFragment extends Fragment implements MessageListener {
             pos++;
         }
         if(pos >= sessionList.size()){
-            addNewSessionMessage(new SessionMessageRecord(GlobalInfo.user.getPhoneNumber(), receiverId, 0),
+            addNewSessionMessage(new SessionMessageRecord(GlobalInfo.user.getUserId(), receiverId, 0),
                     messageTime, message, true);
         }
     }

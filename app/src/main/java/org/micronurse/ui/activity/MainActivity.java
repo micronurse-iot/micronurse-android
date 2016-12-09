@@ -17,7 +17,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -25,7 +24,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.micronurse.R;
-import org.micronurse.database.model.Guardianship;
 import org.micronurse.model.User;
 import org.micronurse.service.EmergencyCallService;
 import org.micronurse.service.LocationService;
@@ -190,24 +188,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
         if(GlobalInfo.Guardian.monitorOlder == null){
-            Guardianship guardianship = DatabaseUtil.findDefaultMonitorOlder(GlobalInfo.user.getPhoneNumber());
-            if(guardianship == null){
-                GlobalInfo.Guardian.monitorOlder = GlobalInfo.guardianshipList.get(0);
-                guardianship = new Guardianship(GlobalInfo.user.getPhoneNumber(), GlobalInfo.Guardian.monitorOlder.getPhoneNumber());
-                guardianship.save();
-            }else{
-                for(User u: GlobalInfo.guardianshipList){
-                    if(u.getPhoneNumber().equals(guardianship.getOlderId())){
-                        GlobalInfo.Guardian.monitorOlder = u;
-                        break;
-                    }
-                }
-                if(GlobalInfo.Guardian.monitorOlder == null){
-                    GlobalInfo.Guardian.monitorOlder = GlobalInfo.guardianshipList.get(0);
-                    guardianship.setOlderId(GlobalInfo.Guardian.monitorOlder.getPhoneNumber());
-                    guardianship.save();
-                }
-            }
+            GlobalInfo.Guardian.monitorOlder = GlobalInfo.guardianshipList.get(0);
         }
         ((TextView)mNavHeaderView.findViewById(R.id.nav_header_older_nickname)).setText(GlobalInfo.Guardian.monitorOlder.getNickname());
         ((ImageView)mNavHeaderView.findViewById(R.id.nav_header_older_portrait)).setImageBitmap(GlobalInfo.Guardian.monitorOlder.getPortrait());

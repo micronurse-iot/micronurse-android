@@ -24,13 +24,15 @@ public class MonitorWarningReceiver extends BroadcastReceiver {
         Bundle bundle = intent.getExtras();
         String title = context.getString(R.string.action_monitor_warning);
         String message = bundle.getString(Application.BUNDLE_KEY_MESSAGE);
-        String userId = bundle.getString(Application.BUNDLE_KEY_USER_ID);
-        if(GlobalInfo.user.getPhoneNumber().equals(userId))
+        int userId = bundle.getInt(Application.BUNDLE_KEY_USER_ID, -1);
+        if(userId < 0)
+            return;
+        if(GlobalInfo.user.getUserId() == userId)
             title += '-' + GlobalInfo.user.getNickname();
         else{
             if(GlobalInfo.guardianshipList != null){
                 for(User u : GlobalInfo.guardianshipList){
-                    if(u.getPhoneNumber().equals(userId)) {
+                    if(u.getUserId() == userId) {
                         title += '-' + u.getNickname();
                         break;
                     }
