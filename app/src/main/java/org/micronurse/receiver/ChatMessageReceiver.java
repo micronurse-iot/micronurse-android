@@ -30,8 +30,9 @@ public class ChatMessageReceiver extends BroadcastReceiver {
             if(senderId < 0)
                 return;
             try {
-                ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
-                        ChatMessageRecord.class);
+                ChatMessageRecord cmr = GsonUtil.getDefaultGsonBuilder()
+                        .excludeFieldsWithoutExposeAnnotation().create()
+                        .fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), ChatMessageRecord.class);
                 cmr = new ChatMessageRecord(GlobalInfo.user.getUserId(), senderId, senderId, cmr.getMessageTime(), cmr.getMessageType(), cmr.getContent());
                 cmr.save();
                 Log.i(GlobalInfo.LOG_TAG, "Cache a message from user " + senderId + " successfully.");

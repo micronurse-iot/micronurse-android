@@ -1,6 +1,10 @@
 package org.micronurse;
 
+import android.app.Activity;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
 import com.baidu.mapapi.SDKInitializer;
 
@@ -39,5 +43,14 @@ public class Application extends com.activeandroid.app.Application {
         ACTION_CHAT_MESSAGE_RECEIVED = getPackageName() + ".action.CHAT_MESSAGE_RECEIVED";
         ACTION_CHAT_MESSAGE_SEND_START = getPackageName() + ".action.CHAT_MESSAGE_SEND_START";
         ACTION_MEDICATION_REMINDER = getPackageName() + ".action.MEDICATION_REMINDER";
+    }
+
+    public static void checkPermission(Activity activity, String permission){
+        if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
+                return;
+            }
+            ActivityCompat.requestPermissions(activity, new String[]{permission}, 0);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package org.micronurse.ui.activity;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -23,6 +24,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.model.User;
 import org.micronurse.service.EmergencyCallService;
@@ -102,6 +104,7 @@ public class MainActivity extends AppCompatActivity
         mNavigationView.setNavigationItemSelectedListener(this);
         mNavigationView.getMenu().getItem(0).setChecked(true);
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
+            Application.checkPermission(this, Manifest.permission.CALL_PHONE);
             mSwitchEmergencyCall = (SwitchCompat) mNavigationView.getMenu().findItem(R.id.nav_switch_emergency_call)
                                    .getActionView().findViewById(R.id.switch_emergency_call_btn);
             mSwitchEmergencyCall.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -151,6 +154,8 @@ public class MainActivity extends AppCompatActivity
         };
         bindService(mqttServiceIntent, mqttServiceConnection, Context.BIND_AUTO_CREATE);
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
+            Application.checkPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+            Application.checkPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
             emergencyCallServiceIntent = new Intent(this, EmergencyCallService.class);
             startService(emergencyCallServiceIntent);
             emergencyCallServiceConnection = new ServiceConnection() {

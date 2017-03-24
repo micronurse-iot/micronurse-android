@@ -143,8 +143,9 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
             if(senderId < 0)
                 return;
             try {
-                ChatMessageRecord cmr = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE),
-                        ChatMessageRecord.class);
+                ChatMessageRecord cmr = GsonUtil.getDefaultGsonBuilder()
+                        .excludeFieldsWithoutExposeAnnotation().create()
+                        .fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), ChatMessageRecord.class);
                 cmr.setChatterAId(GlobalInfo.user.getUserId());
                 cmr.setChatterBId(senderId);
                 cmr.setSenderId(senderId);
