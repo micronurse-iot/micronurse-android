@@ -13,13 +13,19 @@ import java.util.Date;
  */
 public class DateTimeUtil {
     @SuppressLint("SimpleDateFormat")
-    private static SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+    @SuppressLint("SimpleDateFormat")
+    private static SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm:ss");
     @SuppressLint("SimpleDateFormat")
     private static SimpleDateFormat sdf2 = new SimpleDateFormat("MM-dd");
     @SuppressLint("SimpleDateFormat")
     private static SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd");
 
     public static String convertTimestamp(Context context, Date time, boolean showDate, boolean showTime){
+        return convertTimestamp(context, time, showDate, showTime, false);
+    }
+
+    public static String convertTimestamp(Context context, Date time, boolean showDate, boolean showTime, boolean showSecond){
         Date currentDate = new Date();
         String timeStr = "";
         if(time.getYear() == currentDate.getYear() && time.getMonth() == currentDate.getMonth()
@@ -44,18 +50,17 @@ public class DateTimeUtil {
             if(showTime)
                 timeStr += ' ';
         }
-        if(showTime)
-            timeStr += sdf.format(time);
+        if(showTime) {
+            if(showSecond)
+                timeStr += sdf1.format(time);
+            else
+                timeStr += sdf.format(time);
+        }
         return timeStr;
     }
 
-    @SuppressWarnings("deprecation")
-    public static String convertTimestamp(Context context, long timestamp){
-        return convertTimestamp(context, new Date(timestamp), true, true);
-    }
-
-    public static String convertTimestamp(Context context, long timestamp, boolean showDate, boolean showTime){
-        return convertTimestamp(context, new Date(timestamp), showDate, showTime);
+    public static String getHttpTimestampStr(Date date){
+        return "T" + Long.toString(date.getTime() / 1000);
     }
 
     @SuppressWarnings("deprecation")

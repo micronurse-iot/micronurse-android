@@ -14,8 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.gson.JsonSyntaxException;
-
 import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.database.model.ChatMessageRecord;
@@ -26,27 +24,26 @@ import org.micronurse.ui.fragment.older.friendjuan.MessageFragment;
 import org.micronurse.ui.fragment.older.friendjuan.MomentFragment;
 import org.micronurse.ui.listener.MessageListener;
 import org.micronurse.ui.listener.OnBindMQTTServiceListener;
+import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
-import org.micronurse.util.GsonUtil;
 
-import java.util.Date;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceListener {
-    private View viewRoot;
-    private ViewPager viewPager;
-    private TabLayout tabLayout;
+    private View rootView;
+    @BindView(R.id.tab_viewpager_friend_juan)
+    ViewPager viewPager;
+    @BindView(R.id.tab_friend_juan)
+    TabLayout tabLayout;
+
     private Fragment[] friendJuanPages;
     private String[] pageTitles;
 
-    private MessageArrivedReceiver msgArrivedReceiver;
-    private MessageSentReceiver msgSentReceiver;
-    private MessageSendStartReceiver msgSendStartReceiver;
+    private MessageReceiver msgReceiver;
 
     public FriendJuanFragment() {
         // Required empty public constructor
-        msgArrivedReceiver = new MessageArrivedReceiver();
-        msgSentReceiver = new MessageSentReceiver();
-        msgSendStartReceiver = new MessageSendStartReceiver();
     }
 
     public static FriendJuanFragment getInstance(Context context){
@@ -56,35 +53,23 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
                 FriendContactsFragment.getInstance(context),
                 MomentFragment.getInstance(context)
         };
-        IntentFilter filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_RECEIVED);
-        filter.addCategory(context.getPackageName());
-        context.registerReceiver(fragment.msgArrivedReceiver, filter);
-        filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SENT);
-        filter.addCategory(context.getPackageName());
-        context.registerReceiver(fragment.msgSentReceiver, filter);
-        filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SEND_START);
-        filter.addCategory(context.getPackageName());
-        context.registerReceiver(fragment.msgSendStartReceiver, filter);
         return fragment;
     }
 
     @Override
     public void onBind(MQTTService service) {
-        for(User u : GlobalInfo.guardianshipList) {
-            service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(GlobalInfo.TOPIC_CHATTING,
-                    u.getUserId(), GlobalInfo.user.getUserId(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
+        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
+            service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(Application.MQTT_TOPIC_CHATTING_FRIEND,
+                    GlobalInfo.user.getUserId(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
         }
-        for(User u : GlobalInfo.Older.friendList) {
-            service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(GlobalInfo.TOPIC_CHATTING,
-                    u.getUserId(), GlobalInfo.user.getUserId(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
-        }
+        service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(Application.MQTT_TOPIC_CHATTING_GUARDIANSHIP,
+                    GlobalInfo.user.getUserId(), 1, Application.ACTION_CHAT_MESSAGE_RECEIVED));
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        if(viewRoot != null)
-            return viewRoot;
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if(rootView != null)
+            return rootView;
 
         pageTitles = new String[]{
                 getString(R.string.friend_message),
@@ -96,19 +81,27 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
                 new MessageFragment(), new FriendContactsFragment(), new MomentFragment()
             };
         }
-        viewRoot = inflater.inflate(R.layout.fragment_older_friend_juan, container, false);
-        viewPager = (ViewPager) viewRoot.findViewById(R.id.tab_viewpager_friend_juan);
+        rootView = inflater.inflate(R.layout.fragment_older_friend_juan, container, false);
+        ButterKnife.bind(this, rootView);
         viewPager.setAdapter(new FriendJuanPagerAdapter(getFragmentManager()));
-        tabLayout = (TabLayout) viewRoot.findViewById(R.id.tab_friend_juan);
         tabLayout.setupWithViewPager(viewPager);
-        return viewRoot;
+
+        msgReceiver = new MessageReceiver();
+        IntentFilter filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_RECEIVED_SAVED);
+        filter.addCategory(getContext().getPackageName());
+        getContext().registerReceiver(msgReceiver, filter);
+        filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SENT_SAVED);
+        filter.addCategory(getContext().getPackageName());
+        getContext().registerReceiver(msgReceiver, filter);
+        filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SEND_START);
+        filter.addCategory(getContext().getPackageName());
+        getContext().registerReceiver(msgReceiver, filter);
+        return rootView;
     }
 
     @Override
     public void onDestroy() {
-        getContext().unregisterReceiver(msgArrivedReceiver);
-        getContext().unregisterReceiver(msgSentReceiver);
-        getContext().unregisterReceiver(msgSendStartReceiver);
+        getContext().unregisterReceiver(msgReceiver);
         super.onDestroy();
     }
 
@@ -133,63 +126,22 @@ public class FriendJuanFragment extends Fragment implements OnBindMQTTServiceLis
         }
     }
 
-
-    private class MessageArrivedReceiver extends BroadcastReceiver {
+    private class MessageReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(GlobalInfo.user == null || GlobalInfo.user.getUserId() == intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1))
+            if(GlobalInfo.user == null)
                 return;
-            int senderId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
-            if(senderId < 0)
+            ChatMessageRecord cmr = DatabaseUtil.findChatMessageByDbId(intent.getLongExtra(Application.BUNDLE_KEY_CHAT_MSG_DB_ID, -1));
+            if(cmr == null)
                 return;
-            try {
-                ChatMessageRecord cmr = GsonUtil.getDefaultGsonBuilder()
-                        .excludeFieldsWithoutExposeAnnotation().create()
-                        .fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), ChatMessageRecord.class);
-                cmr.setChatterAId(GlobalInfo.user.getUserId());
-                cmr.setChatterBId(senderId);
-                cmr.setSenderId(senderId);
-                for(Fragment f : friendJuanPages){
-                    if(f instanceof MessageListener){
+            for(Fragment f : friendJuanPages){
+                if(f instanceof MessageListener){
+                    if(intent.getAction().equals(Application.ACTION_CHAT_MESSAGE_RECEIVED_SAVED))
                         ((MessageListener) f).onMessageArrived(cmr);
-                    }
-                }
-            }catch (JsonSyntaxException jse){
-                jse.printStackTrace();
-            }
-        }
-    }
-
-    private class MessageSentReceiver extends BroadcastReceiver{
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int topicUserId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
-            if(GlobalInfo.user == null || GlobalInfo.user.getUserId() != topicUserId)
-                return;
-            int receiverId = intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1);
-            if(receiverId < 0)
-                return;
-            for(Fragment f : friendJuanPages){
-                if(f instanceof MessageListener){
-                    ((MessageListener) f).onMessageSent(receiverId, intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE_ID));
-                }
-            }
-        }
-    }
-
-    private class MessageSendStartReceiver extends BroadcastReceiver{
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(viewRoot == null)
-                return;
-            int receiverId = intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1);
-            Date msgTime = new Date(intent.getLongExtra(Application.BUNDLE_KEY_MESSAGE_TIMESTAMP, -1));
-            String msg = intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE);
-            if(receiverId < 0)
-                return;
-            for(Fragment f : friendJuanPages){
-                if(f instanceof MessageListener){
-                    ((MessageListener) f).onMessageSendStart(receiverId, intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE_ID), msg, msgTime);
+                    else if(intent.getAction().equals(Application.ACTION_CHAT_MESSAGE_SENT_SAVED))
+                        ((MessageListener) f).onMessageSent(cmr);
+                    else if(intent.getAction().equals(Application.ACTION_CHAT_MESSAGE_SEND_START))
+                        ((MessageListener) f).onMessageSendStart(cmr);
                 }
             }
         }

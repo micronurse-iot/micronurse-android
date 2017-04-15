@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
@@ -30,12 +31,12 @@
             android:value="MicroNurse.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="10" />
+            android:value="11" />
         <meta-data
             android:name="AA_MODELS"
             android:value="org.micronurse.database.model.LoginUserRecord,
                            org.micronurse.database.model.ChatMessageRecord,
-                           org.micronurse.database.model.SessionMessageRecord,
+                           org.micronurse.database.model.SessionRecord,
                            org.micronurse.database.model.MedicationReminder" />
         <meta-data
             android:name="AA_SERIALIZERS"
@@ -74,11 +75,9 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.older.SettingsActivity"
+            android:name=".ui.activity.SettingsActivity"
             android:label="@string/action_settings" />
-        <activity
-            android:name=".ui.activity.guardian.SettingsActivity"
-            android:label="@string/action_settings" />
+
         <activity
             android:name=".ui.activity.older.SettingHomeLocationActivity"
             android:label="@string/action_setting_home_location" />

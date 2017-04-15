@@ -3,20 +3,12 @@ package org.micronurse.receiver;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v7.app.AlertDialog;
-import android.app.Service;
-import android.os.Vibrator;
 import android.support.v7.app.NotificationCompat;
-import android.util.Log;
 
-import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.database.model.MedicationReminder;
-import org.micronurse.model.User;
 import org.micronurse.util.DatabaseUtil;
-import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.ScheduleUtil;
 
 /**
@@ -53,7 +45,7 @@ public class MedicationReminderReceiver extends BroadcastReceiver {
         long remindId = intent.getLongExtra(BUNDLE_KEY_REMINDER_ID, -1);
         if(remindId < 0)
             return;
-        MedicationReminder mr = DatabaseUtil.findMedicationReminderById(remindId);
+        MedicationReminder mr = DatabaseUtil.findMedicationReminderByDBId(remindId);
         if(mr == null) {
             return;
         }

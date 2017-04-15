@@ -14,14 +14,20 @@ import com.unnamed.b.atv.view.AndroidTreeView;
 import org.micronurse.R;
 import org.micronurse.adapter.ContactListContactHolder;
 import org.micronurse.adapter.ContactListRootHolder;
+import org.micronurse.database.model.SessionRecord;
 import org.micronurse.model.User;
 import org.micronurse.ui.activity.ChatActivity;
+import org.micronurse.ui.listener.ContactListener;
 import org.micronurse.util.GlobalInfo;
 
-public class FriendContactsFragment extends Fragment {
-    private View viewRoot;
-    private ViewGroup listContainer;
-    private SwipeRefreshLayout refresh;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
+public class FriendContactsFragment extends Fragment implements ContactListener {
+    private View rootView;
+    @BindView(R.id.contacts_list_container)
+    ViewGroup listContainer;
     private TreeNode treeRoot;
     private TreeNode guardianListRoot;
     private TreeNode olderFriendListRoot;
@@ -37,60 +43,66 @@ public class FriendContactsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        if(viewRoot != null)
-            return viewRoot;
+        if(rootView != null)
+            return rootView;
 
-        viewRoot = inflater.inflate(R.layout.fragment_friend_juan_contacts, container, false);
-        refresh = (SwipeRefreshLayout) viewRoot.findViewById(R.id.refresh_layout);
-        refresh.setColorSchemeResources(R.color.colorAccent);
-        refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshContactList();
-            }
-        });
-        listContainer = (ViewGroup) viewRoot.findViewById(R.id.contacts_list_container);
+        rootView = inflater.inflate(R.layout.fragment_friend_juan_contacts, container, false);
+        ButterKnife.bind(this, rootView);
 
-        refreshContactList();
-        return viewRoot;
-    }
-
-    private void refreshContactList(){
-        //TODO: Refresh contact list without removing the whole tree view.
-        listContainer.removeAllViews();
         treeRoot = TreeNode.root();
         AndroidTreeView atv = new AndroidTreeView(getActivity(), treeRoot);
         guardianListRoot = new TreeNode(new ContactListRootHolder.IconTextItem(R.drawable.ic_contacts_32dp, getString(R.string.guardians) + " (" + GlobalInfo.guardianshipList.size() + ')'))
                 .setViewHolder(new ContactListRootHolder(getActivity(), atv));
-        for(final User u : GlobalInfo.guardianshipList){
-            TreeNode node = new TreeNode(new ContactListContactHolder.IconTextItem(u.getPortrait(), u.getNickname()))
-                            .setViewHolder(new ContactListContactHolder(getActivity(), new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    Intent intent = new Intent(getActivity(), ChatActivity.class);
-                                    intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, u.getUserId());
-                                    startActivity(intent);
-                                }
-                            }));
-            guardianListRoot.addChild(node);
-        }
         olderFriendListRoot = new TreeNode(new ContactListRootHolder.IconTextItem(R.drawable.ic_friend_32dp, getString(R.string.friends) + " (" + GlobalInfo.Older.friendList.size() + ')'))
                 .setViewHolder(new ContactListRootHolder(getActivity(), atv));
-        for(final User u : GlobalInfo.Older.friendList){
-            TreeNode node = new TreeNode(new ContactListContactHolder.IconTextItem(u.getPortrait(), u.getNickname()))
-                    .setViewHolder(new ContactListContactHolder(getActivity(), new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(getActivity(), ChatActivity.class);
-                            intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, u.getUserId());
-                            startActivity(intent);
-                        }
-                    }));
-            olderFriendListRoot.addChild(node);
-        }
         treeRoot.addChildren(guardianListRoot, olderFriendListRoot);
         atv.setDefaultAnimation(true);
         listContainer.addView(atv.getView());
-        refresh.setRefreshing(false);
+
+        for(User u : GlobalInfo.guardianshipList)
+            onAddGuardianship(u);
+        for(User u : GlobalInfo.Older.friendList)
+            onAddFriend(u);
+        return rootView;
+    }
+
+    @Override
+    public void onAddGuardianship(final User newContact) {
+        TreeNode node = new TreeNode(new ContactListContactHolder.IconTextItem(newContact.getPortrait(), newContact.getNickname()))
+                .setViewHolder(new ContactListContactHolder(getActivity(), new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(getActivity(), ChatActivity.class);
+                        intent.putExtra(ChatActivity.BUNDLE_KEY_SESSION_TYPE, SessionRecord.SESSION_TYPE_GUARDIANSHIP);
+                        intent.putExtra(ChatActivity.BUNDLE_KEY_SESSION_ID, newContact.getUserId());
+                        startActivity(intent);
+                    }
+                }));
+        guardianListRoot.addChild(node);
+    }
+
+    @Override
+    public void onAddFriend(final User newContact) {
+        TreeNode node = new TreeNode(new ContactListContactHolder.IconTextItem(newContact.getPortrait(), newContact.getNickname()))
+                .setViewHolder(new ContactListContactHolder(getActivity(), new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(getActivity(), ChatActivity.class);
+                        intent.putExtra(ChatActivity.BUNDLE_KEY_SESSION_TYPE, SessionRecord.SESSION_TYPE_FRIEND);
+                        intent.putExtra(ChatActivity.BUNDLE_KEY_SESSION_ID, newContact.getUserId());
+                        startActivity(intent);
+                    }
+                }));
+        olderFriendListRoot.addChild(node);
+    }
+
+    @OnClick(R.id.btn_add_friend)
+    void onBtnAddFriendClick(View v){
+        //TODO: Add friend
+    }
+
+    @OnClick(R.id.btn_add_guardian)
+    void onBtnAddGuradianClick(View v){
+        //TODO: Add guardianship
     }
 }

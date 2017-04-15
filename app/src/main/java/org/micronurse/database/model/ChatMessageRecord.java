@@ -9,90 +9,94 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * Created by zhou-shengyun on 16-10-13.
+ * Created by shengyun-zhou <GGGZ-1101-28@Live.cn> on 2017-02-23
  */
 
 @Table(name = "ChatMessageRecord")
-public class ChatMessageRecord extends Model implements Serializable {
-    public static final String MESSAGE_TYPE_TEXT = "text";
-    private static final String MESSAGE_ID_PREFIX = "ChatMessage_";
+public class ChatMessageRecord extends Model implements Serializable, Comparable<ChatMessageRecord> {
+    public static final int MESSAGE_TYPE_TEXT = 1;
 
-    @Column(name = "ChatterAId", notNull = true)
-    private int chatterAId;
+    public static final int MESSAGE_STATUS_NORMAL = 0;
+    public static final int MESSAGE_STATUS_SENDING = 1;
+    public static final int MESSAGE_STATUS_ERROR = 2;
 
-    @Column(name = "ChatterBId", notNull = true)
-    private int chatterBId;
+    @Column(name = "Session", notNull = true)
+    @Expose
+    private SessionRecord session;
 
     @Column(name = "SenderId", notNull = true)
-    private int senderId;
+    @Expose
+    private long senderId;
 
-    @Column(name = "MessageTime", notNull = true, uniqueGroups = {"ChatterAId", "ChatterBId", "MessageTime"},
-            indexGroups = {"ChatterAId", "ChatterBId", "MessageTime"})
+    @Column(name = "MessageTime", notNull = true, uniqueGroups = {"Session", "SenderId", "MessageTime"},
+            indexGroups = {"Session", "SenderId", "MessageTime"})
     @Expose
     private Date messageTime;
 
     @Column(name = "MessageType", notNull = true, length = 10)
     @Expose
-    private String messageType;
+    private int messageType;
 
     @Column(name = "Content", notNull = true)
     @Expose
-    private String content;
+    private String strContent;
+
+    @Column(name = "Status", notNull = true)
+    private int status;
+
+    private Object content;
 
     public ChatMessageRecord(){
         super();
     }
 
-    public ChatMessageRecord(int chatterAId, int chatterBId, int senderId, String messageType, String content) {
-        this(chatterAId, chatterBId, senderId, new Date(), messageType, content);
+    public ChatMessageRecord(SessionRecord session, long senderId, int messageType, String strContent) {
+        this(session, senderId, new Date(), messageType, strContent, MESSAGE_STATUS_SENDING);
     }
 
-    public ChatMessageRecord(int chatterAId, int chatterBId, int senderId, Date messageTime, String messageType, String content) {
-        this.chatterAId = chatterAId;
-        this.chatterBId = chatterBId;
+    public ChatMessageRecord(SessionRecord session, long senderId, Date messageTime, int messageType, String strContent, int status) {
+        this(session, senderId, messageTime, messageType, strContent, null, status);
+    }
+
+    public ChatMessageRecord(SessionRecord session, long senderId, Date messageTime, int messageType, String strContent, Object content, int status) {
+        this.session = session;
         this.senderId = senderId;
         this.messageTime = messageTime;
         this.messageType = messageType;
+        this.strContent = strContent;
+        this.status = status;
         this.content = content;
     }
 
-    public String getMessageType() {
+    public int getMessageType() {
         return messageType;
     }
 
-    public void setMessageType(String messageType) {
+    public void setMessageType(int messageType) {
         this.messageType = messageType;
     }
 
-    public String getContent() {
-        return content;
+    public String getStrContent() {
+        return strContent;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setStrContent(String strContent) {
+        this.strContent = strContent;
     }
 
-    public int getChatterAId() {
-        return chatterAId;
+    public SessionRecord getSession() {
+        return session;
     }
 
-    public void setChatterAId(int chatterAId) {
-        this.chatterAId = chatterAId;
+    public void setSession(SessionRecord session) {
+        this.session = session;
     }
 
-    public int getChatterBId() {
-        return chatterBId;
-    }
-
-    public void setChatterBId(int chatterBId) {
-        this.chatterBId = chatterBId;
-    }
-
-    public int getSenderId() {
+    public long getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(int senderId) {
+    public void setSenderId(long senderId) {
         this.senderId = senderId;
     }
 
@@ -104,13 +108,39 @@ public class ChatMessageRecord extends Model implements Serializable {
         this.messageTime = messageTime;
     }
 
-    public String getMessageId(){
-        return MESSAGE_ID_PREFIX + messageTime.getTime() + '/' + chatterBId + '/' + chatterAId;
+    public String getLiteralContent(){
+        if(messageType == MESSAGE_TYPE_TEXT)
+            return getStrContent();
+        return null;
     }
 
-    public String getLiteralContent(){
-        if(messageType.equals(MESSAGE_TYPE_TEXT))
-            return getContent();
-        return null;
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public String getMessageId(){
+        return "" + session.getSessionType() + session.getSessionId() + '-'
+                + senderId + '-' + messageTime.getTime();
+    }
+
+    public Object getContent() {
+        return content;
+    }
+
+    public void setContent(Object content) {
+        this.content = content;
+    }
+
+    @Override
+    public int compareTo(ChatMessageRecord o) {
+        if(messageTime.before(o.messageTime))
+            return 1;
+        else if(messageTime.after(o.messageTime))
+            return -1;
+        return 0;
     }
 }

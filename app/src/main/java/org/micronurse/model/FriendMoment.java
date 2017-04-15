@@ -1,11 +1,13 @@
 package org.micronurse.model;
 
+import java.util.Date;
+
 public class FriendMoment {
     private Integer userId;
-    private Long timestamp;
+    private Date timestamp;
     private String textContent;
 
-    public FriendMoment(int userId, long timestamp, String textContent){
+    public FriendMoment(int userId, Date timestamp, String textContent){
         this.userId = userId;
         this.timestamp = timestamp;
         this.textContent = textContent;
@@ -15,7 +17,7 @@ public class FriendMoment {
         return textContent;
     }
 
-    public long getTimestamp() {
+    public Date getTimestamp() {
         return timestamp;
     }
 
@@ -27,7 +29,7 @@ public class FriendMoment {
         this.textContent = textContent;
     }
 
-    public void setTimestamp(long timestamp) {
+    public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
 

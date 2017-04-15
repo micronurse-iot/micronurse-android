@@ -1,10 +1,7 @@
 package org.micronurse.ui.fragment.monitor;
 
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -15,47 +12,46 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.google.gson.JsonSyntaxException;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.micronurse.Application;
+
 import org.micronurse.R;
 import org.micronurse.adapter.MonitorAdapter;
-import org.micronurse.http.APIErrorListener;
-import org.micronurse.http.MicronurseAPI;
-import org.micronurse.http.model.PublicResultCode;
-import org.micronurse.http.model.result.FeverThermometerDataListResult;
-import org.micronurse.http.model.result.PulseTransducerDataListResult;
-import org.micronurse.http.model.result.Result;
-import org.micronurse.http.model.result.TurgoscopeDataListResult;
+import org.micronurse.net.PublicResultCode;
+import org.micronurse.net.http.HttpApi;
+import org.micronurse.net.http.HttpApiJsonListener;
+import org.micronurse.net.http.HttpApiJsonRequest;
+import org.micronurse.net.model.result.FeverThermometerDataListResult;
+import org.micronurse.net.model.result.PulseTransducerDataListResult;
+import org.micronurse.net.model.result.Result;
 import org.micronurse.model.FeverThermometer;
 import org.micronurse.model.PulseTransducer;
-import org.micronurse.model.RawSensorData;
 import org.micronurse.model.Sensor;
-import org.micronurse.model.Turgoscope;
 import org.micronurse.model.User;
 import org.micronurse.ui.listener.OnSensorDataReceivedListener;
 import org.micronurse.util.CheckUtil;
 import org.micronurse.util.GlobalInfo;
-import org.micronurse.util.GsonUtil;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 
 public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, OnSensorDataReceivedListener {
-    private View viewRoot;
-    private TextView txtHealthCondition;
-    private SwipeRefreshLayout swipeLayout;
-    private RecyclerView healthDataList;
+    private View rootView;
+    @BindView(R.id.txt_health_condition)
+    TextView txtHealthCondition;
+    @BindView(R.id.refresh_layout)
+    SwipeRefreshLayout refresh;
+    @BindView(R.id.health_data_list)
+    RecyclerView healthDataListView;
 
     private FeverThermometer feverThermometer;
     private PulseTransducer pulseTransducer;
-    private Turgoscope turgoscope;
-    private List<Object> sensorDataList = new ArrayList<>();
+    private List<Sensor> sensorDataList = new ArrayList<>();
+    private MonitorAdapter adapter;
     private String updateBodyTemperatureURL;
     private String updatePulseURL;
-    private String updateBloodPressureURL;
 
     public HealthMonitorFragment() {
         // Required empty public constructor
@@ -67,49 +63,52 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     }
 
     private void updateURL(){
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
-            updateBodyTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_FEVER_THERMOMETER,
-                    String.valueOf(1));
-            updatePulseURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_PULSE_TRANSDUCER,
-                    String.valueOf(1));
-            updateBloodPressureURL = MicronurseAPI.getApiUrl(MicronurseAPI.OlderSensorAPI.LATEST_SENSOR_DATA, Sensor.SENSOR_TYPE_TURGOSCOPE,
-                    String.valueOf(1));
-        }else if(GlobalInfo.Guardian.monitorOlder != null){
-            updateBodyTemperatureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
-                    Sensor.SENSOR_TYPE_FEVER_THERMOMETER, String.valueOf(1));
-            updatePulseURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
-                    Sensor.SENSOR_TYPE_PULSE_TRANSDUCER, String.valueOf(1));
-            updateBloodPressureURL = MicronurseAPI.getApiUrl(MicronurseAPI.GuardianSensorAPI.LATEST_SENSOR_DATA,
-                    String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
-                    Sensor.SENSOR_TYPE_TURGOSCOPE, String.valueOf(1));
-        }else{
-            swipeLayout.setEnabled(false);
+        switch (GlobalInfo.user.getAccountType()){
+            case User.ACCOUNT_TYPE_OLDER:
+                updateBodyTemperatureURL = HttpApi.getApiUrl(HttpApi.SensorAPI.LATEST_SENSOR_DATA,
+                        Sensor.SENSOR_TYPE_FEVER_THERMOMETER, String.valueOf(1));
+                updatePulseURL = HttpApi.getApiUrl(HttpApi.SensorAPI.LATEST_SENSOR_DATA,
+                        Sensor.SENSOR_TYPE_PULSE_TRANSDUCER, String.valueOf(1));
+                break;
+            case User.ACCOUNT_TYPE_GUARDIAN:
+                if(GlobalInfo.Guardian.monitorOlder == null){
+                    refresh.setEnabled(false);
+                    break;
+                }
+                updateBodyTemperatureURL = HttpApi.getApiUrl(HttpApi.SensorAPI.LATEST_SENSOR_DATA,
+                        String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
+                        Sensor.SENSOR_TYPE_FEVER_THERMOMETER, String.valueOf(1));
+                updatePulseURL = HttpApi.getApiUrl(HttpApi.SensorAPI.LATEST_SENSOR_DATA,
+                        String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
+                        Sensor.SENSOR_TYPE_PULSE_TRANSDUCER, String.valueOf(1));
+                break;
+            default:
+                refresh.setEnabled(false);
+                break;
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        if(viewRoot != null)
-            return viewRoot;
-        viewRoot = inflater.inflate(R.layout.fragment_health_monitor, container, false);
-        swipeLayout = (SwipeRefreshLayout)viewRoot.findViewById(R.id.swipeLayout);
-        swipeLayout.setColorSchemeResources(R.color.colorAccent);
-        swipeLayout.setOnRefreshListener(this);
+        if(rootView != null)
+            return rootView;
+        rootView = inflater.inflate(R.layout.fragment_health_monitor, container, false);
+        ButterKnife.bind(this, rootView);
+        refresh.setColorSchemeResources(R.color.colorAccent);
+        refresh.setOnRefreshListener(this);
 
-        txtHealthCondition = (TextView) viewRoot.findViewById(R.id.health_condition);
-        healthDataList = (RecyclerView) viewRoot.findViewById(R.id.health_data_list);
-        healthDataList.setLayoutManager(new LinearLayoutManager(getContext()));
-        healthDataList.setNestedScrollingEnabled(false);
+        healthDataListView.setLayoutManager(new LinearLayoutManager(getContext()));
+        healthDataListView.setNestedScrollingEnabled(false);
+        adapter = new MonitorAdapter(getActivity(), sensorDataList);
+        healthDataListView.setAdapter(adapter);
 
         updateURL();
-        if(swipeLayout.isEnabled()){
-            swipeLayout.setRefreshing(true);
+        if(refresh.isEnabled()){
+            refresh.setRefreshing(true);
             updateData();
         }
-        return viewRoot;
+        return rootView;
     }
 
     @Override
@@ -118,64 +117,46 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
     }
 
     private void updateData(){
-        new MicronurseAPI<>(getContext(), updateBodyTemperatureURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<FeverThermometerDataListResult>() {
-            @Override
-            public void onResponse(FeverThermometerDataListResult response) {
-                updateBodyTemperature(response.getDataList().get(0));
-                swipeLayout.setRefreshing(false);
-            }
-        }, new APIErrorListener() {
-            @Override
-            public boolean onErrorResponse(VolleyError err, Result result) {
-                swipeLayout.setRefreshing(false);
-                if(result != null){
-                    if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
-                        return true;
-                }
-                return false;
-            }
-        }, FeverThermometerDataListResult.class, false, null).startRequest();
+        HttpApi.startRequest(new HttpApiJsonRequest(getActivity(), updateBodyTemperatureURL, Request.Method.GET, GlobalInfo.token, null,
+                new HttpApiJsonListener<FeverThermometerDataListResult>(FeverThermometerDataListResult.class) {
+                    @Override
+                    public void onResponse() {
+                        refresh.setRefreshing(false);
+                    }
 
-        new MicronurseAPI<>(getContext(), updatePulseURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<PulseTransducerDataListResult>() {
-            @Override
-            public void onResponse(PulseTransducerDataListResult response) {
-                updatePulse(response.getDataList().get(0));
-                swipeLayout.setRefreshing(false);
-            }
-        }, new APIErrorListener() {
-            @Override
-            public boolean onErrorResponse(VolleyError err, Result result) {
-                swipeLayout.setRefreshing(false);
-                if(result != null){
-                    if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
-                        return true;
-                }
-                return false;
-            }
-        }, PulseTransducerDataListResult.class, false, null).startRequest();
+                    @Override
+                    public void onDataResponse(FeverThermometerDataListResult data) {
+                        updateBodyTemperature(data.getDataList().get(0));
+                    }
 
-        new MicronurseAPI<>(getContext(), updateBloodPressureURL, Request.Method.GET, null, GlobalInfo.token, new Response.Listener<TurgoscopeDataListResult>() {
-            @Override
-            public void onResponse(TurgoscopeDataListResult response) {
-                updateBloodPressure(response.getDataList().get(0));
-                swipeLayout.setRefreshing(false);
-            }
-        }, new APIErrorListener() {
-            @Override
-            public boolean onErrorResponse(VolleyError err, Result result) {
-                swipeLayout.setRefreshing(false);
-                if(result != null){
-                    if(result.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND)
-                        return true;
-                }
-                return false;
-            }
-        }, TurgoscopeDataListResult.class, false, null).startRequest();
+                    @Override
+                    public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
+                        return errorInfo.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND;
+                    }
+                }));
+
+        HttpApi.startRequest(new HttpApiJsonRequest(getActivity(), updatePulseURL, Request.Method.GET, GlobalInfo.token, null,
+                new HttpApiJsonListener<PulseTransducerDataListResult>(PulseTransducerDataListResult.class) {
+                    @Override
+                    public void onResponse() {
+                        refresh.setRefreshing(false);
+                    }
+
+                    @Override
+                    public void onDataResponse(PulseTransducerDataListResult data) {
+                        updatePulse(data.getDataList().get(0));
+                    }
+
+                    @Override
+                    public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
+                        return errorInfo.getResultCode() == PublicResultCode.SENSOR_DATA_NOT_FOUND;
+                    }
+                }));
     }
 
     private synchronized void updateBodyTemperature(FeverThermometer feverThermometer){
         if(this.feverThermometer != null) {
-            if (feverThermometer.getTimestamp() <= this.feverThermometer.getTimestamp())
+            if (feverThermometer.getTimestamp().getTime() <= this.feverThermometer.getTimestamp().getTime())
                 return;
         }
         this.feverThermometer = feverThermometer;
@@ -184,60 +165,37 @@ public class HealthMonitorFragment extends Fragment implements SwipeRefreshLayou
 
     private synchronized void updatePulse(PulseTransducer pulseTransducer){
         if(this.pulseTransducer != null) {
-            if (pulseTransducer.getTimestamp() <= this.pulseTransducer.getTimestamp())
+            if (pulseTransducer.getTimestamp().getTime() <= this.pulseTransducer.getTimestamp().getTime())
                 return;
         }
         this.pulseTransducer = pulseTransducer;
         updateDataView();
     }
 
-    private synchronized void updateBloodPressure(Turgoscope turgoscope){
-        if(this.turgoscope != null) {
-            if (turgoscope.getTimestamp() <= this.turgoscope.getTimestamp())
-                return;
-        }
-        this.turgoscope = turgoscope;
-        updateDataView();
-    }
-
     @SuppressLint("SetTextI18n")
     private void updateDataView(){
-        if(feverThermometer != null || pulseTransducer != null || turgoscope != null){
-            viewRoot.findViewById(R.id.health_data_area).setVisibility(View.VISIBLE);
-            viewRoot.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
-            CheckUtil.checkHealthSafetyLevel(txtHealthCondition, viewRoot.findViewById(R.id.health_condition_area),
-                    feverThermometer, pulseTransducer, turgoscope);
+        if(feverThermometer != null || pulseTransducer != null){
+            rootView.findViewById(R.id.health_data_area).setVisibility(View.VISIBLE);
+            rootView.findViewById(R.id.txt_no_data).setVisibility(View.GONE);
+            CheckUtil.checkHealthSafetyLevel(txtHealthCondition, rootView.findViewById(R.id.health_condition_area),
+                    feverThermometer, pulseTransducer);
         }
         sensorDataList.clear();
         if(feverThermometer != null)
             sensorDataList.add(feverThermometer);
         if(pulseTransducer != null)
             sensorDataList.add(pulseTransducer);
-        if(turgoscope != null)
-            sensorDataList.add(turgoscope);
-        if(!sensorDataList.isEmpty())
-            healthDataList.setAdapter(new MonitorAdapter(getActivity(), sensorDataList));
+        adapter.notifyDataSetChanged();
     }
 
     @Override
-    public void onSensorDataReceived(RawSensorData rawSensorData) {
-        if(viewRoot == null)
+    public void onSensorDataReceived(Sensor sensor) {
+        if (rootView == null)
             return;
-        try {
-            if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_FEVER_THERMOMETER))
-                updateBodyTemperature(new FeverThermometer(rawSensorData.getTimestamp(), Float.valueOf(rawSensorData.getValue())));
-            else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_PULSE_TRANSDUCER))
-                updatePulse(new PulseTransducer(rawSensorData.getTimestamp(), Integer.valueOf(rawSensorData.getValue())));
-            else if (rawSensorData.getSensorType().toLowerCase().equals(Sensor.SENSOR_TYPE_TURGOSCOPE)){
-                String[] splitStr = rawSensorData.getValue().split("/", 2);
-                if(splitStr.length != 2)
-                    return;
-                updateBloodPressure(new Turgoscope(rawSensorData.getTimestamp(), Integer.valueOf(splitStr[0]),
-                        Integer.valueOf(splitStr[1])));
-            }
-        }catch (NumberFormatException | JsonSyntaxException e){
-            e.printStackTrace();
-        }
+        if (sensor instanceof FeverThermometer)
+            updateBodyTemperature((FeverThermometer) sensor);
+        else if (sensor instanceof PulseTransducer)
+            updatePulse((PulseTransducer) sensor);
     }
 }
 

@@ -16,7 +16,7 @@
         android:text="@string/no_data"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipeLayout"
+        android:id="@+id/refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -54,7 +54,7 @@
                             android:layout_marginRight="@dimen/activity_horizontal_margin"/>
 
                         <TextView
-                            android:id="@+id/health_condition"
+                            android:id="@+id/txt_health_condition"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@android:color/white"

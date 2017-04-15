@@ -5,101 +5,45 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.activity.older.SettingHomeLocationActivity">
 
-    <TextView
-        android:id="@+id/txt_no_data"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:drawableLeft="@drawable/ic_info_outline_48dp"
-        android:layout_centerInParent="true"
-        android:gravity="center"
-        android:textSize="@dimen/large_text_size"
-        android:text="@string/no_data"/>
+    <com.baidu.mapapi.map.MapView
+        android:id="@+id/bmap"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"/>
 
-        <RelativeLayout
-            android:id="@+id/set_home_location"
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/item_padding"
+        android:alpha="0.9">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:visibility="visible">
+            android:padding="@dimen/item_padding"
+            android:orientation="vertical">
 
-            <com.baidu.mapapi.map.MapView
-                android:id="@+id/bmapView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clickable="false"/>
-
-
-            <android.support.v7.widget.CardView
+            <com.rengwuxian.materialedittext.MaterialEditText
+                android:id="@+id/edit_home_address"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/item_padding"
-                android:layout_below="@+id/older_location_area"
-                android:alpha="0.9"
-                android:clickable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
+                android:layout_marginBottom="@dimen/item_padding_small"
+                android:hint="@string/action_home_location_desc"
+                android:imeOptions="actionSearch"
+                app:met_textColorHint="@color/grey_500"
+                app:met_underlineColor="@color/grey_500"
+                app:met_primaryColor="@color/colorAccent"
+                app:met_floatingLabelText="@string/action_home_location_desc"
+                app:met_floatingLabel="highlight"
+                app:met_clearButton="true" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/item_padding"
-                    android:orientation="horizontal">
+            <Button
+                android:id="@+id/btn_save"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/action_save"/>
 
-                    <ImageView
-                        android:id="@+id/ic_home"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentLeft="true"
-                        android:layout_centerVertical="true"
-                        android:layout_marginRight="@dimen/item_padding"
-                        android:tint="@color/indigo_500"
-                        app:srcCompat="@drawable/ic_home_indigo_32dp" />
-                    <EditText
-                        android:id="@+id/txt_city"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@android:color/black"
-                        android:hint="@string/error_cityname_empty"
-                        android:textSize="@dimen/normal_text_size"
-                        android:layout_gravity="center_vertical"
-                        android:imeOptions="actionNext"/>
-
-                    <EditText
-                        android:id="@+id/txt_home_location"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="@android:color/black"
-                        android:hint="@string/error_homeaddress_empty"
-                        android:textSize="@dimen/normal_text_size"
-                        android:layout_gravity="center_vertical"/>
-
-
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/item_padding"
-                    android:layout_marginLeft="40sp"
-                    android:orientation="horizontal">
-                    <Button
-                        android:id="@+id/btn_search_location"
-                        android:layout_width="@dimen/button_size"
-                        android:layout_height="match_parent"
-                        android:text="@string/action_search" />
-
-                    <Button
-                        android:id="@+id/btn_save_home_location"
-                        android:layout_marginLeft="@dimen/left_margin"
-                        android:layout_width="@dimen/button_size"
-                        android:layout_height="match_parent"
-                        android:text="@string/action_save"/>
-                </LinearLayout>
-                </LinearLayout>
-            </android.support.v7.widget.CardView>
-        </RelativeLayout>
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
 
 </RelativeLayout>

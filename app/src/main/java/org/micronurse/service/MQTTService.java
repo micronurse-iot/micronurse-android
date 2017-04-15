@@ -2,11 +2,10 @@ package org.micronurse.service;
 
 import android.app.Service;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -15,16 +14,24 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.micronurse.Application;
-import org.micronurse.util.GlobalInfo;
-import org.micronurse.util.SharedPreferenceUtil;
 
 import java.io.Serializable;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+
 public class MQTTService extends Service implements MqttCallback {
-    public static String BROKER_URL = "tcp://micronurse-mqttbroker:13883";
+    public static final String BUNDLE_KEY_MESSAGE = "MessageContent";
+    public static final String BUNDLE_KEY_TOPIC = "Topic";
+    public static final String BUNDLE_KEY_TOPIC_OWNER_ID = "TopicOwnerID";
+
+    private static final String TAG = "MQTT Service";
+    private static final int TIME_OUT = 2000;
+    private static final int MAX_RETRY = 5;
+
+    public static String BROKER_URL;
     public static final String CLIENT_ID_PREFIX = "micronurse_mobile_user:";
     public static final String USERNAME_PREFIX = "micronurse_mobile_user:";
 
@@ -33,40 +40,44 @@ public class MQTTService extends Service implements MqttCallback {
     private boolean exitFlag = false;
     private Thread networkThread;
     private Object mqttAction;
-    private LinkedBlockingDeque<Object> actionQueue = new LinkedBlockingDeque<>();
+    private Map<String, String> topicActionMap = new HashMap<>();
+    private LinkedBlockingQueue<Object> actionQueue = new LinkedBlockingQueue<>();
 
     public MQTTService() throws MqttException {
-        String clientId = CLIENT_ID_PREFIX + GlobalInfo.user.getUserId();
-
-        /*For dev*/
-        SharedPreferences devPreference = SharedPreferenceUtil.getDevPreference();
-        BROKER_URL = "tcp://" + devPreference.getString(SharedPreferenceUtil.DEV_KEY_MQTTBROKER_HOST, "micronurse-mqttbroker") + ":13883";
-
-        mqttClient = new MqttClient(BROKER_URL, clientId, new MemoryPersistence());
-        mqttClient.setCallback(this);
         connOpts = new MqttConnectOptions();
         connOpts.setCleanSession(false);
+        connOpts.setConnectionTimeout(10000);
         connOpts.setKeepAliveInterval(30);
         connOpts.setAutomaticReconnect(false);
-        connOpts.setUserName(USERNAME_PREFIX + GlobalInfo.user.getUserId());
-        connOpts.setPassword(GlobalInfo.token.toCharArray());
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        topicActionMap.clear();
+        actionQueue.clear();
+    }
+
+    public void startWork(long userId, String password) throws MqttException {
+        if(mqttClient != null && mqttClient.isConnected())
+            return;
+        String clientId = CLIENT_ID_PREFIX + userId;
+        mqttClient = new MqttClient(BROKER_URL, clientId, new MemoryPersistence());
+        mqttClient.setCallback(this);
+        connOpts.setUserName(USERNAME_PREFIX + userId);
+        connOpts.setPassword(password.toCharArray());
         networkThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(!exitFlag){
                     try {
                         mqttClient.connect(connOpts);
-                        Log.i(GlobalInfo.LOG_TAG, "Connected to MQTT broker.");
+                        Log.i(TAG, "Connected to MQTT broker.");
                         break;
                     } catch (MqttException e) {
                         e.printStackTrace();
                         try {
-                            Thread.sleep(2000);
+                            Thread.sleep(TIME_OUT);
                         } catch (InterruptedException e1) {
                             e1.printStackTrace();
                         }
@@ -74,50 +85,64 @@ public class MQTTService extends Service implements MqttCallback {
                 }
                 while(!exitFlag){
                     try{
-                        mqttAction = actionQueue.pollFirst(2, TimeUnit.SECONDS);
+                        mqttAction = actionQueue.poll(TIME_OUT, TimeUnit.MILLISECONDS);
                         if(mqttAction == null)
                             continue;
                         final Object mqttActionClone = mqttAction;
-                        if(mqttActionClone instanceof MQTTSubscriptionAction){
-                            String topic = getFullTopic(((MQTTSubscriptionAction) mqttActionClone).topic,
-                                    ((MQTTSubscriptionAction) mqttActionClone).topicUserId, ((MQTTSubscriptionAction) mqttActionClone).receiverId);
-                            mqttClient.subscribe(topic, ((MQTTSubscriptionAction) mqttActionClone).qos, new IMqttMessageListener() {
-                                @Override
-                                public void messageArrived(String topic, MqttMessage message) throws Exception {
-                                    Intent intent = new Intent(((MQTTSubscriptionAction) mqttActionClone).action);
-                                    intent.addCategory(getPackageName());
-                                    parseTopic(topic, intent);
-                                    intent.putExtra(Application.BUNDLE_KEY_MESSAGE, new String(message.getPayload()));
-                                    sendBroadcast(intent);
+                        for(int i = 0; !exitFlag && i < MAX_RETRY + 1; i++){
+                            try {
+                                if (mqttAction instanceof MQTTSubscriptionAction) {
+                                    String topic = getFullTopic(((MQTTSubscriptionAction) mqttAction).topic,
+                                            ((MQTTSubscriptionAction) mqttAction).topicOwnerId);
+                                    mqttClient.subscribe(topic, ((MQTTSubscriptionAction) mqttAction).qos, new IMqttMessageListener() {
+                                        @Override
+                                        public void messageArrived(String topic, MqttMessage message) throws Exception {
+                                            if (((MQTTSubscriptionAction) mqttActionClone).action != null && !((MQTTSubscriptionAction) mqttActionClone).action.isEmpty()) {
+                                                String msg = new String(message.getPayload());
+                                                Log.i(TAG, "Message Arrived: " + msg);
+                                                Intent intent = new Intent(((MQTTSubscriptionAction) mqttActionClone).action);
+                                                intent.addCategory(getPackageName());
+                                                parseTopic(topic, intent);
+                                                intent.putExtra(BUNDLE_KEY_MESSAGE, msg);
+                                                sendBroadcast(intent);
+                                            }
+                                        }
+                                    });
+                                    Log.i(TAG, "Subscribe on topic <" + topic + "> successfully.");
+                                } else if (mqttAction instanceof MQTTPublishAction) {
+                                    String topic = getFullTopic(((MQTTPublishAction) mqttAction).topic,
+                                            ((MQTTPublishAction) mqttAction).topicOwnerId);
+                                    mqttClient.publish(topic, ((MQTTPublishAction) mqttAction).message.getBytes(), ((MQTTPublishAction) mqttAction).qos,
+                                            ((MQTTPublishAction) mqttAction).retain);
+                                    Log.i(TAG, "Publish on topic <" + topic + "> successfully.");
+                                    if (((MQTTPublishAction) mqttAction).intent != null) {
+                                        sendBroadcast(((MQTTPublishAction) mqttAction).intent);
+                                    }
                                 }
-                            });
-                            Log.i(GlobalInfo.LOG_TAG, "Subscribe on topic <" + topic + "> successfully.");
-                        }else if(mqttActionClone instanceof MQTTPublishAction){
-                            String topic = getFullTopic(((MQTTPublishAction) mqttActionClone).topic, ((MQTTPublishAction) mqttActionClone).topicUserId,
-                                    ((MQTTPublishAction) mqttActionClone).receiverId);
-                            mqttClient.publish(topic, ((MQTTPublishAction) mqttActionClone).message.getBytes(), ((MQTTPublishAction) mqttActionClone).qos,
-                                    ((MQTTPublishAction) mqttActionClone).retain);
-                            Log.i(GlobalInfo.LOG_TAG, "Publish on topic <" + topic + "> successfully.");
-                            if(((MQTTPublishAction) mqttActionClone).action != null) {
-                                Intent intent = new Intent(((MQTTPublishAction) mqttActionClone).action);
-                                intent.addCategory(getPackageName());
-                                parseTopic(topic, intent);
-                                if (((MQTTPublishAction) mqttActionClone).messageId != null)
-                                    intent.putExtra(Application.BUNDLE_KEY_MESSAGE_ID, ((MQTTPublishAction) mqttActionClone).messageId);
-                                sendBroadcast(intent);
+                                mqttAction = null;
+                                break;
+                            }catch (MqttException e){
+                                Log.e(TAG, "", e);
+                                Thread.sleep(TIME_OUT);
                             }
                         }
-                    } catch (MqttException e) {
+                        if(mqttAction != null){
+                            actionQueue.offer(mqttAction, TIME_OUT, TimeUnit.MILLISECONDS);
+                        }
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
-                        try {
-                            actionQueue.putFirst(mqttAction);
-                            Thread.sleep(2000);
-                        } catch (InterruptedException ignored) {}
-                    } catch (InterruptedException | NumberFormatException e) {
-                        e.printStackTrace();
+                        break;
                     }
                 }
                 networkThread = null;
+                if(mqttClient.isConnected()){
+                    try {
+                        mqttClient.disconnect(TIME_OUT);
+                        Log.i(TAG, "Disconnected from MQTT server.");
+                    }catch (MqttException me){
+                        me.printStackTrace();
+                    }
+                }
             }
         });
         networkThread.start();
@@ -125,40 +150,31 @@ public class MQTTService extends Service implements MqttCallback {
 
     @Override
     public void onDestroy() {
-        try {
-            exitFlag = true;
-            if(networkThread != null){
-                networkThread.join(2000);
-            }
-            if(mqttClient.isConnected()) {
-                mqttClient.disconnect(1500);
-                Log.i(GlobalInfo.LOG_TAG, "Disconnected from MQTT server.");
-            }
-        } catch (MqttException | InterruptedException e) {
-            e.printStackTrace();
-        }
+        exitFlag = true;
         super.onDestroy();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return new MQTTServiceBinder();
+        return new Binder();
     }
 
     @Override
     public void connectionLost(Throwable cause) {
-        Log.e(GlobalInfo.LOG_TAG, "Lost connection from MQTT broker.");
+        Log.e(TAG, "Lost connection from MQTT broker.");
         cause.printStackTrace();
         while (!exitFlag) {
             try {
-                Log.i(GlobalInfo.LOG_TAG, "Trying to reconnect to MQTT broker...");
+                if(mqttClient.isConnected())
+                    break;
+                Log.i(TAG, "Trying to reconnect to MQTT broker...");
                 mqttClient.connect(connOpts);
-                Log.i(GlobalInfo.LOG_TAG, "Reconnected to MQTT broker.");
+                Log.i(TAG, "Reconnected to MQTT broker.");
                 break;
             }catch (MqttException e) {
                 e.printStackTrace();
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(TIME_OUT);
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
@@ -169,117 +185,94 @@ public class MQTTService extends Service implements MqttCallback {
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         String msg = new String(message.getPayload());
-        Log.i(GlobalInfo.LOG_TAG, "Offline Message Arrived: " + msg);
+        Log.i(TAG, "Message Arrived: " + msg);
         Intent intent = new Intent();
-        try {
-            parseTopic(topic, intent);
-            intent.putExtra(Application.BUNDLE_KEY_MESSAGE, msg);
-            intent.addCategory(getPackageName());
-            if (intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_SENSOR_DATA_REPORT)) {
-                intent.setAction(Application.ACTION_SENSOR_DATA_REPORT);
-            } else if (intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_SENSOR_WARNING)) {
-                intent.setAction(Application.ACTION_SENSOR_WARNING);
-            } else if (intent.getStringExtra(Application.BUNDLE_KEY_TOPIC).equals(GlobalInfo.TOPIC_CHATTING)) {
-                intent.setAction(Application.ACTION_CHAT_MESSAGE_RECEIVED);
-            }
+        intent.addCategory(getPackageName());
+        parseTopic(topic, intent);
+        String action = topicActionMap.get(intent.getStringExtra(BUNDLE_KEY_TOPIC));
+        if(action != null) {
+            intent.putExtra(BUNDLE_KEY_MESSAGE, new String(message.getPayload()));
+            intent.setAction(action);
             sendBroadcast(intent);
-        } catch (NumberFormatException nfe){
-            nfe.printStackTrace();
         }
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {}
 
-    private String getFullTopic(String topic, Integer topicUserId, Integer receiverId){
+    private String getFullTopic(String topic, Long topicOwnerId){
         String result = topic;
-        if(receiverId != null)
-            result += '/' + receiverId.toString();
-        if(topicUserId != null)
-            result += '/' + topicUserId.toString();
+        if(topicOwnerId != null)
+            result += '/' + topicOwnerId.toString();
         return result;
     }
 
-    private void parseTopic(String topicWithUser, Intent intent) throws NumberFormatException{
-        if(topicWithUser == null || topicWithUser.isEmpty())
+    private void parseTopic(String fullTopic, Intent intent) throws NumberFormatException {
+        if(fullTopic == null || fullTopic.isEmpty())
             return;
-        String topic = topicWithUser;
-        String[] topicSplit = topicWithUser.split("/");
-        if(topicSplit.length > 1){
-            int end = topicSplit.length - 1;
-            String topicUser = topicSplit[topicSplit.length - 1];
-            intent.putExtra(Application.BUNDLE_KEY_USER_ID, Integer.valueOf(topicUser));
-            if(topicSplit.length > 2){
-                String receiver = topicSplit[topicSplit.length - 2];
-                intent.putExtra(Application.BUNDLE_KEY_RECEIVER_ID, Integer.valueOf(receiver));
-                end = topicSplit.length - 2;
-            }
-            topic = "";
-            for(int i = 0; i < end; i++){
-                topic += topicSplit[i];
-                if(i < end - 1)
-                    topic += '/';
+        String[] topicSplit = fullTopic.split("/");
+        if(topicSplit.length >= 1){
+            intent.putExtra(BUNDLE_KEY_TOPIC, topicSplit[0]);
+            if(topicSplit.length >= 2) {
+                try {
+                    intent.putExtra(BUNDLE_KEY_TOPIC_OWNER_ID, Long.valueOf(topicSplit[1]));
+                } catch (NumberFormatException nfe) {
+                    nfe.printStackTrace();
+                }
             }
         }
-        intent.putExtra(Application.BUNDLE_KEY_TOPIC, topic);
     }
 
     public void addMQTTAction(Object action){
         try {
-            actionQueue.putLast(action);
+            actionQueue.offer(action, TIME_OUT, TimeUnit.MILLISECONDS);
+            if(action instanceof MQTTSubscriptionAction){
+                if(((MQTTSubscriptionAction) action).action != null &&
+                        !((MQTTSubscriptionAction) action).action.isEmpty()) {
+                    topicActionMap.put(((MQTTSubscriptionAction) action).topic,
+                            ((MQTTSubscriptionAction) action).action);
+                }
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public class MQTTServiceBinder extends Binder{
+    public class Binder extends android.os.Binder {
         public MQTTService getService(){
             return MQTTService.this;
         }
     }
 
-    public static class MQTTSubscriptionAction implements Serializable{
+    public static class MQTTSubscriptionAction implements Serializable {
         private String topic;
-        private Integer topicUserId;
-        private Integer receiverId;
+        private Long topicOwnerId;
         private int qos;
         private String action;
 
-        public MQTTSubscriptionAction(String topic, @Nullable Integer topicUserId, int qos, String broadcastAction) {
+        public MQTTSubscriptionAction(String topic, @Nullable Long topicOwnerId, int qos, @Nullable String broadcastAction) {
             this.topic = topic;
-            this.topicUserId = topicUserId;
+            this.topicOwnerId = topicOwnerId;
             this.qos = qos;
             this.action = broadcastAction;
         }
 
-        public MQTTSubscriptionAction(String topic, @Nullable Integer topicUserId, @Nullable Integer receiverId, int qos, String action) {
-            this(topic, topicUserId, qos, action);
-            this.receiverId = receiverId;
-        }
     }
 
-    public static class MQTTPublishAction implements Serializable{
+    public static class MQTTPublishAction implements Serializable {
         private String topic;
-        private Integer topicUserId;
-        private Integer receiverId;
+        private Long topicOwnerId;
         private int qos;
         private boolean retain = false;
         private String message;
-        private String messageId;
-        private String action;
+        private Intent intent;
 
-        public MQTTPublishAction(String topic, @Nullable Integer topicUserId, @Nullable Integer receiverId, int qos, String message, @Nullable String messageId, @Nullable String action) {
-            this(topic, topicUserId, qos, message, messageId, action);
-            this.receiverId = receiverId;
-        }
-
-        public MQTTPublishAction(String topic, @Nullable Integer topicUserId, int qos, String message, @Nullable String messageId, @Nullable String action) {
+        public MQTTPublishAction(String topic, @Nullable Long topicOwnerId, int qos, String message, @Nullable Intent intent) {
             this.topic = topic;
-            this.topicUserId = topicUserId;
+            this.topicOwnerId = topicOwnerId;
             this.qos = qos;
             this.message = message;
-            this.messageId = messageId;
-            this.action = action;
+            this.intent = intent;
         }
     }
 

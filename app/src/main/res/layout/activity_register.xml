@@ -42,7 +42,7 @@
                     android:layout_centerVertical="true">
 
                     <EditText
-                        android:id="@+id/register_phone_number"
+                        android:id="@+id/edit_phone_number"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/prompt_phone_number"
@@ -78,7 +78,7 @@
                     android:layout_toRightOf="@+id/icon_password_register">
 
                     <EditText
-                        android:id="@+id/register_password"
+                        android:id="@+id/edit_password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/prompt_password"
@@ -95,7 +95,7 @@
                     android:layout_alignLeft="@+id/password_register_layout">
 
                     <EditText
-                        android:id="@+id/register_reconfirm_password"
+                        android:id="@+id/edit_repassword"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/prompt_reconfirm_password"
@@ -114,7 +114,7 @@
                 android:layout_marginBottom="@dimen/activity_vertical_margin">
 
                 <EditText
-                    android:id="@+id/register_name"
+                    android:id="@+id/edit_nickname"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:imeOptions="actionNext"
@@ -139,7 +139,7 @@
                     android:layout_marginRight="@dimen/activity_horizontal_margin"/>
 
                 <RadioGroup
-                    android:id="@+id/register_sex_group"
+                    android:id="@+id/radiogroup_gender"
                     android:orientation="horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -176,7 +176,7 @@
                     android:layout_marginRight="@dimen/activity_horizontal_margin"/>
 
                 <RadioGroup
-                    android:id="@+id/register_account_type_group"
+                    android:id="@+id/radiogroup_account_type"
                     android:orientation="horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -212,11 +212,11 @@
                     android:layout_centerVertical="true"
                     android:layout_alignParentLeft="true"
                     android:layout_marginRight="@dimen/activity_horizontal_margin"
-                    android:layout_toLeftOf="@+id/button_get_code"
-                    android:layout_toStartOf="@+id/button_get_code">
+                    android:layout_toLeftOf="@+id/btn_get_captcha"
+                    android:layout_toStartOf="@+id/btn_get_captcha">
 
                     <EditText
-                        android:id="@+id/register_identifying_code"
+                        android:id="@+id/edit_captcha"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:imeOptions="actionDone"
@@ -228,7 +228,7 @@
                 </android.support.design.widget.TextInputLayout>
 
                 <Button
-                    android:id="@+id/button_get_code"
+                    android:id="@+id/btn_get_captcha"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/action_identifying_code"
@@ -238,7 +238,7 @@
             </RelativeLayout>
 
             <Button
-                android:id="@+id/button_register"
+                android:id="@+id/btn_sign_up"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/action_register"

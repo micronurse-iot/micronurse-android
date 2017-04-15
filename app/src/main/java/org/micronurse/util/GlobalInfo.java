@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import org.micronurse.database.model.ChatMessageRecord;
+import org.micronurse.database.model.SessionRecord;
 import org.micronurse.model.User;
 import org.micronurse.service.EmergencyCallService;
 import org.micronurse.service.LocationService;
@@ -24,6 +25,8 @@ public class GlobalInfo {
     public static List<User> guardianshipList = new ArrayList<>();
     public static ConcurrentLinkedQueue<ChatMessageRecord> sendMessageQueue = new ConcurrentLinkedQueue<>();
     public static Integer currentChatReceiverId = null;
+    public static SessionRecord notificationSession = null;
+    public static SessionRecord currentSession = null;
 
     public static class Guardian{
         public static User monitorOlder;
@@ -57,7 +60,7 @@ public class GlobalInfo {
         clearLoginUserInfo();
     }
 
-    public static User findUserById(int userId){
+    public static User findUserById(long userId){
         if(user.getUserId() == userId)
             return user;
         for(User u : guardianshipList){
@@ -71,7 +74,4 @@ public class GlobalInfo {
         return null;
     }
 
-    public static String TOPIC_SENSOR_DATA_REPORT = "sensor_data_report";
-    public static String TOPIC_SENSOR_WARNING = "sensor_warning";
-    public static String TOPIC_CHATTING = "chatting";
 }

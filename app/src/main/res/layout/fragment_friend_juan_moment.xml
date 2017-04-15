@@ -16,14 +16,13 @@
         android:textSize="@dimen/large_text_size"
         android:text="@string/no_moment"/>
 
-    <com.github.jdsjlzx.recyclerview.LRecyclerView
+    <com.malinskiy.superrecyclerview.SuperRecyclerView
         android:id="@+id/moment_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical"
-        android:paddingTop="@dimen/item_padding">
-
-    </com.github.jdsjlzx.recyclerview.LRecyclerView>
+        app:mainLayoutId="@layout/layout_recyclerview_verticalscroll"
+        app:scrollbarStyle="insideInset"
+        app:layout_moreProgress="@layout/recyclerview_loading"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/btn_post_moment"

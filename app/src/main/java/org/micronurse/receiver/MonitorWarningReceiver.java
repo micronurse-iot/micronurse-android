@@ -9,6 +9,7 @@ import android.support.v7.app.NotificationCompat;
 import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.model.User;
+import org.micronurse.service.MQTTService;
 import org.micronurse.util.GlobalInfo;
 
 /**
@@ -18,13 +19,13 @@ public class MonitorWarningReceiver extends BroadcastReceiver {
     public static final int MONITOR_WARNING_NOTIFICATION_ID = 34985723;
 
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(Context context, Intent mqttIntent) {
         if(GlobalInfo.user == null)
             return;
-        Bundle bundle = intent.getExtras();
+        Bundle bundle = mqttIntent.getExtras();
         String title = context.getString(R.string.action_monitor_warning);
-        String message = bundle.getString(Application.BUNDLE_KEY_MESSAGE);
-        int userId = bundle.getInt(Application.BUNDLE_KEY_USER_ID, -1);
+        String message = bundle.getString(MQTTService.BUNDLE_KEY_MESSAGE);
+        long userId = bundle.getLong(MQTTService.BUNDLE_KEY_TOPIC_OWNER_ID, -1);
         if(userId < 0)
             return;
         if(GlobalInfo.user.getUserId() == userId)

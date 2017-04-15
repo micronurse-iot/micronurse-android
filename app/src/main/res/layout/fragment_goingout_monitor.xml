@@ -17,7 +17,7 @@
         android:text="@string/no_data"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipeLayout"
+        android:id="@+id/refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -26,10 +26,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <com.baidu.mapapi.map.MapView
-                android:id="@+id/bmapView"
+                android:id="@+id/bmap"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clickable="false"/>
@@ -62,38 +62,25 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/txt_older_location"
+                        <TextView android:id="@+id/txt_older_location"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/your_location"
                             android:textSize="@dimen/small_text_size" />
 
                         <TextView
-                            android:id="@+id/older_location"
+                            android:id="@+id/txt_current_location"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/unknown_location"
                             android:textColor="@android:color/black"
                             android:textSize="@dimen/normal_text_size"/>
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView android:id="@+id/txt_data_time"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
+                            android:textSize="@dimen/small_text_size"/>
 
-                            <TextView
-                                android:layout_height="wrap_content"
-                                android:layout_width="wrap_content"
-                                android:textSize="@dimen/small_text_size"
-                                android:text="@string/update_time"/>
-
-                            <TextView android:id="@+id/data_update_time"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textSize="@dimen/small_text_size"/>
-
-                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </android.support.v7.widget.CardView>
@@ -124,7 +111,7 @@
                         app:srcCompat="@drawable/ic_home_indigo_32dp" />
 
                     <TextView
-                        android:id="@+id/home_location"
+                        android:id="@+id/txt_home_location"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_toRightOf="@+id/ic_home"

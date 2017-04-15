@@ -12,7 +12,6 @@ import org.micronurse.model.Humidometer;
 import org.micronurse.model.PulseTransducer;
 import org.micronurse.model.SmokeTransducer;
 import org.micronurse.model.Thermometer;
-import org.micronurse.model.Turgoscope;
 
 import java.util.List;
 
@@ -221,24 +220,6 @@ public class CheckUtil {
         return checkResult;
     }
 
-    public static int checkSafetyLevel(Turgoscope turgoscope){
-        //TODO: Return the corresponding safe level value according to the blood pressure.
-        int lowBloodPressure = turgoscope.getLowBloodPressure();
-        int highBloodPressure = turgoscope.getHighBloodPressure();
-        if(highBloodPressure > 90 && highBloodPressure <= 140 && lowBloodPressure > 60 && lowBloodPressure <= 90)
-            return SAFETY_LEVEL_SAFE;
-        else if(highBloodPressure >= 141 && highBloodPressure <= 159 && lowBloodPressure >= 91 && lowBloodPressure <= 95)
-            return SAFETY_LEVEL_HIDDEN_IN_DANGER;
-        else
-            return SAFETY_LEVEL_DANGER;
-
-    }
-
-    public static int checkSafetyLevel(TextView tv, Turgoscope turgoscope){
-        int checkResult = checkSafetyLevel(turgoscope);
-        tv.setTextColor(getSafetyLevelColor(tv.getResources(), checkResult));
-        return checkResult;
-    }
 
     public static int checkFamilySafetyLevel(@Nullable List<Thermometer> thermometer, @Nullable List<Humidometer> humidometer, @Nullable List<SmokeTransducer> smokeTransducer){
         int result = SAFETY_LEVEL_UNKNOWN;
@@ -290,7 +271,7 @@ public class CheckUtil {
         return checkResult;
     }
 
-    public static int checkHealthSafetyLevel(@Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer, @Nullable Turgoscope turgoscope){
+    public static int checkHealthSafetyLevel(@Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer){
         int result = SAFETY_LEVEL_UNKNOWN;
         if(feverThermometer != null){
             result = checkSafetyLevel(feverThermometer);
@@ -304,18 +285,12 @@ public class CheckUtil {
                 return result;
         }
 
-        if(turgoscope != null){
-            result = checkSafetyLevel(turgoscope);
-            if(result == SAFETY_LEVEL_HIDDEN_IN_DANGER || result == SAFETY_LEVEL_DANGER)
-                return result;
-        }
-
         return result;
 
     }
 
-    public static int checkHealthSafetyLevel(TextView tv, View bgView, @Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer, @Nullable Turgoscope turgoscope){
-        int checkResult = checkHealthSafetyLevel(feverThermometer, pulseTransducer, turgoscope);
+    public static int checkHealthSafetyLevel(TextView tv, View bgView, @Nullable FeverThermometer feverThermometer, @Nullable PulseTransducer pulseTransducer){
+        int checkResult = checkHealthSafetyLevel(feverThermometer, pulseTransducer);
         bgView.setBackgroundColor(getSafetyLevelColor(bgView.getResources(), checkResult));
         switch (checkResult){
             case SAFETY_LEVEL_SAFE:

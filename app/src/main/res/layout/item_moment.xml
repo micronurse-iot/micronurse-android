@@ -32,7 +32,7 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/moment_user"
+                    android:id="@+id/txt_moment_user"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="@dimen/normal_text_size"
@@ -41,7 +41,7 @@
                     android:ellipsize="end"/>
 
                 <TextView
-                    android:id="@+id/moment_text_content"
+                    android:id="@+id/txt_moment_content"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/item_padding"
@@ -50,7 +50,7 @@
                     android:textIsSelectable="true"/>
 
                 <TextView
-                    android:id="@+id/moment_time"
+                    android:id="@+id/txt_moment_time"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="@dimen/small_text_size"

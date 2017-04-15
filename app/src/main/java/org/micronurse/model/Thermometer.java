@@ -1,5 +1,7 @@
 package org.micronurse.model;
 
+import java.util.Date;
+
 /**
  * Created by zhou-shengyun on 8/15/16.
  */
@@ -7,7 +9,7 @@ public class Thermometer extends Sensor {
     private String name;
     private Float temperature;
 
-    public Thermometer(long timestamp, String name, float temperature) {
+    public Thermometer(Date timestamp, String name, float temperature) {
         super(timestamp);
         this.name = name;
         this.temperature = temperature;

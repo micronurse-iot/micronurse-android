@@ -4,24 +4,21 @@ import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.Toast;
+
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
+
 import org.micronurse.R;
 import org.micronurse.database.model.LoginUserRecord;
-import org.micronurse.http.APIErrorListener;
-import org.micronurse.http.MicronurseAPI;
-import org.micronurse.http.model.PublicResultCode;
-import org.micronurse.http.model.result.Result;
-import org.micronurse.model.User;
+import org.micronurse.net.http.HttpApi;
+import org.micronurse.net.http.HttpApiJsonListener;
+import org.micronurse.net.http.HttpApiJsonRequest;
+import org.micronurse.net.model.result.Result;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
-import org.micronurse.util.HttpAPIUtil;
 import java.util.List;
 
 public class WelcomeActivity extends AppCompatActivity {
-    private Intent loginIntent;
-
     private void startLoginActivity() {
         Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
         finish();
@@ -32,7 +29,6 @@ public class WelcomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
-        loginIntent = new Intent(WelcomeActivity.this, MainActivity.class);
 
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -45,44 +41,49 @@ public class WelcomeActivity extends AppCompatActivity {
                     loginUserRecord = records.get(0);
 
                 if(loginUserRecord != null && loginUserRecord.getToken() != null && !loginUserRecord.getToken().isEmpty()) {
-                    new MicronurseAPI<Result>(WelcomeActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.CHECK_LOGIN, String.valueOf(loginUserRecord.getUserId())), Request.Method.GET,
-                            null, loginUserRecord.getToken(), new Response.Listener<Result>() {
+                    HttpApi.startRequest(new HttpApiJsonRequest(getApplicationContext(), HttpApi.getApiUrl(HttpApi.AccountAPI.CHECK_LOGIN, String.valueOf(loginUserRecord.getUserId())), Request.Method.GET,
+                            loginUserRecord.getToken(), null, new HttpApiJsonListener<Result>(Result.class) {
                         @Override
-                        public void onResponse(Result response) {
+                        public void onDataResponse(Result data) {
                             GlobalInfo.token = loginUserRecord.getToken();
-
-                            HttpAPIUtil.finishLogin(WelcomeActivity.this, loginUserRecord.getPhoneNumber(), new Response.Listener<Result>() {
+                            LoginActivity.afterLogin(WelcomeActivity.this, loginUserRecord.getPhoneNumber(), new HttpApiJsonListener<Result>(Result.class) {
                                 @Override
-                                public void onResponse(Result response) {
+                                public void onDataResponse(Result data) {
                                     finish();
-                                    startActivity(loginIntent);
+                                    startActivity(new Intent(WelcomeActivity.this, MainActivity.class));
                                 }
-                            }, new APIErrorListener() {
+
                                 @Override
-                                public boolean onErrorResponse(VolleyError err, Result result) {
-                                    if(result != null) {
-                                        if(GlobalInfo.user != null){
-                                            if((GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER && result.getResultCode() == PublicResultCode.FRIEND_JUAN_NO_FRIENDSHIP) ||
-                                                    (GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN && result.getResultCode() == PublicResultCode.GUARDIANSHIP_NOT_EXIST)) {
-                                                finish();
-                                                startActivity(loginIntent);
-                                                return true;
-                                            }
-                                        }
-                                        startLoginActivity();
+                                public void onErrorResponse() {
+                                    startLoginActivity();
+                                }
+
+                                @Override
+                                public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
+                                    if(statusCode == 401 && errorInfo.getResultCode() == 401){
+                                        Toast.makeText(WelcomeActivity.this, R.string.alert_session_expired, Toast.LENGTH_SHORT).show();
+                                        return true;
                                     }
                                     return false;
                                 }
-                            }, false);
+                            });
                         }
-                    }, new APIErrorListener() {
+
                         @Override
-                        public boolean onErrorResponse(VolleyError err, Result result) {
-                            if (result == null || result.getResultCode() != 401)
-                                startLoginActivity();
+                        public void onErrorResponse() {
+                            startLoginActivity();
+                        }
+
+                        @Override
+                        public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
+                            if(statusCode == 401 && errorInfo.getResultCode() == 401){
+                                Toast.makeText(WelcomeActivity.this, R.string.alert_session_expired, Toast.LENGTH_SHORT).show();
+                                return true;
+                            }
                             return false;
                         }
-                    }, Result.class, false, null).startRequest();
+                    }));
+
                 }else{
                     startLoginActivity();
                 }

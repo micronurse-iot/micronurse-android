@@ -1,7 +1,9 @@
 package org.micronurse.ui.fragment.older.friendjuan;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,10 +12,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.adapter.SessionMessageAdapter;
 import org.micronurse.database.model.ChatMessageRecord;
-import org.micronurse.database.model.SessionMessageRecord;
+import org.micronurse.database.model.SessionRecord;
 import org.micronurse.model.User;
 import org.micronurse.ui.activity.ChatActivity;
 import org.micronurse.ui.listener.MessageListener;
@@ -21,170 +24,154 @@ import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class MessageFragment extends Fragment implements MessageListener {
-    private View viewRoot;
-    private RecyclerView sessionListView;
+    private View rootView;
+    @BindView(R.id.session_msg_list)
+    RecyclerView sessionListView;
+
     private LinkedList<SessionMessageAdapter.MessageItem> sessionList = new LinkedList<>();
     private SessionMessageAdapter adapter;
+
+    private UpdateSessionReceiver sessionReceiver;
 
     public MessageFragment() {
         // Required empty public constructor
     }
 
-    public static MessageFragment getInstance(Context context){
-        return new MessageFragment();
+    public static MessageFragment getInstance(Context context) {
+        MessageFragment fragment = new MessageFragment();
+        return fragment;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        if(viewRoot != null)
-            return viewRoot;
-        viewRoot = inflater.inflate(R.layout.fragment_friend_juan_message, container, false);
-        sessionListView = (RecyclerView) viewRoot.findViewById(R.id.session_msg_list);
+        // Inflate the layout for this fragment
+        if(rootView != null)
+            return rootView;
+        rootView = inflater.inflate(R.layout.fragment_friend_juan_message, container, false);
+        ButterKnife.bind(this, rootView);
+
         sessionListView.setNestedScrollingEnabled(false);
         sessionListView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        List<SessionMessageRecord> records = DatabaseUtil.findSessionMessageRecords(GlobalInfo.user.getUserId());
-        adapter = new SessionMessageAdapter(getActivity(), sessionList, new SessionMessageAdapter.OnItemClickListener() {
+        List<SessionRecord> records = DatabaseUtil.findAllSessionRecords(GlobalInfo.user.getUserId());
+        Collections.sort(records);
+        Collections.reverse(records);
+        adapter = new SessionMessageAdapter(getContext(), sessionList, new SessionMessageAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position, SessionMessageAdapter.MessageItem item) {
-                item.getSessionMessageRecord().setUnreadMessageNum(0);
-                item.getSessionMessageRecord().save();
-                adapter.notifyItemChanged(position);
-                Intent intent = new Intent(getContext(), ChatActivity.class);
-                intent.putExtra(ChatActivity.BUNDLE_KEY_RECEIVER_ID, item.getSessionMessageRecord().getToUserId());
-                startActivity(intent);
+                switch (item.getSession().getSessionType()){
+                    case SessionRecord.SESSION_TYPE_GROUP:
+                    case SessionRecord.SESSION_TYPE_FRIEND:
+                    case SessionRecord.SESSION_TYPE_GUARDIANSHIP:
+                        Intent intent = new Intent(getContext(), ChatActivity.class);
+                        intent.putExtra(ChatActivity.BUNDLE_KEY_SESSION_TYPE, item.getSession().getSessionType());
+                        intent.putExtra(ChatActivity.BUNDLE_KEY_SESSION_ID, item.getSession().getSessionId());
+                        startActivity(intent);
+                        break;
+                }
             }
         });
-        if(records == null || records.isEmpty()) {
-            sessionListView.setAdapter(adapter);
-            return viewRoot;
-        }
-        viewRoot.findViewById(R.id.txt_no_message).setVisibility(View.GONE);
-        for(SessionMessageRecord smr : records){
-            User u = GlobalInfo.findUserById(smr.getToUserId());
-            if(u != null){
-                List<ChatMessageRecord> chatRecords = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getUserId(),
-                        smr.getToUserId(), new Date(), 1);
-                if(chatRecords != null && !chatRecords.isEmpty()) {
-                    if (chatRecords.get(0).getMessageType().equals(ChatMessageRecord.MESSAGE_TYPE_TEXT)) {
-                        sessionList.add(new SessionMessageAdapter.MessageItem(u.getPortrait(), u.getNickname(),
-                                chatRecords.get(0).getMessageTime(), chatRecords.get(0).getContent(), smr));
-                    }
-                }
-            }
-        }
-        Collections.sort(sessionList);
         sessionListView.setAdapter(adapter);
-        return viewRoot;
+        for(SessionRecord sr : records)
+            addNewSession(sr);
+
+        //Register receiver
+        sessionReceiver = new UpdateSessionReceiver();
+        IntentFilter filter = new IntentFilter(Application.ACTION_SESSION_UPDATE);
+        filter.addCategory(getContext().getPackageName());
+        getContext().registerReceiver(sessionReceiver, filter);
+
+        return rootView;
     }
 
-    private void updateArrivedMessage(ChatMessageRecord cmr){
-        viewRoot.findViewById(R.id.txt_no_message).setVisibility(View.GONE);
-        SessionMessageAdapter.MessageItem messageItem = null;
-        for(SessionMessageAdapter.MessageItem mi : sessionList){
-            if(mi.getSessionMessageRecord().getToUserId() == cmr.getChatterBId()){
-                messageItem = mi;
-                break;
-            }
-        }
-        if(messageItem == null) {
-            addNewSessionMessage(new SessionMessageRecord(GlobalInfo.user.getUserId(), cmr.getChatterBId(), 1),
-                    cmr.getMessageTime(), cmr.getContent(), false);
+    private void addNewSession(SessionRecord session){
+        SessionMessageAdapter.MessageItem item = new SessionMessageAdapter.MessageItem();
+        updateSessionInfo(item, session, true);
+        if(item.getSession() == null)
             return;
-        }
-        messageItem.setSessionTime(cmr.getMessageTime());
-        messageItem.setSessionMsg(cmr.getLiteralContent());
-        messageItem.getSessionMessageRecord().setUnreadMessageNum(
-                messageItem.getSessionMessageRecord().getUnreadMessageNum() + 1
-        );
-        messageItem.getSessionMessageRecord().save();
-        Collections.sort(sessionList);
-        adapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onResume() {
-        if(GlobalInfo.currentChatReceiverId != null){
-            int pos = 0;
-            for(SessionMessageAdapter.MessageItem mi : sessionList){
-                if(mi.getSessionMessageRecord().getToUserId() == GlobalInfo.currentChatReceiverId){
-                    mi.getSessionMessageRecord().setUnreadMessageNum(0);
-                    mi.getSessionMessageRecord().save();
-                    adapter.notifyItemChanged(pos);
-                    break;
-                }
-                pos++;
-            }
-            GlobalInfo.currentChatReceiverId = null;
-        }
-        super.onResume();
+        sessionList.addFirst(item);
+        adapter.notifyItemInserted(0);
+        ButterKnife.findById(rootView, R.id.txt_no_message).setVisibility(View.GONE);
     }
 
     @Override
     public void onMessageArrived(ChatMessageRecord cmr) {
-        if(viewRoot == null) {
-            SessionMessageRecord smr = DatabaseUtil.findSessionMessageRecord(GlobalInfo.user.getUserId(), cmr.getChatterBId());
-            if(smr == null){
-                smr = new SessionMessageRecord(GlobalInfo.user.getUserId(), cmr.getChatterBId());
-            }
-            smr.setUnreadMessageNum(smr.getUnreadMessageNum() + 1);
-            smr.save();
+        if(rootView == null)
             return;
-        }
-        updateArrivedMessage(cmr);
+        handleMsg(cmr);
     }
 
     @Override
-    public void onMessageSent(int receiverId, String messageId) {
-        if(viewRoot == null)
-            return;
-        int pos = 0;
-        for(SessionMessageAdapter.MessageItem mi : sessionList){
-            if(mi.getSessionMessageRecord().getToUserId() == receiverId){
-                mi.setSending(false);
-                adapter.notifyItemChanged(pos);
-                break;
-            }
-            pos++;
-        }
+    public void onMessageSent(ChatMessageRecord cmr) {
+        handleMsg(cmr);
     }
 
     @Override
-    public void onMessageSendStart(int receiverId, String messageId, String message, Date messageTime) {
-        if(viewRoot == null)
-            return;
-        int pos = 0;
+    public void onMessageSendStart(ChatMessageRecord cmr) {
+        handleMsg(cmr);
+    }
+
+    private void handleMsg(ChatMessageRecord cmr){
         for(SessionMessageAdapter.MessageItem mi : sessionList){
-            if(mi.getSessionMessageRecord().getToUserId() == receiverId){
-                mi.setSessionTime(messageTime);
-                mi.setSessionMsg(message);
-                mi.setSending(true);
+            if(mi.getSession().equals(cmr.getSession())){
+                updateSessionInfo(mi, cmr.getSession(), false);
                 Collections.sort(sessionList);
                 adapter.notifyDataSetChanged();
-                break;
+                return;
             }
-            pos++;
         }
-        if(pos >= sessionList.size()){
-            addNewSessionMessage(new SessionMessageRecord(GlobalInfo.user.getUserId(), receiverId, 0),
-                    messageTime, message, true);
-        }
+        addNewSession(cmr.getSession());
     }
 
-    private void addNewSessionMessage(SessionMessageRecord smr, Date messageTime, String textMessage, boolean sending){
-        viewRoot.findViewById(R.id.txt_no_message).setVisibility(View.GONE);
-        User u = GlobalInfo.findUserById(smr.getToUserId());
-        if(u != null){
-            smr.save();
-            sessionList.addFirst(new SessionMessageAdapter.MessageItem(
-                    u.getPortrait(), u.getNickname(), messageTime, textMessage, smr, sending));
-            Collections.sort(sessionList);
-            adapter.notifyDataSetChanged();
+    private void updateSessionInfo(SessionMessageAdapter.MessageItem item, SessionRecord newSession, boolean fullUpdate){
+        if(fullUpdate) {
+            switch (newSession.getSessionType()) {
+                case SessionRecord.SESSION_TYPE_GUARDIANSHIP:
+                case SessionRecord.SESSION_TYPE_FRIEND:
+                    User u = GlobalInfo.findUserById(newSession.getSessionId());
+                    if (u == null)
+                        return;
+                    item.setPortrait(u.getPortrait());
+                    item.setDisplayName(u.getNickname());
+                    break;
+            }
+        }
+        item.setSession(newSession);
+    }
+
+    @Override
+    public void onDestroy() {
+        getContext().unregisterReceiver(sessionReceiver);
+        super.onDestroy();
+    }
+
+    private class UpdateSessionReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            long dbId = intent.getLongExtra(Application.BUNDLE_KEY_SESSION_DB_ID, -1);
+            SessionRecord session = DatabaseUtil.findSessionRecordByDbId(dbId);
+            for(SessionMessageAdapter.MessageItem mi : sessionList){
+                if(mi.getSession().getId() == dbId){
+                    if(session == null){
+                        int index = sessionList.indexOf(mi);
+                        sessionList.remove(index);
+                        adapter.notifyItemRemoved(index);
+                        return;
+                    }else{
+                        updateSessionInfo(mi, session, true);
+                        Collections.sort(sessionList);
+                        adapter.notifyDataSetChanged();
+                        return;
+                    }
+                }
+            }
         }
     }
 }

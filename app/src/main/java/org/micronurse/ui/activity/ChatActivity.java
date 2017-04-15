@@ -1,5 +1,6 @@
 package org.micronurse.ui.activity;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,40 +18,51 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.Gson;
 
 import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.adapter.ChatMessageAdapter;
 import org.micronurse.database.model.ChatMessageRecord;
+import org.micronurse.database.model.SessionRecord;
 import org.micronurse.model.User;
+import org.micronurse.receiver.ChatMessageReceiver;
 import org.micronurse.service.MQTTService;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
 
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ChatActivity extends AppCompatActivity {
-    public static final String BUNDLE_KEY_RECEIVER_ID = "ReceiverId";
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
-    private SwipeRefreshLayout refresh;
-    private RecyclerView chatListView;
-    private LinearLayoutManager layoutManager;
-    private ImageButton btnSendMessage;
-    private EditText editChatMsg;
-    private User chatReceiver;
+public class ChatActivity extends AppCompatActivity {
+    public static final String BUNDLE_KEY_SESSION_ID = "SessionId";
+    public static final String BUNDLE_KEY_SESSION_TYPE = "SessionType";
+
+    @BindView(R.id.refresh_layout) SwipeRefreshLayout refresh;
+    @BindView(R.id.chat_list) RecyclerView chatListView;
+    @BindView(R.id.chat_msg_edit) EditText editChatMsg;
+    @BindView(R.id.btn_send_msg) ImageButton btnSendMessage;
+
     private LinkedList<Object> messageList = new LinkedList<>();
     private ChatMessageAdapter adapter;
     private Calendar endTime;
-    private ServiceConnection serviceConnection;
+
+    private SessionRecord session;
+    private boolean newSessionFlag = false;
+
+    private Gson gson = GsonUtil.getDefaultGsonBuilder()
+            .excludeFieldsWithoutExposeAnnotation().create();
     private MQTTService mqttService;
-    private ChatMessageSentReceiver msgSentReceiver;
-    private ChatMessageArrivedReceiver msgArrivedReceiver;
+    private ServiceConnection mqttServConn;
+
+    private SentMessageReceiver sentMessageReceiver;
+    private ReceivedMessageReceiver receivedMessageReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +70,8 @@ public class ChatActivity extends AppCompatActivity {
         endTime = Calendar.getInstance();
 
         setContentView(R.layout.activity_chat);
+        ButterKnife.bind(this);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        refresh = (SwipeRefreshLayout) findViewById(R.id.refresh_layout);
         refresh.setColorSchemeResources(R.color.colorAccent);
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -67,117 +79,104 @@ public class ChatActivity extends AppCompatActivity {
                 updateChatHistory();
             }
         });
-        chatListView = (RecyclerView) findViewById(R.id.chat_list);
-        layoutManager = new LinearLayoutManager(this);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         chatListView.setLayoutManager(layoutManager);
         chatListView.setNestedScrollingEnabled(false);
-        int receiverId = getIntent().getIntExtra(BUNDLE_KEY_RECEIVER_ID, -1);
-        chatReceiver = GlobalInfo.findUserById(receiverId);
-        setTitle(chatReceiver.getNickname());
-        adapter = new ChatMessageAdapter(this, messageList);
+        btnSendMessage.setEnabled(false);
+
+        char sessionType = getIntent().getCharExtra(BUNDLE_KEY_SESSION_TYPE, SessionRecord.SESSION_TYPE_UNKNOWN);
+        long sessionId = getIntent().getLongExtra(BUNDLE_KEY_SESSION_ID, -1);
+        session = DatabaseUtil.findSessionRecord(GlobalInfo.user.getUserId(), sessionType, sessionId);
+        if(session == null) {
+            newSessionFlag = true;
+            session = new SessionRecord(GlobalInfo.user.getUserId(), sessionType, sessionId);
+        }
+
+        switch (sessionType){
+            case SessionRecord.SESSION_TYPE_GUARDIANSHIP:
+            case SessionRecord.SESSION_TYPE_FRIEND:
+                adapter = new ChatMessageAdapter(this, messageList, false);
+                User u = GlobalInfo.findUserById(sessionId);
+                if(u == null){
+                    finish();
+                    return;
+                }
+                setTitle(u.getNickname());
+                break;
+        }
         chatListView.setAdapter(adapter);
-        btnSendMessage = (ImageButton) findViewById(R.id.btn_send_msg);
-        btnSendMessage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendTextMessage();
-            }
-        });
-        editChatMsg = (EditText) findViewById(R.id.chat_msg_edit);
-        serviceConnection = new ServiceConnection() {
+        updateChatHistory();
+
+        if(session.equals(GlobalInfo.notificationSession)){
+            NotificationManager mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.cancel(ChatMessageReceiver.CHAT_MSG_NOTIFICATION_ID);
+            GlobalInfo.notificationSession = null;
+        }
+
+        mqttServConn = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
-                mqttService = ((MQTTService.MQTTServiceBinder)service).getService();
+                mqttService = ((MQTTService.Binder) service).getService();
+                btnSendMessage.setEnabled(true);
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {}
         };
+        Intent mqttIntent = new Intent(this, MQTTService.class);
+        bindService(mqttIntent, mqttServConn, BIND_AUTO_CREATE);
 
-        msgSentReceiver = new ChatMessageSentReceiver();
-        IntentFilter intentFilter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SENT);
-        intentFilter.addCategory(getPackageName());
-        registerReceiver(msgSentReceiver, intentFilter);
-        msgArrivedReceiver = new ChatMessageArrivedReceiver();
-        intentFilter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_RECEIVED);
-        intentFilter.addCategory(getPackageName());
-        registerReceiver(msgArrivedReceiver, intentFilter);
-        Intent intent = new Intent(this, MQTTService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        IntentFilter filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_SENT_SAVED);
+        filter.addCategory(getPackageName());
+        sentMessageReceiver = new SentMessageReceiver();
+        registerReceiver(sentMessageReceiver, filter);
+        filter = new IntentFilter(Application.ACTION_CHAT_MESSAGE_RECEIVED_SAVED);
+        filter.addCategory(getPackageName());
+        receivedMessageReceiver = new ReceivedMessageReceiver();
+        registerReceiver(receivedMessageReceiver, filter);
+    }
 
-        updateChatHistory();
-        for(ChatMessageRecord cmr : GlobalInfo.sendMessageQueue){
-            if(cmr.getChatterAId() == GlobalInfo.user.getUserId() && cmr.getChatterBId() == receiverId){
-                messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, cmr, true));
-            }
-        }
-        Collections.sort(messageList, new Comparator<Object>() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                if(((ChatMessageAdapter.MessageItem) o1).getMessage().getMessageTime().getTime() <
-                        ((ChatMessageAdapter.MessageItem) o2).getMessage().getMessageTime().getTime())
-                    return -1;
-                return 1;
-            }
-        });
-        if(!messageList.isEmpty()) {
-            adapter.notifyDataSetChanged();
-            chatListView.smoothScrollToPosition(messageList.size() - 1);
-        }
-        chatListView.setVisibility(View.VISIBLE);
+    @OnClick(R.id.btn_send_msg)
+    void onBtnSendMsgClick(View v){
+        sendTextMessage();
     }
 
     private void updateChatHistory(){
-        List<ChatMessageRecord> records = DatabaseUtil.findChatMessageRecords(GlobalInfo.user.getUserId(),
-                chatReceiver.getUserId(), endTime.getTime(), 20);
+        if(newSessionFlag) {
+            refresh.setRefreshing(false);
+            return;
+        }
+        List<ChatMessageRecord> records = session.getMessages(endTime.getTime(), 20);
         if(records != null){
             for(ChatMessageRecord cmr : records){
                 endTime.setTimeInMillis(cmr.getMessageTime().getTime() - 1);
                 if(GlobalInfo.user.getUserId() == cmr.getSenderId()){
                     messageList.addFirst(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT,
-                            GlobalInfo.user, cmr));
+                            GlobalInfo.user, cmr, null));
                 }else{
                     messageList.addFirst(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_LEFT,
-                            chatReceiver, cmr));
+                            GlobalInfo.findUserById(cmr.getSenderId()), cmr, null));
                 }
                 adapter.notifyItemInserted(0);
             }
-            if(records.size() > 0)
-                chatListView.smoothScrollToPosition(records.size() - 1);
+            if(!records.isEmpty())
+                chatListView.scrollToPosition(records.size() - 1);
         }
         refresh.setRefreshing(false);
     }
 
-    private void sendTextMessage(){
-        String message = editChatMsg.getText().toString();
-        if(message.isEmpty())
-            return;
-        ChatMessageRecord newMessage = new ChatMessageRecord(GlobalInfo.user.getUserId(), chatReceiver.getUserId(),
-                GlobalInfo.user.getUserId(), ChatMessageRecord.MESSAGE_TYPE_TEXT, message);
-        sendMessage(newMessage);
-        editChatMsg.setText("");
+    @Override
+    protected void onResume() {
+        super.onResume();
+        GlobalInfo.currentSession = session;
     }
 
-    private void sendMessage(ChatMessageRecord newMessage){
-        GlobalInfo.sendMessageQueue.add(newMessage);
-        messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, newMessage, true));
-        adapter.notifyItemInserted(messageList.size() - 1);
-        chatListView.smoothScrollToPosition(messageList.size() - 1);
-
-        Intent intent = new Intent(Application.ACTION_CHAT_MESSAGE_SEND_START);
-        intent.addCategory(getPackageName());
-        intent.putExtra(Application.BUNDLE_KEY_MESSAGE, newMessage.getLiteralContent());
-        intent.putExtra(Application.BUNDLE_KEY_MESSAGE_ID, newMessage.getMessageId());
-        intent.putExtra(Application.BUNDLE_KEY_RECEIVER_ID, chatReceiver.getUserId());
-        intent.putExtra(Application.BUNDLE_KEY_MESSAGE_TIMESTAMP, newMessage.getMessageTime().getTime());
-        sendBroadcast(intent);
-
-        mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(
-                GlobalInfo.TOPIC_CHATTING, GlobalInfo.user.getUserId(), chatReceiver.getUserId(),
-                1, GsonUtil.getDefaultGsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(newMessage),
-                newMessage.getMessageId(), Application.ACTION_CHAT_MESSAGE_SENT
-        ));
+    @Override
+    protected void onPause() {
+        GlobalInfo.currentSession = null;
+        super.onPause();
     }
 
     @Override
@@ -190,60 +189,105 @@ public class ChatActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void sendTextMessage(){
+        String message = editChatMsg.getText().toString();
+        if(message.isEmpty())
+            return;
+        ChatMessageRecord newMessage = new ChatMessageRecord(session, GlobalInfo.user.getUserId(), ChatMessageRecord.MESSAGE_TYPE_TEXT, message);
+        sendMessage(newMessage);
+        editChatMsg.setText("");
+    }
+
+    private void sendMessage(ChatMessageRecord newMessage){
+        messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_RIGHT, GlobalInfo.user, newMessage, null));
+        adapter.notifyItemInserted(messageList.size() - 1);
+        chatListView.smoothScrollToPosition(messageList.size() - 1);
+
+        if(newSessionFlag) {
+            updateSession();
+            newMessage.setSession(session);
+        }
+        newMessage.save();
+        Intent sentIntent = new Intent(Application.ACTION_CHAT_MESSAGE_SENT);
+        sentIntent.addCategory(getPackageName());
+        sentIntent.putExtra(Application.BUNDLE_KEY_CHAT_MSG_DB_ID, newMessage.getId());
+        switch (session.getSessionType()){
+            case SessionRecord.SESSION_TYPE_GUARDIANSHIP:
+                mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(Application.MQTT_TOPIC_CHATTING_GUARDIANSHIP, session.getSessionId(),
+                        1, gson.toJson(newMessage), sentIntent));
+                break;
+            case SessionRecord.SESSION_TYPE_FRIEND:
+                mqttService.addMQTTAction(new MQTTService.MQTTPublishAction(Application.MQTT_TOPIC_CHATTING_FRIEND, session.getSessionId(),
+                        1, gson.toJson(newMessage), sentIntent));
+                break;
+        }
+
+        Intent sendStartIntent = new Intent(Application.ACTION_CHAT_MESSAGE_SEND_START);
+        sendStartIntent.addCategory(getPackageName());
+        sendStartIntent.putExtra(Application.BUNDLE_KEY_CHAT_MSG_DB_ID, newMessage.getId());
+        sendBroadcast(sendStartIntent);
+    }
+
+    private void updateSession(){
+        SessionRecord tempSession = DatabaseUtil.findSessionRecord(session.getOwnerUserId(), session.getSessionType(),
+                session.getSessionId());
+        if (tempSession != null)
+            session = tempSession;
+        else
+            session.save();
+        newSessionFlag = false;
+    }
+
     @Override
     protected void onDestroy() {
-        unregisterReceiver(msgArrivedReceiver);
-        unregisterReceiver(msgSentReceiver);
-        unbindService(serviceConnection);
+        if(mqttServConn != null)
+            unbindService(mqttServConn);
+        mqttService = null;
+        if(sentMessageReceiver != null)
+            unregisterReceiver(sentMessageReceiver);
+        if(receivedMessageReceiver != null)
+            unregisterReceiver(receivedMessageReceiver);
+        if(!newSessionFlag){
+            session.setUnreadMessageCount(0);
+            Intent intent = new Intent(Application.ACTION_SESSION_UPDATE);
+            intent.addCategory(getPackageName());
+            intent.putExtra(Application.BUNDLE_KEY_SESSION_DB_ID, session.save());
+            sendBroadcast(intent);
+        }
         super.onDestroy();
     }
 
-    private class ChatMessageSentReceiver extends BroadcastReceiver{
+    private class SentMessageReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            int topicUserId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
-            int receiverId = intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1);
-            if(GlobalInfo.user == null || GlobalInfo.user.getUserId() != topicUserId || chatReceiver.getUserId() != receiverId)
-                return;
-            String messageId = intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE_ID);
-            if(messageId == null || messageId.isEmpty())
-                return;
-            for(int i = messageList.size() - 1; i >= 0; i--){
-                Object item = messageList.get(i);
-                if(item instanceof ChatMessageAdapter.MessageItem){
-                    if(messageId.equals(((ChatMessageAdapter.MessageItem) item).getMessage().getMessageId())){
-                        ((ChatMessageAdapter.MessageItem) item).setSending(false);
-                        adapter.notifyItemChanged(i);
-                        return;
+            long msgDbId = intent.getLongExtra(Application.BUNDLE_KEY_CHAT_MSG_DB_ID, -1);
+            for(Object o : messageList){
+                if(o instanceof ChatMessageAdapter.MessageItem){
+                    if(msgDbId == ((ChatMessageAdapter.MessageItem) o).getMessage().getId()){
+                        ((ChatMessageAdapter.MessageItem) o).getMessage().setStatus(ChatMessageRecord.MESSAGE_STATUS_NORMAL);
+                        adapter.notifyItemChanged(messageList.indexOf(o));
                     }
                 }
             }
         }
     }
 
-    private class ChatMessageArrivedReceiver extends BroadcastReceiver{
+    private class ReceivedMessageReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(GlobalInfo.user == null || GlobalInfo.user.getUserId() != intent.getIntExtra(Application.BUNDLE_KEY_RECEIVER_ID, -1))
+            ChatMessageRecord cmr = DatabaseUtil.findChatMessageByDbId(intent.getLongExtra(Application.BUNDLE_KEY_CHAT_MSG_DB_ID, -1));
+            if(cmr == null)
                 return;
-            int senderId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
-            if(chatReceiver.getUserId() != senderId)
+            if(!cmr.getSession().equals(session))
                 return;
-            try {
-                ChatMessageRecord cmr = GsonUtil.getDefaultGsonBuilder()
-                        .excludeFieldsWithoutExposeAnnotation().create()
-                        .fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), ChatMessageRecord.class);
-                cmr.setChatterAId(GlobalInfo.user.getUserId());
-                cmr.setChatterBId(senderId);
-                cmr.setSenderId(senderId);
-                messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_LEFT, chatReceiver, cmr));
-                boolean scrollFlag = !chatListView.canScrollVertically(1);
-                adapter.notifyItemInserted(messageList.size() - 1);
-                if(scrollFlag)
-                    chatListView.smoothScrollToPosition(messageList.size() - 1);
-            }catch (JsonSyntaxException jse){
-                jse.printStackTrace();
-            }
+            if(newSessionFlag)
+                updateSession();
+            boolean scrollFlag = ((LinearLayoutManager)chatListView.getLayoutManager()).findLastVisibleItemPosition() > messageList.size() - 3;
+            messageList.addLast(new ChatMessageAdapter.MessageItem(ChatMessageAdapter.MessageItem.POSITION_LEFT, GlobalInfo.findUserById(cmr.getSenderId()), cmr, null));
+            adapter.notifyItemInserted(messageList.size() - 1);
+            if(scrollFlag)
+                chatListView.smoothScrollToPosition(messageList.size() - 1);
         }
     }
+
 }

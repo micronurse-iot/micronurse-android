@@ -17,7 +17,7 @@
         android:text="@string/no_data"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipeLayout"
+        android:id="@+id/refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -60,7 +60,7 @@
                             android:layout_marginRight="@dimen/activity_horizontal_margin"/>
 
                         <TextView
-                            android:id="@+id/safe_level"
+                            android:id="@+id/txt_safe_level"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@android:color/white"
@@ -133,7 +133,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/prompt_smoke"
-                        android:textColor="@color/pink_500"
+                        android:textColor="@color/amber_500"
                         android:textSize="@dimen/normal_text_size"
                         android:layout_marginLeft="@dimen/item_padding"
                         android:layout_marginTop="@dimen/activity_vertical_margin"/>

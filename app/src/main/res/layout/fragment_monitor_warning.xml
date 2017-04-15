@@ -15,18 +15,12 @@
         android:textSize="@dimen/large_text_size"
         android:text="@string/no_monitor_warning"/>
 
-    <com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
-        android:id="@+id/refresh_layout"
+    <com.malinskiy.superrecyclerview.SuperRecyclerView
+        android:id="@+id/warning_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:srl_direction="both">
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/data_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="vertical"/>
-
-    </com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout>
+        app:mainLayoutId="@layout/layout_recyclerview_verticalscroll"
+        app:scrollbarStyle="insideInset"
+        app:layout_moreProgress="@layout/recyclerview_loading" />
 
 </RelativeLayout>

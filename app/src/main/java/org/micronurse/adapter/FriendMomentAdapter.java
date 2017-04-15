@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.micronurse.R;
@@ -16,7 +17,8 @@ import org.micronurse.util.GlobalInfo;
 
 import java.util.List;
 
-import de.hdodenhof.circleimageview.CircleImageView;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class FriendMomentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<FriendMoment> momentList;
@@ -53,24 +55,25 @@ public class FriendMomentAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             holder.momentPortrait.setImageBitmap(u.getPortrait());
             holder.momentUser.setText(u.getNickname());
             holder.momentTextContent.setText(momentItem.getTextContent());
-            holder.momentTime.setText(DateTimeUtil.convertTimestamp(context, momentItem.getTimestamp()));
+            holder.momentTime.setText(DateTimeUtil.convertTimestamp(context, momentItem.getTimestamp(), true, true, false));
         }
     }
 
-    private class FriendShareItemViewHolder extends RecyclerView.ViewHolder{
+    class FriendShareItemViewHolder extends RecyclerView.ViewHolder{
         private View itemView;
-        private CircleImageView momentPortrait;
-        private TextView momentUser;
-        private TextView momentTextContent;
-        private TextView momentTime;
+        @BindView(R.id.moment_portrait)
+        ImageView momentPortrait;
+        @BindView(R.id.txt_moment_user)
+        TextView momentUser;
+        @BindView(R.id.txt_moment_content)
+        TextView momentTextContent;
+        @BindView(R.id.txt_moment_time)
+        TextView momentTime;
 
         public FriendShareItemViewHolder(View itemView) {
             super(itemView);
             this.itemView = itemView;
-            momentPortrait = (CircleImageView) itemView.findViewById(R.id.moment_portrait);
-            momentTextContent = (TextView) itemView.findViewById(R.id.moment_text_content);
-            momentUser = (TextView) itemView.findViewById(R.id.moment_user);
-            momentTime = (TextView) itemView.findViewById(R.id.moment_time);
+            ButterKnife.bind(this, itemView);
         }
     }
 }

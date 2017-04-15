@@ -11,7 +11,7 @@ public class User{
     public static final char GENDER_MALE = 'M';
     public static final char GENDER_FEMALE = 'F';
 
-    private Integer userId;
+    private Long userId;
     private String phoneNumber;
     private String nickname;
     private Character gender;
@@ -25,7 +25,7 @@ public class User{
         this.accountType = accountType;
     }
 
-    public Integer getUserId() {
+    public Long getUserId() {
         return userId;
     }
 

@@ -1,5 +1,7 @@
 package org.micronurse.model;
 
+import java.util.Date;
+
 /**
  * Created by zhou-shengyun on 9/7/16.
  */
@@ -7,7 +9,7 @@ public class InfraredTransducer extends Sensor {
     private String name;
     private Boolean warning;
 
-    public InfraredTransducer(long timestamp, String name, Boolean warning) {
+    public InfraredTransducer(Date timestamp, String name, Boolean warning) {
         super(timestamp);
         this.name = name;
         this.warning = warning;

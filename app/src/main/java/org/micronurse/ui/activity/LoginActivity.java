@@ -1,14 +1,14 @@
 package org.micronurse.ui.activity;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -16,25 +16,32 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-import com.activeandroid.query.Select;
+
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import org.micronurse.R;
 import org.micronurse.database.model.LoginUserRecord;
-import org.micronurse.http.APIErrorListener;
-import org.micronurse.http.MicronurseAPI;
-import org.micronurse.http.model.request.LoginRequest;
-import org.micronurse.http.model.result.LoginResult;
-import org.micronurse.http.model.result.Result;
-import org.micronurse.http.model.PublicResultCode;
+import org.micronurse.net.http.HttpApi;
+import org.micronurse.net.http.HttpApiJsonListener;
+import org.micronurse.net.http.HttpApiJsonRequest;
+import org.micronurse.net.model.request.LoginRequest;
+import org.micronurse.net.model.result.LoginResult;
+import org.micronurse.net.model.result.Result;
+import org.micronurse.net.PublicResultCode;
 import org.micronurse.model.User;
+import org.micronurse.net.model.result.UserListResult;
+import org.micronurse.net.model.result.UserResult;
 import org.micronurse.util.CheckUtil;
+import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
-import org.micronurse.util.HttpAPIUtil;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnEditorAction;
+import butterknife.OnTextChanged;
 
 /**
  * A login screen that offers login via phone number/password.
@@ -44,105 +51,64 @@ public class LoginActivity extends AppCompatActivity {
     public static final String BUNDLE_PREFER_PASSWORD_KEY = "PreferPassword";
     public static final String BUNDLE_AUTO_LOGIN_KEY = "AutoLogin";
 
-    /**
-     * Keep track of the login task to ensure we can cancel it if requested.
-     */
-    private boolean mLoginTask = false;
-
     // UI references.
-    private AutoCompleteTextView mPhoneNumberView;
-    private EditText mPasswordView;
-    private ImageView mPortraitImageView;
+    @BindView(R.id.edit_phone_number)
+    AutoCompleteTextView editPhoneNum;
+    @BindView(R.id.edit_password)
+    EditText editPassword;
+    @BindView(R.id.login_portrait)
+    ImageView imgLoginPortrait;
 
-    private Intent loginIntent;
-    private Intent resetPasswordIntent;
-    private Intent registerIntent;
+    private List<LoginUserRecord> loginUserRecords;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        // Set up the login form.
-        loginIntent = new Intent(LoginActivity.this, MainActivity.class);
-        mPortraitImageView = (ImageView) findViewById(R.id.login_portrait);
+        ButterKnife.bind(this);
 
-        final List<LoginUserRecord> loginUserRecords = new Select().from(LoginUserRecord.class)
-                .orderBy("LastLoginTime DESC").execute();
+        loginUserRecords = DatabaseUtil.findAllLoginUserRecords(10);
         List<String> phoneNumberRecords = new ArrayList<String>();
-        for(LoginUserRecord lur : loginUserRecords){
+        for(LoginUserRecord lur : loginUserRecords)
             phoneNumberRecords.add(lur.getPhoneNumber());
-        }
-
-        mPhoneNumberView = (AutoCompleteTextView) findViewById(R.id.login_phone_number);
-        mPhoneNumberView.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String tempPhoneNum = s.toString();
-                for(LoginUserRecord lur : loginUserRecords){
-                    if(lur.getPhoneNumber().equals(tempPhoneNum)) {
-                        mPortraitImageView.setImageBitmap(lur.getPortrait());
-                        return;
-                    }
-                }
-                mPortraitImageView.setImageResource(R.mipmap.default_portrait);
-            }
-        });
-        mPhoneNumberView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, phoneNumberRecords));
-        mPhoneNumberView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_NEXT) {
-                    mPasswordView.requestFocus();
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        mPasswordView = (EditText) findViewById(R.id.login_password);
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if(id == EditorInfo.IME_ACTION_DONE) {
-                    attemptLogin();
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        Button mSignInButton = (Button) findViewById(R.id.button_sign_in);
-        mSignInButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                attemptLogin();
-            }
-        });
-
-        Button mForgetPassword = (Button) findViewById(R.id.button_forget_password);
-        mForgetPassword.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                resetPasswordIntent = new Intent(LoginActivity.this, ResetPasswordActivity.class);
-                startActivity(resetPasswordIntent);
-            }
-        });
-        Button mNewUser = (Button) findViewById(R.id.button_new_user);
-        mNewUser.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                registerIntent = new Intent(LoginActivity.this,RegisterActivity.class);
-                startActivity(registerIntent);
-            }
-        });
+        editPhoneNum.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, phoneNumberRecords));
     }
 
+    @OnTextChanged(value = R.id.edit_phone_number, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
+    void onPhoneNumChanged(Editable s){
+        String tempPhoneNum = s.toString();
+        for(LoginUserRecord lur : loginUserRecords){
+            if(lur.getPhoneNumber().equals(tempPhoneNum)) {
+                imgLoginPortrait.setImageBitmap(lur.getPortrait());
+                return;
+            }
+        }
+        imgLoginPortrait.setImageResource(R.mipmap.default_portrait);
+    }
+
+    @OnEditorAction(R.id.edit_password)
+    boolean onPasswordDone(TextView textView, int id, KeyEvent keyEvent) {
+        if(id == EditorInfo.IME_ACTION_DONE) {
+            attemptLogin();
+            return true;
+        }
+        return false;
+    }
+
+    @OnClick(R.id.btn_sign_in)
+    void onBtnSignInClick(View v){
+        attemptLogin();
+    }
+
+    @OnClick(R.id.btn_sign_up)
+    void onBtnSignUpClick(View v){
+        startActivity(new Intent(this, RegisterActivity.class));
+    }
+
+    @OnClick(R.id.btn_forget_password)
+    void onBtnResetPasswordClick(View v){
+        startActivity(new Intent(this, ResetPasswordActivity.class));
+    }
 
     @Override
     protected void onResume() {
@@ -150,90 +116,167 @@ public class LoginActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String preferPhoneNum = intent.getStringExtra(BUNDLE_PREFER_PHONE_NUMBER_KEY);
         if(preferPhoneNum != null)
-            mPhoneNumberView.setText(preferPhoneNum);
+            editPhoneNum.setText(preferPhoneNum);
         String preferPassword = intent.getStringExtra(BUNDLE_PREFER_PASSWORD_KEY);
         if(preferPassword != null)
-            mPasswordView.setText(preferPassword);
+            editPassword.setText(preferPassword);
         if(intent.getBooleanExtra(BUNDLE_AUTO_LOGIN_KEY, false))
             attemptLogin();
     }
 
-    /**
-     * Attempts to sign in the account specified by the login form.
-     * If there are form errors (invalid phone number, missing fields, etc.), the
-     * errors are presented and no actual login attempt is made.
-     */
     private void attemptLogin() {
-        if (mLoginTask) {
-            return;
-        }
-
         // Reset errors.
-        mPhoneNumberView.setError(null);
-        mPasswordView.setError(null);
+        editPhoneNum.setError(null);
+        editPassword.setError(null);
 
         // Store values at the time of the login attempt.
-        final String phoneNumber = mPhoneNumberView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        final String phoneNumber = editPhoneNum.getText().toString();
+        String password = editPassword.getText().toString();
 
         // Check for a valid phone number.
-        if(!CheckUtil.checkPhoneNumber(mPhoneNumberView))
+        if(!CheckUtil.checkPhoneNumber(editPhoneNum))
             return;
 
         // Check for a valid password, if the user entered one.
-        if (!CheckUtil.checkPassword(mPasswordView))
+        if (!CheckUtil.checkPassword(editPassword))
             return;
 
         // Kick off a background task to perform the user login attempt.
         LoginRequest loginRequest = new LoginRequest(phoneNumber, password);
-        final MicronurseAPI<LoginResult> request = new MicronurseAPI<>(LoginActivity.this, MicronurseAPI.getApiUrl(MicronurseAPI.AccountAPI.LOGIN), Request.Method.PUT, loginRequest, null,
-            new Response.Listener<LoginResult>() {
-                @Override
-                public void onResponse(LoginResult response) {
-                    GlobalInfo.token = response.getToken();
-                    HttpAPIUtil.finishLogin(LoginActivity.this, phoneNumber, new Response.Listener<Result>() {
-                        @Override
-                        public void onResponse(Result response) {
-                            startActivity(loginIntent);
-                            finish();
-                        }
-                    }, new APIErrorListener() {
-                        @Override
-                        public boolean onErrorResponse(VolleyError err, Result result) {
-                            if(result == null)
-                                return false;
-                            if(GlobalInfo.user != null){
-                                if((GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER && result.getResultCode() == PublicResultCode.FRIEND_JUAN_NO_FRIENDSHIP) ||
-                                        (GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN && result.getResultCode() == PublicResultCode.GUARDIANSHIP_NOT_EXIST)) {
-                                    finish();
-                                    startActivity(loginIntent);
-                                    return true;
-                                }
-                            }
-                            Toast.makeText(LoginActivity.this, R.string.error_login_failed, Toast.LENGTH_SHORT).show();
-                            return true;
-                        }
-                    }, true);
-                }
-            }, new APIErrorListener() {
-                @Override
-                public boolean onErrorResponse(VolleyError error, Result result) {
-                    if (result == null)
-                        return false;
-                    switch (result.getResultCode()) {
-                        case PublicResultCode.LOGIN_USER_NOT_EXIST:
-                            mPhoneNumberView.setError(result.getMessage());
-                            mPhoneNumberView.requestFocus();
-                            return true;
-                        case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
-                            mPasswordView.setError(result.getMessage());
-                            mPasswordView.requestFocus();
-                            return true;
+        final ProgressDialog pd = new ProgressDialog(this);
+        pd.setCancelable(false);
+        pd.setMessage(getString(R.string.action_logining));
+        pd.show();
+
+        HttpApi.startRequest(new HttpApiJsonRequest(this, HttpApi.getApiUrl(HttpApi.AccountAPI.LOGIN), Request.Method.PUT, null, loginRequest, new HttpApiJsonListener<LoginResult>(LoginResult.class) {
+            @Override
+            public void onDataResponse(LoginResult data) {
+                GlobalInfo.token = data.getToken();
+                afterLogin(LoginActivity.this, phoneNumber, new HttpApiJsonListener<Result>(Result.class) {
+                    @Override
+                    public void onDataResponse(Result data) {
+                        pd.dismiss();
+                        finish();
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     }
-                    return false;
+
+                    @Override
+                    public void onErrorResponse() {
+                        pd.dismiss();
+                    }
+                });
+            }
+
+            @Override
+            public void onErrorResponse() {
+                pd.dismiss();
+            }
+
+            @Override
+            public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
+                switch (errorInfo.getResultCode()) {
+                    case PublicResultCode.LOGIN_USER_NOT_EXIST:
+                        editPhoneNum.setError(errorInfo.getMessage());
+                        editPhoneNum.requestFocus();
+                        return true;
+                    case PublicResultCode.LOGIN_INCORRECT_PASSWORD:
+                        editPassword.setError(errorInfo.getMessage());
+                        editPassword.requestFocus();
+                        return true;
                 }
-        }, LoginResult.class, true, getString(R.string.action_logining));
-        request.startRequest();
+                return false;
+            }
+        }));
+    }
+
+    public static void afterLogin(final Activity activity, final String phoneNumber, final HttpApiJsonListener<Result> listener){
+        HttpApi.startRequest(new HttpApiJsonRequest(activity, HttpApi.getApiUrl(HttpApi.AccountAPI.USER_BASIC_INFO_BY_PHONE, phoneNumber), Request.Method.GET, null, null,
+                new HttpApiJsonListener<UserResult>(UserResult.class) {
+                    @Override
+                    public void onDataResponse(UserResult data) {
+                        GlobalInfo.user = data.getUser();
+                        GlobalInfo.user.setPhoneNumber(phoneNumber);
+                        getGuardianship(activity, listener);
+                    }
+
+                    @Override
+                    public void onErrorResponse() {
+                        listener.onErrorResponse();
+                    }
+                }));
+
+    }
+
+    private static void getGuardianship(final Activity activity, final HttpApiJsonListener<Result> listener){
+        HttpApi.startRequest(new HttpApiJsonRequest(activity, HttpApi.getApiUrl(HttpApi.AccountAPI.GUARDIANSHIP), Request.Method.GET, GlobalInfo.token, null, new HttpApiJsonListener<UserListResult>(UserListResult.class) {
+            @Override
+            public void onDataResponse(UserListResult data) {
+                GlobalInfo.guardianshipList = data.getUserList();
+                if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN)
+                    listener.onDataResponse((Result) null);
+                else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
+                    getFriendList(activity, listener);
+                }
+            }
+
+            @Override
+            public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
+                if(errorInfo.getResultCode() == PublicResultCode.GUARDIANSHIP_NOT_EXIST){
+                    if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN)
+                        listener.onDataResponse((Result) null);
+                    else if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
+                        getFriendList(activity, listener);
+                    }
+                    return true;
+                }
+                listener.onErrorResponse();
+                return false;
+            }
+
+            @Override
+            public boolean onDataCorrupted(Throwable e) {
+                listener.onErrorResponse();
+                return false;
+            }
+
+            @Override
+            public boolean onNetworkError(Throwable e) {
+                listener.onErrorResponse();
+                return false;
+            }
+        }));
+    }
+
+    private static void getFriendList(final Activity activity, final HttpApiJsonListener<Result> listener){
+        HttpApi.startRequest(new HttpApiJsonRequest(activity, HttpApi.getApiUrl(HttpApi.OlderFriendJuanAPI.FRIENDSHIP), Request.Method.GET, GlobalInfo.token, null, new HttpApiJsonListener<UserListResult>(UserListResult.class) {
+            @Override
+            public void onDataResponse(UserListResult data) {
+                GlobalInfo.Older.friendList = data.getUserList();
+                listener.onDataResponse((Result) null);
+            }
+
+            @Override
+            public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
+                if(errorInfo.getResultCode() == PublicResultCode.FRIEND_JUAN_NO_FRIENDSHIP){
+                    listener.onDataResponse((Result) null);
+                    return true;
+                }
+                listener.onErrorResponse();
+                return false;
+            }
+
+            @Override
+            public boolean onDataCorrupted(Throwable e) {
+                listener.onErrorResponse();
+                return false;
+            }
+
+            @Override
+            public boolean onNetworkError(Throwable e) {
+                listener.onErrorResponse();
+                return false;
+            }
+        }));
     }
 }
 

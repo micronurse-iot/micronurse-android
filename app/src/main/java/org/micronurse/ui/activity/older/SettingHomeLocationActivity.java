@@ -1,22 +1,20 @@
 package org.micronurse.ui.activity.older;
 
+import android.app.ProgressDialog;
+import android.app.SearchManager;
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapPoi;
@@ -34,34 +32,33 @@ import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
 
 import org.micronurse.R;
-import org.micronurse.http.APIErrorListener;
-import org.micronurse.http.MicronurseAPI;
-import org.micronurse.http.model.PublicResultCode;
-import org.micronurse.http.model.request.SaveHomeLocationRequest;
-import org.micronurse.http.model.result.HomeLocationResult;
-import org.micronurse.http.model.result.Result;
-import org.micronurse.model.User;
+import org.micronurse.net.http.HttpApi;
+import org.micronurse.net.http.HttpApiJsonListener;
+import org.micronurse.net.http.HttpApiJsonRequest;
+import org.micronurse.net.model.request.SaveHomeLocationRequest;
+import org.micronurse.net.model.result.Result;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.ImageUtil;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class SettingHomeLocationActivity extends AppCompatActivity  implements
         OnGetGeoCoderResultListener {
     public static final int RESULT_CODE_SET_HOME_LOCATION = 666;
     public static final String BUNDLE_HOME_LONGITUDE = "HomeLongitude";
     public static final String BUNDLE_HOME_LATITUDE = "HomeLatitude";
+    public static final String BUNDLE_HOME_ADDR = "HomeAddr";
 
-    private EditText txtCity;
-    private EditText txtAddr;
-    private Button btnSearchLocation;
-    private Button btnSave;
-
-    private MapView mMapView;
+    @BindView(R.id.edit_home_address)
+    EditText editAddr;
+    @BindView(R.id.bmap)
+    MapView mMapView;
     private BaiduMap baiduMap;
     private MarkerOptions homeMarkerOptions;
     private Marker homeMarker;
     private GeoCoder mSearch;
-    private String cityName;
-    private String addrDetail;
     private Double mCurrentLatitude, mCurrentLongitude;
 
 
@@ -70,55 +67,19 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting_home_location);
+        ButterKnife.bind(this);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        txtCity = (EditText)findViewById(R.id.txt_city);
-        txtCity.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                txtCity.setError(null);
-                if (TextUtils.isEmpty(txtCity.getText())) {
-                    txtCity.setError(getString(R.string.error_cityname_empty));
-                    txtCity.requestFocus();
-                    return false;
-                } else {
-                    txtAddr.requestFocus();
-                }
-                return true;
-            }
-        });
-        txtAddr = (EditText)findViewById(R.id.txt_home_location);
-        txtAddr.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                searchLocation();
-                return true;
-            }
-        });
-        btnSearchLocation = (Button)findViewById(R.id.btn_search_location);
-        btnSearchLocation.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                searchLocation();
-            }
-        });
-        btnSave = (Button) findViewById(R.id.btn_save_home_location);
-        btnSave.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveHomeLocation();
-            }
-        });
 
-        mMapView = (MapView)findViewById(R.id.bmapView);
+        mMapView = (MapView)findViewById(R.id.bmap);
         baiduMap = mMapView.getMap();
         baiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(17));
         baiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng point) {
-                homeMarkerOptions.position(point);
                 if (homeMarker != null)
-                    homeMarker.remove();
-                homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
+                    homeMarker.setPosition(point);
+                else
+                    homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions.position(point));
                 mSearch.reverseGeoCode(new ReverseGeoCodeOption()
                         .location(point));
                 mCurrentLongitude = point.longitude;
@@ -145,63 +106,70 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
             homeMarkerOptions.position(point);
             homeMarker = (Marker) baiduMap.addOverlay(homeMarkerOptions);
             baiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(point));
-            mSearch.reverseGeoCode(new ReverseGeoCodeOption()
-                    .location(new LatLng(mCurrentLatitude, mCurrentLongitude)));
+            editAddr.setText(getIntent().getStringExtra(BUNDLE_HOME_ADDR));
         }
     }
 
-
-    private boolean searchLocation() {
-        txtCity.setError(null);
-        txtAddr.setError(null);
-        if (TextUtils.isEmpty(txtCity.getText())) {
-            txtCity.setError(getString(R.string.error_cityname_empty));
-            txtCity.requestFocus();
-            return false;
-        } else if (TextUtils.isEmpty(txtAddr.getText())) {
-            txtAddr.setError(getString(R.string.error_homeaddress_empty));
-            txtAddr.requestFocus();
-            return false;
-        } else {
-            cityName = txtCity.getText().toString();
-            addrDetail = txtAddr.getText().toString();
-            mSearch.geocode(new GeoCodeOption()
-                    .city(cityName)
-                    .address(cityName+addrDetail));
-
-        }
-        return true;
+    @OnClick(R.id.btn_save)
+    void onBtnSaveClick(View v){
+        saveHomeLocation();
     }
 
     private void saveHomeLocation() {
-        if (searchLocation()) {
-            new MicronurseAPI<Result>(this, MicronurseAPI.getApiUrl(MicronurseAPI.OlderAccountAPI.SET_HOME_LOCATION), Request.Method.POST, new SaveHomeLocationRequest(
-                    mCurrentLongitude, mCurrentLatitude
-            ), GlobalInfo.token, new Response.Listener<Result>() {
-                @Override
-                public void onResponse(Result response) {
-                    setResult(RESULT_CODE_SET_HOME_LOCATION);
-                    finish();
-                }
-            }, new APIErrorListener() {
-                @Override
-                public boolean onErrorResponse(VolleyError err, Result result) {
-                    if (result != null) {
-                        switch (result.getResultCode()) {
-                            case PublicResultCode.HOME_ADDRESS_NOT_EXIST:
-                                txtCity.setError(result.getMessage());
-                                txtAddr.setHint(R.string.error_address_notfind);
-                                txtCity.requestFocus();
-                                return true;
-                        }
-                    }
-                    return false;
-                }
-            }, Result.class, true, getString(R.string.action_save_home_location)).startRequest();
+        if(TextUtils.isEmpty(editAddr.getText().toString())){
+            editAddr.setError(getString(R.string.error_homeaddress_empty));
+            return;
         }
+
+        final ProgressDialog pd = new ProgressDialog(this);
+        pd.setCancelable(false);
+        pd.setMessage(getString(R.string.action_save_home_location));
+        pd.show();
+
+        HttpApi.startRequest(new HttpApiJsonRequest(this, HttpApi.getApiUrl(HttpApi.OlderAccountAPI.SET_HOME_LOCATION), Request.Method.POST, GlobalInfo.token,
+                new SaveHomeLocationRequest(mCurrentLongitude, mCurrentLatitude, editAddr.getText().toString()),
+                new HttpApiJsonListener<Result>(Result.class) {
+                    @Override
+                    public void onResponse() {
+                        pd.dismiss();
+                    }
+
+                    @Override
+                    public void onDataResponse(Result data) {
+                        Toast.makeText(SettingHomeLocationActivity.this, data.getMessage(), Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_CODE_SET_HOME_LOCATION);
+                        finish();
+                    }
+                }));
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_set_home_location, menu);
+        final MenuItem searchItem = menu.findItem(R.id.menu_search);
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if(query == null || query.isEmpty())
+                    return true;
+                mSearch.geocode(new GeoCodeOption()
+                        .city("")
+                        .address(query));
+                return true;
+            }
 
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return true;
+            }
+        });
+
+        return super.onCreateOptionsMenu(menu);
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -235,10 +203,10 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
     @Override
     public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {
         if (geoCodeResult == null || geoCodeResult.error != SearchResult.ERRORNO.NO_ERROR) {
-            Log.e(GlobalInfo.LOG_TAG, "Geo error:" + geoCodeResult.error);
-            Toast.makeText(this, R.string.error_address_notfind, Toast.LENGTH_LONG)
+            if(geoCodeResult != null)
+                Log.e(GlobalInfo.LOG_TAG, "Geo error:" + geoCodeResult.error);
+            Toast.makeText(this, R.string.error_address_notfind, Toast.LENGTH_SHORT)
                     .show();
-            return;
         }
         else{
             homeMarkerOptions.position(geoCodeResult.getLocation());
@@ -249,19 +217,17 @@ public class SettingHomeLocationActivity extends AppCompatActivity  implements
                     .getLocation()));
             mCurrentLongitude = geoCodeResult.getLocation().longitude;
             mCurrentLatitude = geoCodeResult.getLocation().latitude;
+            editAddr.setText(geoCodeResult.getAddress());
         }
     }
 
     @Override
     public void onGetReverseGeoCodeResult(ReverseGeoCodeResult reverseGeoCodeResult) {
         if (reverseGeoCodeResult == null || reverseGeoCodeResult.error != SearchResult.ERRORNO.NO_ERROR) {
-            Log.e(GlobalInfo.LOG_TAG, "Geo reverse error:" + reverseGeoCodeResult.error);
-            Toast.makeText(this, R.string.unknown_location, Toast.LENGTH_LONG)
-                    .show();
+            if(reverseGeoCodeResult != null)
+                Log.e(GlobalInfo.LOG_TAG, "Geo reverse error:" + reverseGeoCodeResult.error);
         } else {
-            ReverseGeoCodeResult.AddressComponent address = reverseGeoCodeResult.getAddressDetail();
-            txtCity.setText(address.city);
-            txtAddr.setText(address.district + address.street + address.streetNumber);
+            editAddr.setText(reverseGeoCodeResult.getAddress());
         }
     }
 

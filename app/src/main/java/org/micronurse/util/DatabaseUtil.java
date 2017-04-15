@@ -5,7 +5,7 @@ import com.activeandroid.query.Select;
 import org.micronurse.database.model.ChatMessageRecord;
 import org.micronurse.database.model.LoginUserRecord;
 import org.micronurse.database.model.MedicationReminder;
-import org.micronurse.database.model.SessionMessageRecord;
+import org.micronurse.database.model.SessionRecord;
 import org.micronurse.model.User;
 
 import java.util.Date;
@@ -35,7 +35,7 @@ public class DatabaseUtil {
                 .orderBy("LastLoginTime DESC").limit(limit).execute();
     }
 
-    public static LoginUserRecord findLoginUserRecord(int userId){
+    public static LoginUserRecord findLoginUserRecord(long userId){
         return new Select().from(LoginUserRecord.class).where("UserId=?", userId)
                 .executeSingle();
     }
@@ -50,27 +50,35 @@ public class DatabaseUtil {
                 .execute();
     }
 
-    public static List<SessionMessageRecord> findSessionMessageRecords(int fromUserId){
-        return new Select().from(SessionMessageRecord.class)
-                .where("FromUserId=?", fromUserId)
+    public static List<SessionRecord> findAllSessionRecords(long ownerUserId){
+        return new Select().from(SessionRecord.class).where("OwnerUserId=?", ownerUserId)
                 .execute();
     }
 
-    public static SessionMessageRecord findSessionMessageRecord(int fromUserId, int toUserId){
-        return new Select().from(SessionMessageRecord.class)
-                .where("FromUserId=?", fromUserId)
-                .where("ToUserId=?", toUserId)
+    public static SessionRecord findSessionRecord(long ownerUserId, char sessionType, long sessionId){
+        return new Select().from(SessionRecord.class).where("OwnerUserId=?", ownerUserId)
+                .where("SessionId=?", SessionRecord.getOriginalSessionId(sessionType, sessionId))
                 .executeSingle();
     }
 
-    public static List<MedicationReminder> findMedicationRemindersByUserId(int userId){
+    public static SessionRecord findSessionRecordByDbId(long dbId){
+        return new Select().from(SessionRecord.class).where("Id=?", dbId)
+                .executeSingle();
+    }
+
+    public static ChatMessageRecord findChatMessageByDbId(long dbId){
+        return new Select().from(ChatMessageRecord.class).where("Id=?", dbId)
+                .executeSingle();
+    }
+
+    public static List<MedicationReminder> findMedicationRemindersByUserId(long userId){
         return new Select().from(MedicationReminder.class)
                 .where("UserId=?", userId)
                 .orderBy("AddTime DESC")
                 .execute();
     }
 
-    public static MedicationReminder findMedicationReminderById(long id){
+    public static MedicationReminder findMedicationReminderByDBId(long id){
         return new Select().from(MedicationReminder.class)
                 .where("Id=?", id)
                 .executeSingle();

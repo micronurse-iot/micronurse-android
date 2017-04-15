@@ -29,11 +29,17 @@ import org.micronurse.ui.listener.OnSensorDataReceivedListener;
 import org.micronurse.ui.widget.ViewPager;
 import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.GsonUtil;
+import org.micronurse.util.SensorUtil;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MonitorFragment extends Fragment implements OnBindMQTTServiceListener{
-    private View viewRoot;
-    private ViewPager viewPager;
-    private TabLayout tabLayout;
+    private View rootView;
+    @BindView(R.id.tab_viewpager_monitor)
+    ViewPager viewPager;
+    @BindView(R.id.tab_monitor)
+    TabLayout tabLayout;
     private OnFullScreenListener fullScreenListener;
     private Fragment[] monitorPages;
     private String[] pageTitles;
@@ -60,8 +66,8 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        if (viewRoot != null)
-            return viewRoot;
+        if (rootView != null)
+            return rootView;
 
         if (monitorPages == null) {
             monitorPages = new Fragment[]{
@@ -92,25 +98,24 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
                     fullScreenListener.onExitFullScreen();
             }
         });
-        viewRoot = inflater.inflate(R.layout.fragment_monitor, container, false);
-        viewPager = (ViewPager) viewRoot.findViewById(R.id.tab_viewpager_monitor);
+        rootView = inflater.inflate(R.layout.fragment_monitor, container, false);
+        ButterKnife.bind(this, rootView);
         viewPager.setAdapter(new MonitorPagerAdapter(getFragmentManager()));
-        tabLayout = (TabLayout) viewRoot.findViewById(R.id.tab_monitor);
         tabLayout.setupWithViewPager(viewPager);
-        return viewRoot;
+        return rootView;
     }
 
     @Override
     public void onBind(MQTTService service) {
         if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
             service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
-                    GlobalInfo.TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getUserId(), 1, Application.ACTION_SENSOR_DATA_REPORT
+                    Application.MQTT_TOPIC_SENSOR_DATA_REPORT, GlobalInfo.user.getUserId(), 1, Application.ACTION_SENSOR_DATA_REPORT
             ));
         }else{
             if(GlobalInfo.guardianshipList != null){
                 for(User u : GlobalInfo.guardianshipList){
                     service.addMQTTAction(new MQTTService.MQTTSubscriptionAction(
-                            GlobalInfo.TOPIC_SENSOR_DATA_REPORT, u.getUserId(), 1, Application.ACTION_SENSOR_DATA_REPORT
+                            Application.MQTT_TOPIC_SENSOR_DATA_REPORT, u.getUserId(), 1, Application.ACTION_SENSOR_DATA_REPORT
                     ));
                 }
             }
@@ -150,10 +155,10 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
 
     private class SensorDataReceiver extends BroadcastReceiver{
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, Intent mqttIntent) {
             if(GlobalInfo.user == null)
                 return;
-            int userId = intent.getIntExtra(Application.BUNDLE_KEY_USER_ID, -1);
+            long userId = mqttIntent.getLongExtra(MQTTService.BUNDLE_KEY_TOPIC_OWNER_ID, -1);
             if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER &&
                     GlobalInfo.user.getUserId() != userId)
                 return;
@@ -161,10 +166,10 @@ public class MonitorFragment extends Fragment implements OnBindMQTTServiceListen
                     (GlobalInfo.Guardian.monitorOlder == null || GlobalInfo.Guardian.monitorOlder.getUserId() != userId))
                 return;
             try {
-                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(intent.getStringExtra(Application.BUNDLE_KEY_MESSAGE), RawSensorData.class);
+                RawSensorData rawSensorData = GsonUtil.getGson().fromJson(mqttIntent.getStringExtra(MQTTService.BUNDLE_KEY_MESSAGE), RawSensorData.class);
                 for(Fragment f : monitorPages){
                     if(f instanceof OnSensorDataReceivedListener)
-                        ((OnSensorDataReceivedListener) f).onSensorDataReceived(rawSensorData);
+                        ((OnSensorDataReceivedListener) f).onSensorDataReceived(SensorUtil.parseRawSensorData(rawSensorData));
                 }
             }catch (JsonSyntaxException e){
                 e.printStackTrace();

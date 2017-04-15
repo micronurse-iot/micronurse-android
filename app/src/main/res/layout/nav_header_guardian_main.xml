@@ -58,7 +58,7 @@
         android:id="@+id/nav_header_older_portrait"
         android:layout_width="@dimen/nav_header_small_portrait_size"
         android:layout_height="@dimen/nav_header_small_portrait_size"
-        android:src="@android:drawable/sym_def_app_icon"
+        android:src="@mipmap/ic_launcher"
         app:civ_border_width="1dp"
         app:civ_fill_color="#eeeeee"
         app:civ_border_color="#ffffff"

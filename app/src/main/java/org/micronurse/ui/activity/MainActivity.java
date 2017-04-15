@@ -24,13 +24,13 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.model.User;
 import org.micronurse.service.EmergencyCallService;
 import org.micronurse.service.LocationService;
 import org.micronurse.service.MQTTService;
-import org.micronurse.ui.activity.older.SettingsActivity;
 import org.micronurse.ui.fragment.guardian.ContactsFragment;
 import org.micronurse.ui.fragment.older.FriendJuanFragment;
 import org.micronurse.ui.fragment.older.MedicationReminderFragment;
@@ -40,10 +40,17 @@ import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
 
+import java.util.ArrayList;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-    private DrawerLayout drawerLayout;
-    private NavigationView mNavigationView;
+    @BindView(R.id.drawer_layout)
+    DrawerLayout drawerLayout;
+    @BindView(R.id.nav_main)
+    NavigationView mNavigationView;
     private SwitchCompat mSwitchEmergencyCall;
     private View mNavHeaderView;
 
@@ -65,56 +72,78 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER)
-            setContentView(R.layout.activity_older_main);
-        else
-            setContentView(R.layout.activity_guardian_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+        Toolbar toolbar = ButterKnife.findById(this, R.id.toolbar_main);
         setSupportActionBar(toolbar);
 
-        drawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
+        ArrayList<String> permToCheck = new ArrayList<>();
+        permToCheck.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         mFragmentManager = getSupportFragmentManager();
         monitorFragment = MonitorFragment.getInstance(this);
         monitorWarningFragment = MonitorWarningFragment.getInstance(this);
+        FragmentTransaction ft = mFragmentManager.beginTransaction()
+                .add(R.id.main_container, monitorFragment)
+                .add(R.id.main_container, monitorWarningFragment);
 
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
-            friendJuanFragment = FriendJuanFragment.getInstance(this);
-            medicationReminderFragment = new MedicationReminderFragment();
-            mFragmentManager.beginTransaction()
-                    .add(R.id.main_container, monitorFragment)
-                    .add(R.id.main_container, monitorWarningFragment)
-                    .add(R.id.main_container, friendJuanFragment)
-                    .add(R.id.main_container, medicationReminderFragment)
-                    .commit();
-        }else{
-            contactsFragment = ContactsFragment.getInstance(this);
-            mFragmentManager.beginTransaction()
-                    .add(R.id.main_container, monitorFragment)
-                    .add(R.id.main_container, monitorWarningFragment)
-                    .add(R.id.main_container, contactsFragment)
-                    .commit();
+        switch (GlobalInfo.user.getAccountType()){
+            case User.ACCOUNT_TYPE_OLDER:
+                friendJuanFragment = FriendJuanFragment.getInstance(this);
+                medicationReminderFragment = MedicationReminderFragment.getInstance(this);
+                ft.add(R.id.main_container, friendJuanFragment)
+                  .add(R.id.main_container, medicationReminderFragment)
+                  .commit();
+
+                //Navigation
+                mNavHeaderView = mNavigationView.inflateHeaderView(R.layout.nav_header_older_main);
+                mNavigationView.inflateMenu(R.menu.activity_older_main_drawer);
+                mSwitchEmergencyCall = (SwitchCompat) mNavigationView.getMenu().findItem(R.id.nav_switch_emergency_call)
+                        .getActionView().findViewById(R.id.switch_emergency_call_btn);
+                mSwitchEmergencyCall.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        emergencyCallService.setShowCallButton(isChecked);
+                    }
+                });
+
+                //Services
+                permToCheck.add(Manifest.permission.CALL_PHONE);
+                emergencyCallServiceIntent = new Intent(this, EmergencyCallService.class);
+                startService(emergencyCallServiceIntent);
+                emergencyCallServiceConnection = new ServiceConnection() {
+                    @Override
+                    public void onServiceConnected(ComponentName name, IBinder service) {
+                        emergencyCallService = ((EmergencyCallService.EmergencyCallServiceBinder)service).getService();
+                    }
+
+                    @Override
+                    public void onServiceDisconnected(ComponentName name) {}
+                };
+                bindService(emergencyCallServiceIntent, emergencyCallServiceConnection, Context.BIND_AUTO_CREATE);
+                permToCheck.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+                permToCheck.add(Manifest.permission.ACCESS_FINE_LOCATION);
+                locationServiceIntent = new Intent(this, LocationService.class);
+                startService(locationServiceIntent);
+                break;
+            case User.ACCOUNT_TYPE_GUARDIAN:
+                if(GlobalInfo.guardianshipList != null && !GlobalInfo.guardianshipList.isEmpty())
+                    GlobalInfo.Guardian.monitorOlder = GlobalInfo.guardianshipList.get(0);
+
+                contactsFragment = ContactsFragment.getInstance(this);
+                ft.add(R.id.main_container, contactsFragment)
+                  .commit();
+
+                //Navigation
+                mNavHeaderView = mNavigationView.inflateHeaderView(R.layout.nav_header_guardian_main);
+                mNavigationView.inflateMenu(R.menu.activity_guardian_main_drawer);
         }
 
-        mNavigationView = (NavigationView) findViewById(R.id.nav_main);
         mNavigationView.setNavigationItemSelectedListener(this);
-        mNavigationView.getMenu().getItem(0).setChecked(true);
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
-            Application.checkPermission(this, Manifest.permission.CALL_PHONE);
-            mSwitchEmergencyCall = (SwitchCompat) mNavigationView.getMenu().findItem(R.id.nav_switch_emergency_call)
-                                   .getActionView().findViewById(R.id.switch_emergency_call_btn);
-            mSwitchEmergencyCall.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    emergencyCallService.setShowCallButton(isChecked);
-                }
-            });
-        }
-        mNavHeaderView = mNavigationView.getHeaderView(0);
         onNavigationItemSelected(mNavigationView.getMenu().getItem(0));
 
         monitorFragment.setOnFullScreenListener(new OnFullScreenListener() {
@@ -131,46 +160,30 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_GUARDIAN){
-            updateMonitorOlder();
-        }
-
         mqttServiceIntent = new Intent(this, MQTTService.class);
         startService(mqttServiceIntent);
         mqttServiceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
-                MQTTService mqttService = ((MQTTService.MQTTServiceBinder) service).getService();
+                MQTTService mqttService = ((MQTTService.Binder) service).getService();
                 monitorFragment.onBind(mqttService);
                 monitorWarningFragment.onBind(mqttService);
                 if(friendJuanFragment != null)
                     friendJuanFragment.onBind(mqttService);
                 if(contactsFragment != null)
                     contactsFragment.onBind(mqttService);
+                try {
+                    mqttService.startWork(GlobalInfo.user.getUserId(), GlobalInfo.token);
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {}
         };
         bindService(mqttServiceIntent, mqttServiceConnection, Context.BIND_AUTO_CREATE);
-        if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER) {
-            Application.checkPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-            Application.checkPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-            emergencyCallServiceIntent = new Intent(this, EmergencyCallService.class);
-            startService(emergencyCallServiceIntent);
-            emergencyCallServiceConnection = new ServiceConnection() {
-                @Override
-                public void onServiceConnected(ComponentName name, IBinder service) {
-                    emergencyCallService = ((EmergencyCallService.EmergencyCallServiceBinder)service).getService();
-                }
-
-                @Override
-                public void onServiceDisconnected(ComponentName name) {}
-            };
-            bindService(emergencyCallServiceIntent, emergencyCallServiceConnection, Context.BIND_AUTO_CREATE);
-            locationServiceIntent = new Intent(this, LocationService.class);
-            startService(locationServiceIntent);
-        }
+        Application.checkPermission(this, permToCheck.toArray(new String[permToCheck.size()]));
     }
 
     @Override
@@ -191,6 +204,9 @@ public class MainActivity extends AppCompatActivity
             mNavHeaderView.findViewById(R.id.nav_header_older_portrait).setVisibility(View.GONE);
             mNavHeaderView.findViewById(R.id.nav_header_older_nickname).setVisibility(View.GONE);
             return;
+        }else{
+            mNavHeaderView.findViewById(R.id.nav_header_older_portrait).setVisibility(View.VISIBLE);
+            mNavHeaderView.findViewById(R.id.nav_header_older_nickname).setVisibility(View.VISIBLE);
         }
         if(GlobalInfo.Guardian.monitorOlder == null){
             GlobalInfo.Guardian.monitorOlder = GlobalInfo.guardianshipList.get(0);
@@ -274,12 +290,7 @@ public class MainActivity extends AppCompatActivity
                 ad.show();
                 break;
             case R.id.nav_settings:
-                Intent intent;
-                if(GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER)
-                    intent = new Intent(this, SettingsActivity.class);
-                else
-                    intent = new Intent(this, org.micronurse.ui.activity.guardian.SettingsActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
         }
         drawer.closeDrawer(GravityCompat.START);
