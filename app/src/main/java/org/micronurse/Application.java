@@ -1,6 +1,7 @@
 package org.micronurse;
 
 import android.app.Activity;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -30,23 +31,23 @@ public class Application extends com.activeandroid.app.Application {
     public static final String BUNDLE_KEY_CHAT_MSG_DB_ID = "MessageDBID";
     public static final String BUNDLE_KEY_SESSION_DB_ID = "SessionDBID";
 
-    public static String MQTT_TOPIC_SENSOR_DATA_REPORT = "sensor_data_report";
-    public static String MQTT_TOPIC_SENSOR_WARNING = "sensor_warning";
-    public static String MQTT_TOPIC_CHATTING_FRIEND = "chatting_friend";
-    public static String MQTT_TOPIC_CHATTING_GUARDIANSHIP = "chatting_guardianship";
+    public static final String MQTT_TOPIC_SENSOR_DATA_REPORT = "sensor_data_report";
+    public static final String MQTT_TOPIC_SENSOR_WARNING = "sensor_warning";
+    public static final String MQTT_TOPIC_CHATTING_FRIEND = "chatting_friend";
+    public static final String MQTT_TOPIC_CHATTING_GUARDIANSHIP = "chatting_guardianship";
 
     @Override
     public void onCreate() {
         super.onCreate();
         //Init Baidu Map SDK
         SDKInitializer.initialize(this);
-        //Init Dev Preference
-        SharedPreferenceUtil.openDevPreference(this);
-
-        MQTTService.BROKER_URL = "tcp://" +
-                SharedPreferenceUtil.getDevPreference().getString(SharedPreferenceUtil.DEV_KEY_MQTTBROKER_HOST, "localhost")
-                + ":13883";
-        HttpApi.BASE_URL_V1 = "http://" + SharedPreferenceUtil.getDevPreference().getString(SharedPreferenceUtil.DEV_KEY_WEBSERVER_HOST, "localhost") + ":13000/micronurse/v1/mobile";
+        try {
+            ApplicationInfo appInfo = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA);
+            HttpApi.BASE_URL_V1 = appInfo.metaData.getString("MN_HTTP_API_BASE_URL_V1");
+            MQTTService.BROKER_URL = appInfo.metaData.getString("MN_MQTT_BROKER_URL");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
         ACTION_SENSOR_DATA_REPORT = getPackageName() + ".action.SENSOR_DATA_REPORT";
         ACTION_SENSOR_WARNING = getPackageName() + ".action.SENSOR_WARNING";

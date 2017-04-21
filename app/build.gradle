@@ -3,10 +3,10 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         micronurse {
-            keyAlias 'UniqueSwitch'
-            keyPassword '123456'
-            storeFile file('Micronurse-APKSignature.jks')
-            storePassword '123456'
+            storeFile file("${MN_KEYSTORE_FILE}")
+            storePassword "${MN_KEYSTORE_PASSWORD}"
+            keyAlias "${MN_KEYSTORE_ALIAS_NAME}"
+            keyPassword "${MN_KEYSTORE_ALIAS_PASSWORD}"
         }
     }
     compileSdkVersion 24
@@ -18,6 +18,15 @@ android {
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+        vectorDrawables.useSupportLibrary = true
+
+        resValue 'string', 'MN_HTTP_API_BASE_URL_V1', "${MN_HTTP_API_BASE_URL_V1}"
+        resValue 'string', 'MN_MQTT_BROKER_URL', "${MN_MQTT_BROKER_URL}"
+        resValue 'string', 'BAIDU_LBS_API_KEY', "${BAIDU_LBS_API_KEY}"
     }
     buildTypes {
         release {
@@ -51,6 +60,9 @@ dependencies {
             'com.rengwuxian.materialedittext:library:2.1.4',
             'com.github.nekocode:Badge:1.6.2',
             'com.malinskiy:superrecyclerview:1.1.4',
+            'com.google.zxing:core:3.2.1',
+            'cn.bingoogolapple:bga-qrcodecore:1.1.7@aar',
+            'cn.bingoogolapple:bga-zxing:1.1.7@aar',
             'org.eclipse.paho:org.eclipse.paho.client.mqttv3:+',
     )
 
@@ -61,6 +73,7 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:24.2.1'
     compile 'com.android.support:cardview-v7:24.2.1'
     compile 'com.jakewharton:butterknife:8.5.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
 }

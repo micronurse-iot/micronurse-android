@@ -18,6 +18,10 @@
 
     <group android:id="@+id/nav_group_other"
         android:checkableBehavior="none">
+        <item android:id="@+id/nav_scan_qrcode"
+            android:icon="@drawable/ic_qrcode"
+            android:title="@string/action_scan_qr_code"/>
+
         <item android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings"
             android:title="@string/action_settings"/>

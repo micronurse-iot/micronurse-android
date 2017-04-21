@@ -14,9 +14,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:name=".Application"
@@ -34,16 +34,19 @@
             android:value="11" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.micronurse.database.model.LoginUserRecord,
-                           org.micronurse.database.model.ChatMessageRecord,
-                           org.micronurse.database.model.SessionRecord,
-                           org.micronurse.database.model.MedicationReminder" />
+            android:value="org.micronurse.database.model.LoginUserRecord,                            org.micronurse.database.model.ChatMessageRecord,                            org.micronurse.database.model.SessionRecord,                            org.micronurse.database.model.MedicationReminder" />
         <meta-data
             android:name="AA_SERIALIZERS"
             android:value="org.micronurse.database.serializer.BitmapSerializer" />
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="EROcxOxeLvnewEAAR5hTIZpTBDWlCteD" />
+            android:value="@string/BAIDU_LBS_API_KEY" />
+        <meta-data
+            android:name="MN_HTTP_API_BASE_URL_V1"
+            android:value="@string/MN_HTTP_API_BASE_URL_V1"/>
+        <meta-data
+            android:name="MN_MQTT_BROKER_URL"
+            android:value="@string/MN_MQTT_BROKER_URL"/>
 
         <activity
             android:name=".ui.activity.LoginActivity"
@@ -64,7 +67,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.micronurse.ui.activity.LoginActivity" />
         </activity>
-
         <activity
             android:name=".ui.activity.WelcomeActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar">
@@ -73,11 +75,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.activity.SettingsActivity"
             android:label="@string/action_settings" />
-
         <activity
             android:name=".ui.activity.older.SettingHomeLocationActivity"
             android:label="@string/action_setting_home_location" />
@@ -131,20 +131,13 @@
         <activity
             android:name=".ui.activity.older.PostFriendMomentActivity"
             android:label="@string/action_post_new_moment" />
+        <activity android:name=".ui.activity.ScanQRCodeActivity"
+            android:label="@string/action_scan_qr_code"/>
 
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"
             android:process=":remote" />
-
-        <activity android:name=".ui.activity.dev.DevSettingsActivity"
-            android:label="Micro Nurse Dev Settings">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
     </application>
 
 </manifest>

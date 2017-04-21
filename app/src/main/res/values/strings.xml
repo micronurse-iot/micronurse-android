@@ -54,6 +54,7 @@
     <string name="action_monitor_warning">监测警报</string>
     <string name="action_friend_juan">朋友圈</string>
     <string name="action_medication_reminder">吃药提醒</string>
+    <string name="action_scan_qr_code">扫描二维码</string>
     <string name="action_settings">应用设置</string>
     <string name="action_logout">注销账号</string>
     <string name="action_exit">退出应用</string>
@@ -166,4 +167,7 @@
         <item>五</item>
         <item>六</item>
     </string-array>
+
+    <string name="tip_scan_qrcode">将二维码放入框内，即可自动扫描</string>
+    <string name="alert_error_open_camera">无法启动相机</string>
 </resources>

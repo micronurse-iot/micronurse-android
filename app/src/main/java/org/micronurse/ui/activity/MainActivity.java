@@ -226,6 +226,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == ScanQRCodeActivity.REQUEST_CODE_SCAN_QR_CODE && resultCode == ScanQRCodeActivity.RESULT_CDOE_SCAN_QR_CODE){
+            //TODO: parse string
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
     protected void onDestroy() {
         if(emergencyCallServiceConnection != null)
             unbindService(emergencyCallServiceConnection);
@@ -277,6 +285,9 @@ public class MainActivity extends AppCompatActivity
                 hideAllFragment(t);
                 t.show(contactsFragment);
                 t.commit();
+                break;
+            case R.id.nav_scan_qrcode:
+                startActivityForResult(new Intent(this, ScanQRCodeActivity.class), ScanQRCodeActivity.REQUEST_CODE_SCAN_QR_CODE);
                 break;
             case R.id.nav_exit:
                 AlertDialog ad = new AlertDialog.Builder(this).setMessage(R.string.exit_query)
