@@ -33,4 +33,6 @@ public class PublicResultCode {
     public static final int FRIEND_JUAN_NO_MOMENT=200301;
     public static final int FRIEND_JUAN_NO_FRIENDSHIP = 200302;
     public static final int FRIEND_JUAN_EMPTY_MOMENT = 200303;
+
+    public static final int IOT_LOGIN_INVALID_DEVICE_TOKEN = 200401;
 }

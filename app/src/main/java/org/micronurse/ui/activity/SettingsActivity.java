@@ -1,10 +1,13 @@
 package org.micronurse.ui.activity;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.preference.Preference;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 
@@ -33,43 +36,79 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 break;
         }
 
-        findPreference(getResources().getString(R.string.action_logout)).
-                setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        final AlertDialog confirmDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.action_confirm)
+                .setNegativeButton(R.string.action_cancel, null)
+                .create();
+
+        findPreference(getString(R.string.action_logout_iot))
+                .setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        final ProgressDialog pd = new ProgressDialog(SettingsActivity.this);
-                        pd.setCancelable(false);
-                        pd.setMessage(getString(R.string.action_waiting));
-                        pd.show();
-                        HttpApi.startRequest(new HttpApiJsonRequest(SettingsActivity.this, HttpApi.getApiUrl(HttpApi.AccountAPI.LOGOUT), Request.Method.DELETE, GlobalInfo.token, null,
-                                new HttpApiJsonListener<Result>(Result.class) {
+                        confirmDialog.setMessage(getString(R.string.alert_query_logout));
+                        confirmDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.action_ok), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                HttpApi.startRequest(new HttpApiJsonRequest(SettingsActivity.this, HttpApi.getApiUrl(HttpApi.AccountAPI.LOGOUT_IOT), Request.Method.DELETE, GlobalInfo.token,
+                                        null, new HttpApiJsonListener<Result>(Result.class) {
                                     @Override
                                     public void onDataResponse(Result data) {
-                                        logout();
+                                        Toast.makeText(SettingsActivity.this, data.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
-
-                                    @Override
-                                    public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
-                                        logout();
-                                        return true;
-                                    }
-
-                                    @Override
-                                    public boolean onDataCorrupted(Throwable e) {
-                                        logout();
-                                        return true;
-                                    }
-
-                                    @Override
-                                    public boolean onNetworkError(Throwable e) {
-                                        logout();
-                                        return true;
-                                    }
-                                }
-                        ));
+                                }));
+                            }
+                        });
+                        confirmDialog.show();
                         return true;
                     }
                 });
+
+        findPreference(getString(R.string.action_logout))
+                .setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        confirmDialog.setMessage(getString(R.string.alert_query_logout));
+                        confirmDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.action_ok), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final ProgressDialog pd = new ProgressDialog(SettingsActivity.this);
+                                pd.setCancelable(false);
+                                pd.setMessage(getString(R.string.action_waiting));
+                                pd.show();
+                                HttpApi.startRequest(new HttpApiJsonRequest(SettingsActivity.this, HttpApi.getApiUrl(HttpApi.AccountAPI.LOGOUT), Request.Method.DELETE, GlobalInfo.token, null,
+                                        new HttpApiJsonListener<Result>(Result.class) {
+                                            @Override
+                                            public void onDataResponse(Result data) {
+                                                logout();
+                                            }
+
+                                            @Override
+                                            public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
+                                                logout();
+                                                return true;
+                                            }
+
+                                            @Override
+                                            public boolean onDataCorrupted(Throwable e) {
+                                                logout();
+                                                return true;
+                                            }
+
+                                            @Override
+                                            public boolean onNetworkError(Throwable e) {
+                                                logout();
+                                                return true;
+                                            }
+                                        }
+                                ));
+                            }
+                        });
+                        confirmDialog.show();
+                        return true;
+                    }
+                });
+
+
     }
 
     private void logout(){

@@ -50,6 +50,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_waiting">请稍等...</string>
     <string name="other">其它</string>
+    <string name="account">账号</string>
     <string name="action_monitor">监测</string>
     <string name="action_monitor_warning">监测警报</string>
     <string name="action_friend_juan">朋友圈</string>
@@ -57,6 +58,7 @@
     <string name="action_scan_qr_code">扫描二维码</string>
     <string name="action_settings">应用设置</string>
     <string name="action_logout">注销账号</string>
+    <string name="alert_query_logout">确定要注销吗？</string>
     <string name="action_exit">退出应用</string>
 
     <string name="action_family_monitor">家庭环境</string>
@@ -170,4 +172,8 @@
 
     <string name="tip_scan_qrcode">将二维码放入框内，即可自动扫描</string>
     <string name="alert_error_open_camera">无法启动相机</string>
+    <string name="action_confirm">确认</string>
+    <string name="alert_login_iot">请点击确定按钮登录物联网设备终端</string>
+    <string name="alert_invalid_login_iot_qrcode">登录二维码已失效</string>
+    <string name="action_logout_iot">注销物联网设备终端</string>
 </resources>

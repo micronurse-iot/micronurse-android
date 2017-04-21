@@ -24,10 +24,16 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.micronurse.Application;
 import org.micronurse.R;
 import org.micronurse.model.User;
+import org.micronurse.net.http.HttpApi;
 import org.micronurse.service.EmergencyCallService;
 import org.micronurse.service.LocationService;
 import org.micronurse.service.MQTTService;
@@ -39,6 +45,7 @@ import org.micronurse.ui.fragment.MonitorWarningFragment;
 import org.micronurse.ui.listener.OnFullScreenListener;
 import org.micronurse.util.DatabaseUtil;
 import org.micronurse.util.GlobalInfo;
+import org.micronurse.util.HttpAPIUtil;
 
 import java.util.ArrayList;
 
@@ -228,7 +235,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == ScanQRCodeActivity.REQUEST_CODE_SCAN_QR_CODE && resultCode == ScanQRCodeActivity.RESULT_CDOE_SCAN_QR_CODE){
-            //TODO: parse string
+            parseQRCode(data.getStringExtra(ScanQRCodeActivity.BUNDLE_QR_CODE_STR));
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -316,6 +323,20 @@ public class MainActivity extends AppCompatActivity
             ft.hide(medicationReminderFragment);
         }else {
             ft.hide(contactsFragment);
+        }
+    }
+
+    private void parseQRCode(String s){
+        if(s == null || s.isEmpty())
+            return;
+        try {
+            JsonObject json = new JsonParser().parse(s).getAsJsonObject();
+            if(json.get("action").getAsString().equals("iot_login") && GlobalInfo.user.getAccountType() == User.ACCOUNT_TYPE_OLDER){
+                HttpAPIUtil.loginIoT(this, json.get("token").getAsString());
+            }
+        } catch (JsonSyntaxException ignored){
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 }

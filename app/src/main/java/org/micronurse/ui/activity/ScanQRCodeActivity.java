@@ -36,10 +36,9 @@ public class ScanQRCodeActivity extends AppCompatActivity {
         qrCodeView.setDelegate(new QRCodeView.Delegate() {
             @Override
             public void onScanQRCodeSuccess(String s) {
-                setResult(RESULT_CDOE_SCAN_QR_CODE);
                 Intent intent = new Intent();
                 intent.putExtra(BUNDLE_QR_CODE_STR, s);
-                setIntent(intent);
+                setResult(RESULT_CDOE_SCAN_QR_CODE, intent);
                 finish();
             }
 
