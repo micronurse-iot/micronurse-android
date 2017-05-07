@@ -136,6 +136,7 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             } else if (data instanceof InfraredTransducer){
                 if(((InfraredTransducer) data).isWarning()) {
                     holder.iconSensor.setImageBitmap(ImageUtil.getBitmapFromDrawable(context, R.drawable.ic_alarmlight_red_32dp));
+                    holder.txtDataValue.setText("");
                     holder.txtDataValue.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(context.getResources(),
                             ImageUtil.getBitmapFromDrawable(context, R.drawable.ic_warning_red_32dp)), null, null, null);
                 }

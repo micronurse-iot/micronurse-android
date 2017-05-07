@@ -249,7 +249,8 @@ public class MonitorDetailActivity extends AppCompatActivity implements OnSensor
                 return;
             try {
                 RawSensorData rawSensorData = GsonUtil.getGson().fromJson(mqttIntent.getStringExtra(MQTTService.BUNDLE_KEY_MESSAGE), RawSensorData.class);
-                onSensorDataReceived(SensorUtil.parseRawSensorData(rawSensorData));
+                if(rawSensorData.getSensorType() != null && sensorType.equals(rawSensorData.getSensorType().toLowerCase()))
+                    onSensorDataReceived(SensorUtil.parseRawSensorData(rawSensorData));
             }catch (JsonSyntaxException e){
                 e.printStackTrace();
             }

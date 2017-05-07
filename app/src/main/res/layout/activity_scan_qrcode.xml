@@ -12,6 +12,8 @@
         android:layout_height="match_parent"
         app:qrcv_animTime="2000"
         app:qrcv_rectWidth="250dp"
-        app:qrcv_qrCodeTipText="@string/tip_scan_qrcode" />
+        app:qrcv_qrCodeTipText="@string/tip_scan_qrcode"
+        app:qrcv_isShowTipBackground="true"
+        app:qrcv_isOnlyDecodeScanBoxArea="true"/>
 
 </android.support.design.widget.CoordinatorLayout>

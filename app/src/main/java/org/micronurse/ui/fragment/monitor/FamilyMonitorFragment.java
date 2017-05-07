@@ -79,7 +79,7 @@ public class FamilyMonitorFragment extends Fragment implements OnSensorDataRecei
                 updateHumidityURL = HttpApi.getApiUrl(HttpApi.SensorAPI.LATEST_SENSOR_DATA,
                         Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1));
                 updateSmokeURL = HttpApi.getApiUrl(HttpApi.SensorAPI.LATEST_SENSOR_DATA,
-                        Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1));
+                        Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1));
                 break;
             case User.ACCOUNT_TYPE_GUARDIAN:
                 if(GlobalInfo.Guardian.monitorOlder == null){
@@ -94,7 +94,7 @@ public class FamilyMonitorFragment extends Fragment implements OnSensorDataRecei
                         Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1));
                 updateSmokeURL = HttpApi.getApiUrl(HttpApi.SensorAPI.LATEST_SENSOR_DATA,
                         String.valueOf(GlobalInfo.Guardian.monitorOlder.getUserId()),
-                        Sensor.SENSOR_TYPE_HUMIDOMETER, String.valueOf(1));
+                        Sensor.SENSOR_TYPE_SMOKE_TRANSDUCER, String.valueOf(1));
                 break;
             default:
                 refresh.setEnabled(false);
