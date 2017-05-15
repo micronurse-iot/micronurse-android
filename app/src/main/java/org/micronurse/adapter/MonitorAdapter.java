@@ -83,17 +83,21 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             TimelineHeaderViewHolder holder = (TimelineHeaderViewHolder)viewHolder;
             holder.txtDate.setText(DateTimeUtil.convertTimestamp(context, (Date) data, true, false));
             if(showTimeline){
-                holder.itemView.findViewById(R.id.timeline_divider).setVisibility(View.VISIBLE);
-                holder.itemView.findViewById(R.id.timeline_circle).setVisibility(View.VISIBLE);
+                holder.timelineDevider.setVisibility(View.VISIBLE);
+                holder.timelineCircle.setVisibility(View.VISIBLE);
             }
         }
         else if(data instanceof Sensor) {
             final Intent intent = new Intent(context, MonitorDetailActivity.class);
             SensorItemViewHolder holder = (SensorItemViewHolder)viewHolder;
             if(showTimeline){
-                holder.itemView.findViewById(R.id.timeline_divider).setVisibility(View.VISIBLE);
+                holder.timelineDevider.setVisibility(View.VISIBLE);
+                holder.txtDataUpdateTime.setText(DateTimeUtil.convertTimestamp(context, ((Sensor) data).getTimestamp(), false, true, true));
+            }else{
+                holder.timelineDevider.setVisibility(View.GONE);
+                holder.txtDataUpdateTime.setText(DateTimeUtil.convertTimestamp(context, ((Sensor) data).getTimestamp(), true, true, true));
             }
-            holder.txtDataUpdateTime.setText(DateTimeUtil.convertTimestamp(context, ((Sensor) data).getTimestamp(), false, true, true));
+
             if (data instanceof Thermometer) {
                 holder.iconSensor.setImageBitmap(ImageUtil.getBitmapFromDrawable(context, R.drawable.ic_gauge_teal_32dp));
                 holder.txtDataValue.setText(String.format(context.getString(R.string.temperature_format), ((Thermometer) data).getTemperature()));
@@ -179,12 +183,17 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public static class TimelineHeaderViewHolder extends RecyclerView.ViewHolder{
         private View itemView;
-        private TextView txtDate;
+        @BindView(R.id.timeline_time)
+        TextView txtDate;
+        @BindView(R.id.timeline_divider)
+        View timelineDevider;
+        @BindView(R.id.timeline_circle)
+        View timelineCircle;
 
         public TimelineHeaderViewHolder(View itemView){
             super(itemView);
             this.itemView = itemView;
-            txtDate = (TextView) itemView.findViewById(R.id.timeline_time);
+            ButterKnife.bind(this, itemView);
         }
     }
 
@@ -192,6 +201,8 @@ public class MonitorAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private View itemView;
         @BindView(R.id.data_item_card)
         View itemCardView;
+        @BindView(R.id.timeline_divider)
+        View timelineDevider;
         @BindView(R.id.icon_sensor)
         ImageView iconSensor;
         @BindView(R.id.txt_data_value)

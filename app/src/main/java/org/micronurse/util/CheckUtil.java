@@ -134,7 +134,6 @@ public class CheckUtil {
     }
 
     public static int checkSafetyLevel(Thermometer thermometer){
-        //TODO: Return the corresponding safe level value according to the temperature.
         float temperature = thermometer.getTemperature();
         if(temperature >= 12.0 && temperature <= 38.0)
             return SAFETY_LEVEL_SAFE;
@@ -151,7 +150,6 @@ public class CheckUtil {
     }
 
     public static int checkSafetyLevel(Humidometer humidometer){
-        //TODO: Return the corresponding safe level value according to the humidity.
         float humidity = humidometer.getHumidity();
         if(humidity >= 20 && humidity <= 80)
             return SAFETY_LEVEL_SAFE;
@@ -168,7 +166,6 @@ public class CheckUtil {
     }
 
     public static int checkSafetyLevel(SmokeTransducer smokeTransducer){
-        //TODO: Return the corresponding safe level value according to the smoke.
         int smoke = smokeTransducer.getSmoke();
         if(smoke <= 50)
             return SAFETY_LEVEL_SAFE;
@@ -186,11 +183,10 @@ public class CheckUtil {
     }
 
     public static int checkSafetyLevel(FeverThermometer feverThermometer){
-        //TODO: Return the corresponding safe level value according to the body temperature
         float bodyHeat = feverThermometer.getTemperature();
-        if(bodyHeat >= 36.5 && bodyHeat <= 37.5)
+        if(bodyHeat >= 36.0 && bodyHeat <= 37.0)
             return SAFETY_LEVEL_SAFE;
-        else if(bodyHeat <= 35.5 || bodyHeat >= 38.0)
+        else if(bodyHeat <= 35.5 || bodyHeat >= 37.3)
             return SAFETY_LEVEL_DANGER;
         else
             return SAFETY_LEVEL_HIDDEN_IN_DANGER;
@@ -203,7 +199,6 @@ public class CheckUtil {
     }
 
     public static int checkSafetyLevel(PulseTransducer pulseTransducer){
-        //TODO: Return the corresponding safe level value according to the pulse.
         int pulse = pulseTransducer.getPulse();
         if(pulse >= 55 && pulse <= 100)
             return SAFETY_LEVEL_SAFE;
