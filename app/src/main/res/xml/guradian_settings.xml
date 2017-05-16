@@ -4,7 +4,7 @@
 
     <PreferenceCategory android:title="@string/account">
         <Preference
-            android:key="@string/action_logout"
+            android:key="pref_logout"
             android:icon="@drawable/ic_exit"
             android:title="@string/action_logout" />
 

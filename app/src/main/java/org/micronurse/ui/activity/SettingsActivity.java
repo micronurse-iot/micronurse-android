@@ -27,43 +27,41 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        final AlertDialog confirmDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.action_confirm)
+                .setNegativeButton(R.string.action_cancel, null)
+                .create();
         switch (GlobalInfo.user.getAccountType()){
             case User.ACCOUNT_TYPE_OLDER:
                 addPreferencesFromResource(R.xml.older_settings);
+                findPreference("pref_logout_iot")
+                        .setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                            @Override
+                            public boolean onPreferenceClick(Preference preference) {
+                                confirmDialog.setMessage(getString(R.string.alert_query_logout));
+                                confirmDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.action_ok), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        HttpApi.startRequest(new HttpApiJsonRequest(SettingsActivity.this, HttpApi.getApiUrl(HttpApi.AccountAPI.LOGOUT_IOT), Request.Method.DELETE, GlobalInfo.token,
+                                                null, new HttpApiJsonListener<Result>(Result.class) {
+                                            @Override
+                                            public void onDataResponse(Result data) {
+                                                Toast.makeText(SettingsActivity.this, data.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }));
+                                    }
+                                });
+                                confirmDialog.show();
+                                return true;
+                            }
+                        });
                 break;
             case User.ACCOUNT_TYPE_GUARDIAN:
                 addPreferencesFromResource(R.xml.guradian_settings);
                 break;
         }
 
-        final AlertDialog confirmDialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.action_confirm)
-                .setNegativeButton(R.string.action_cancel, null)
-                .create();
-
-        findPreference(getString(R.string.action_logout_iot))
-                .setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                    @Override
-                    public boolean onPreferenceClick(Preference preference) {
-                        confirmDialog.setMessage(getString(R.string.alert_query_logout));
-                        confirmDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.action_ok), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                HttpApi.startRequest(new HttpApiJsonRequest(SettingsActivity.this, HttpApi.getApiUrl(HttpApi.AccountAPI.LOGOUT_IOT), Request.Method.DELETE, GlobalInfo.token,
-                                        null, new HttpApiJsonListener<Result>(Result.class) {
-                                    @Override
-                                    public void onDataResponse(Result data) {
-                                        Toast.makeText(SettingsActivity.this, data.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                }));
-                            }
-                        });
-                        confirmDialog.show();
-                        return true;
-                    }
-                });
-
-        findPreference(getString(R.string.action_logout))
+        findPreference("pref_logout")
                 .setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
@@ -78,27 +76,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 HttpApi.startRequest(new HttpApiJsonRequest(SettingsActivity.this, HttpApi.getApiUrl(HttpApi.AccountAPI.LOGOUT), Request.Method.DELETE, GlobalInfo.token, null,
                                         new HttpApiJsonListener<Result>(Result.class) {
                                             @Override
-                                            public void onDataResponse(Result data) {
+                                            public void onResponse() {
+                                                pd.dismiss();
                                                 logout();
                                             }
 
                                             @Override
-                                            public boolean onErrorDataResponse(int statusCode, Result errorInfo) {
-                                                logout();
-                                                return true;
-                                            }
-
-                                            @Override
-                                            public boolean onDataCorrupted(Throwable e) {
-                                                logout();
-                                                return true;
-                                            }
-
-                                            @Override
-                                            public boolean onNetworkError(Throwable e) {
-                                                logout();
-                                                return true;
-                                            }
+                                            public void onDataResponse(Result data) {}
                                         }
                                 ));
                             }

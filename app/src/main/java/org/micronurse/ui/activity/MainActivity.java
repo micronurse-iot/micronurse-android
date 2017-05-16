@@ -54,6 +54,7 @@ import org.micronurse.util.GlobalInfo;
 import org.micronurse.util.HttpAPIUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -283,7 +284,38 @@ public class MainActivity extends AppCompatActivity
             GlobalInfo.Guardian.monitorOlder = GlobalInfo.guardianshipList.get(0);
         }
         ((TextView)mNavHeaderView.findViewById(R.id.nav_header_older_nickname)).setText(GlobalInfo.Guardian.monitorOlder.getNickname());
-        ((ImageView)mNavHeaderView.findViewById(R.id.nav_header_older_portrait)).setImageBitmap(GlobalInfo.Guardian.monitorOlder.getPortrait());
+        ImageView olderPortrait = ButterKnife.findById(mNavHeaderView, R.id.nav_header_older_portrait);
+        olderPortrait.setImageBitmap(GlobalInfo.Guardian.monitorOlder.getPortrait());
+        olderPortrait.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final List<CharSequence> choiceItems = new ArrayList<CharSequence>();
+                int checked = -1;
+                for(User u : GlobalInfo.guardianshipList) {
+                    choiceItems.add(u.getNickname());
+                    if(GlobalInfo.Guardian.monitorOlder != null && u.getUserId().equals(GlobalInfo.Guardian.monitorOlder.getUserId())){
+                        checked = GlobalInfo.guardianshipList.indexOf(u);
+                    }
+                }
+                if(choiceItems.isEmpty())
+                    return;
+                final AlertDialog ad = new AlertDialog.Builder(MainActivity.this)
+                        .setCancelable(true)
+                        .setTitle(R.string.action_switch_monitor_older)
+                        .setSingleChoiceItems(choiceItems.toArray(new CharSequence[choiceItems.size()]), checked, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                GlobalInfo.Guardian.monitorOlder = GlobalInfo.guardianshipList.get(which);
+                                dialog.dismiss();
+                                Intent refresh = new Intent(MainActivity.this, MainActivity.class);
+                                startActivity(refresh);
+                                finish();
+                            }
+                        })
+                        .create();
+                ad.show();
+            }
+        });
     }
 
     @Override

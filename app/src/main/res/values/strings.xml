@@ -178,4 +178,5 @@
     <string name="action_logout_iot">注销物联网设备终端</string>
     <string name="action_infrared_theft_proof">红外防盗</string>
     <string name="query_switch_infrared_off">确定要关闭红外防盗警报吗？</string>
+    <string name="action_switch_monitor_older">切换监视老人</string>
 </resources>
