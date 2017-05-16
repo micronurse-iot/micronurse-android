@@ -176,4 +176,6 @@
     <string name="alert_login_iot">请点击确定按钮登录物联网设备终端</string>
     <string name="alert_invalid_login_iot_qrcode">登录二维码已失效</string>
     <string name="action_logout_iot">注销物联网设备终端</string>
+    <string name="action_infrared_theft_proof">红外防盗</string>
+    <string name="query_switch_infrared_off">确定要关闭红外防盗警报吗？</string>
 </resources>

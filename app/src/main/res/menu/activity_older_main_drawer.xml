@@ -27,6 +27,11 @@
             android:icon="@drawable/ic_call"
             android:title="@string/action_emergency_call"
             app:actionLayout="@layout/menu_item_emergency_call_switch" />
+        <item
+            android:id="@+id/nav_switch_infrared_theft_proof"
+            android:icon="@drawable/ic_alarmlight"
+            android:title="@string/action_infrared_theft_proof"
+            app:actionLayout="@layout/menu_item_emergency_call_switch" />
     </group>
 
     <group android:id="@+id/nav_group_other"

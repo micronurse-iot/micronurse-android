@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <android.support.v7.widget.SwitchCompat
-        android:id="@+id/switch_emergency_call_btn"
+        android:id="@+id/switch_menu_item"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"

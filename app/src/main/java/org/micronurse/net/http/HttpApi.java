@@ -53,5 +53,7 @@ public class HttpApi {
         public static final String LATEST_SENSOR_DATA = "sensor/sensor_data/latest";
         public static final String LATEST_SENSOR_DATA_BY_NAME = "sensor/sensor_data/latest/by_name";
         public static final String SENSOR_WARNING = "sensor/warning";
+        public static final String SENSOR_CONFIG = "sensor/config";
+        public static final String CHANGE_SENSOR_CONFIG = "sensor/config/new";
     }
 }

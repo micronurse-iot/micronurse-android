@@ -24,7 +24,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.gson.JsonElement;
+import com.android.volley.Request;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -32,8 +32,14 @@ import com.google.gson.JsonSyntaxException;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.micronurse.Application;
 import org.micronurse.R;
+import org.micronurse.model.SensorConfig;
 import org.micronurse.model.User;
 import org.micronurse.net.http.HttpApi;
+import org.micronurse.net.http.HttpApiJsonListener;
+import org.micronurse.net.http.HttpApiJsonRequest;
+import org.micronurse.net.model.request.SensorConfigRequest;
+import org.micronurse.net.model.result.Result;
+import org.micronurse.net.model.result.SensorConfigResult;
 import org.micronurse.service.EmergencyCallService;
 import org.micronurse.service.LocationService;
 import org.micronurse.service.MQTTService;
@@ -58,7 +64,10 @@ public class MainActivity extends AppCompatActivity
     DrawerLayout drawerLayout;
     @BindView(R.id.nav_main)
     NavigationView mNavigationView;
+    private MenuItem menuItemSwitchInfrared;
     private SwitchCompat mSwitchEmergencyCall;
+    private SwitchCompat mSwitchInfrared;
+    private CompoundButton.OnCheckedChangeListener onInfraredChangedListener;
     private View mNavHeaderView;
 
     private FragmentManager mFragmentManager;
@@ -110,13 +119,68 @@ public class MainActivity extends AppCompatActivity
                 mNavHeaderView = mNavigationView.inflateHeaderView(R.layout.nav_header_older_main);
                 mNavigationView.inflateMenu(R.menu.activity_older_main_drawer);
                 mSwitchEmergencyCall = (SwitchCompat) mNavigationView.getMenu().findItem(R.id.nav_switch_emergency_call)
-                        .getActionView().findViewById(R.id.switch_emergency_call_btn);
+                        .getActionView().findViewById(R.id.switch_menu_item);
                 mSwitchEmergencyCall.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         emergencyCallService.setShowCallButton(isChecked);
                     }
                 });
+
+                menuItemSwitchInfrared = mNavigationView.getMenu().findItem(R.id.nav_switch_infrared_theft_proof);
+                mSwitchInfrared = (SwitchCompat) menuItemSwitchInfrared.getActionView().findViewById(R.id.switch_menu_item);
+                mSwitchInfrared.setChecked(false);
+                mSwitchInfrared.setEnabled(false);
+                menuItemSwitchInfrared.setEnabled(false);
+                onInfraredChangedListener = new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if(isChecked)
+                            changeInfraredConfig(true);
+                        else{
+                            AlertDialog ad = new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle(R.string.action_confirm)
+                                    .setMessage(R.string.query_switch_infrared_off)
+                                    .setCancelable(false)
+                                    .setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            mSwitchInfrared.setOnCheckedChangeListener(null);
+                                            mSwitchInfrared.setChecked(true);
+                                            mSwitchInfrared.setOnCheckedChangeListener(onInfraredChangedListener);
+                                        }
+                                    })
+                                    .setPositiveButton(R.string.action_ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            changeInfraredConfig(false);
+                                        }
+                                    })
+                                    .create();
+                            ad.show();
+                        }
+                    }
+                };
+
+                HttpApi.startRequest(new HttpApiJsonRequest(this, HttpApi.getApiUrl(HttpApi.SensorAPI.SENSOR_CONFIG), Request.Method.GET, GlobalInfo.token, null,
+                        new HttpApiJsonListener<SensorConfigResult>(SensorConfigResult.class) {
+                            @Override
+                            public void onResponse() {
+                                mSwitchInfrared.setEnabled(true);
+                                menuItemSwitchInfrared.setEnabled(true);
+                                mSwitchInfrared.setOnCheckedChangeListener(onInfraredChangedListener);
+                            }
+
+                            @Override
+                            public void onDataResponse(SensorConfigResult data) {
+                                if(data.getConfig().isInfraredSwitch()){
+                                    mSwitchInfrared.setOnCheckedChangeListener(null);
+                                    mSwitchInfrared.setChecked(true);
+                                    mSwitchInfrared.setOnCheckedChangeListener(onInfraredChangedListener);
+                                }
+                            }
+                        }));
+
 
                 //Services
                 permToCheck.add(Manifest.permission.CALL_PHONE);
@@ -286,6 +350,9 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_switch_emergency_call:
                 mSwitchEmergencyCall.setChecked(!mSwitchEmergencyCall.isChecked());
                 return true;
+            case R.id.nav_switch_infrared_theft_proof:
+                mSwitchInfrared.setChecked(!mSwitchInfrared.isChecked());
+                return true;
             case R.id.nav_contacts:
                 setTitle(R.string.action_contacts_older);
                 t = mFragmentManager.beginTransaction();
@@ -338,5 +405,34 @@ public class MainActivity extends AppCompatActivity
         } catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    private void changeInfraredConfig(final boolean on){
+        mSwitchInfrared.setEnabled(false);
+        menuItemSwitchInfrared.setEnabled(false);
+        SensorConfig cfg = new SensorConfig(on);
+        SensorConfigRequest req = new SensorConfigRequest(cfg);
+        HttpApi.startRequest(new HttpApiJsonRequest(this, HttpApi.getApiUrl(HttpApi.SensorAPI.CHANGE_SENSOR_CONFIG), Request.Method.PUT, GlobalInfo.token,
+                req, new HttpApiJsonListener<Result>(Result.class) {
+            @Override
+            public void onResponse() {
+                mSwitchInfrared.setEnabled(true);
+                menuItemSwitchInfrared.setEnabled(true);
+            }
+
+            @Override
+            public void onDataResponse(Result data) {
+                mSwitchInfrared.setOnCheckedChangeListener(null);
+                mSwitchInfrared.setChecked(on);
+                mSwitchInfrared.setOnCheckedChangeListener(onInfraredChangedListener);
+            }
+
+            @Override
+            public void onErrorResponse() {
+                mSwitchInfrared.setOnCheckedChangeListener(null);
+                mSwitchInfrared.setChecked(!on);
+                mSwitchInfrared.setOnCheckedChangeListener(onInfraredChangedListener);
+            }
+        }));
     }
 }
