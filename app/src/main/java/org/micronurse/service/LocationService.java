@@ -29,6 +29,7 @@ public class LocationService extends Service implements BDLocationListener {
     private MQTTService mqttService;
     private ServiceConnection mqttServiceConnection;
     private long sendTimestamp = 0;
+    private String lastLocTime = null;
 
     @Override
     public void onCreate() {
@@ -78,7 +79,10 @@ public class LocationService extends Service implements BDLocationListener {
         }else if(bdLocation.getLocType() == BDLocation.TypeNetWorkLocation ||
                  bdLocation.getLocType() == BDLocation.TypeGpsLocation ||
                  bdLocation.getLocType() == BDLocation.TypeOffLineLocation){
-            sendLocation(bdLocation.getLongitude(), bdLocation.getLatitude(), bdLocation.getLocationDescribe());
+            if(!bdLocation.getTime().equals(lastLocTime)) {
+                lastLocTime = bdLocation.getTime();
+                sendLocation(bdLocation.getLongitude(), bdLocation.getLatitude(), bdLocation.getLocationDescribe());
+            }
         }
     }
 

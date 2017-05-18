@@ -84,7 +84,9 @@ public class ChatMessageReceiver extends BroadcastReceiver {
         Bitmap portrait = null;
         String displayName = null;
         String groupSenderName = null;
+        String content;
         User u = null;
+        int iconRes = R.drawable.ic_chat;
         switch (newMessage.getSession().getSessionType()){
             case SessionRecord.SESSION_TYPE_GUARDIANSHIP:
             case SessionRecord.SESSION_TYPE_FRIEND:
@@ -93,21 +95,21 @@ public class ChatMessageReceiver extends BroadcastReceiver {
                     return;
                 portrait = u.getPortrait();
                 displayName = u.getNickname();
+                content = newMessage.getLiteralContent();
                 break;
             default:
                 return;
         }
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
-        mBuilder.setSmallIcon(R.drawable.ic_chat)
-                .setLargeIcon(portrait)
+        mBuilder.setSmallIcon(iconRes)
                 .setAutoCancel(true)
+                .setContentTitle(displayName)
+                .setContentText(content)
                 .setDefaults(NotificationCompat.DEFAULT_ALL);
 
-        NotificationCompat.MessagingStyle msgStyle = new NotificationCompat.MessagingStyle(displayName)
-                .setConversationTitle(displayName)
-                .addMessage(newMessage.getLiteralContent(), newMessage.getMessageTime().getTime(), groupSenderName);
-        mBuilder.setStyle(msgStyle);
+        if(portrait != null)
+           mBuilder.setLargeIcon(portrait);
 
         Intent msgIntent = new Intent(context, ChatActivity.class);
         msgIntent.putExtra(ChatActivity.BUNDLE_KEY_SESSION_TYPE, newMessage.getSession().getSessionType());
